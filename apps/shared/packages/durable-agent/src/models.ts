@@ -1,8 +1,12 @@
 // The model catalog: Haiku 5.5 (default) plus 29 more models, all through OpenRouter.
+// DNA_PROVIDER=deepseek uses DeepSeek's own API instead (DEEPSEEK_API_KEY), with its two chat models.
 // DNA_PROVIDER=faux swaps in a free deterministic model with the same 1M window.
 import { createModels, type MutableModels } from "@earendil-works/pi-ai/models";
+import { deepseekProvider } from "@earendil-works/pi-ai/providers/deepseek";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import type { ModelRef } from "@earendil-works/pi-durable";
+
+export type CatalogProvider = "openrouter" | "deepseek" | "faux";
 
 export interface CatalogEntry {
   id: string;
@@ -19,6 +23,7 @@ export interface ModelInfo extends CatalogEntry {
 }
 
 export const DEFAULT_MODEL = "anthropic/claude-haiku-5.5";
+export const DEEPSEEK_DEFAULT_MODEL = "deepseek-flash";
 export const FAUX_WINDOW = 1_000_000;
 export const FAUX_MODEL = "faux-haiku";
 
@@ -75,9 +80,15 @@ export const CATALOG: readonly CatalogEntry[] = [
   },
 ];
 
+/** DeepSeek's direct API: ids are DeepSeek's own, not OpenRouter's. */
+export const DEEPSEEK_CATALOG: readonly CatalogEntry[] = [
+  { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", tier: "A", icon: "deepseek.png" },
+  { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", tier: "A", icon: "deepseek.png" },
+];
+
 export interface ModelCatalog {
   readonly models: MutableModels;
-  readonly provider: "openrouter" | "faux";
+  readonly provider: CatalogProvider;
   readonly defaultModel: ModelRef;
   list(): ModelInfo[];
   /** A catalog id to a pi-durable model reference; throws for ids outside the catalog. */
@@ -86,7 +97,7 @@ export interface ModelCatalog {
 }
 
 export function createModelCatalog(options: {
-  provider: "openrouter" | "faux";
+  provider: CatalogProvider;
   installFaux?: (models: MutableModels) => void;
   defaultModel?: string;
 }): ModelCatalog {
@@ -119,31 +130,47 @@ export function createModelCatalog(options: {
       info: (id) => all.find((m) => m.id === id),
     };
   }
-  const provider = openrouterProvider();
+  const live =
+    options.provider === "deepseek"
+      ? {
+          id: "deepseek",
+          name: "DeepSeek",
+          provider: deepseekProvider(),
+          catalog: DEEPSEEK_CATALOG,
+          fallback: DEEPSEEK_DEFAULT_MODEL,
+        }
+      : {
+          id: "openrouter",
+          name: "OpenRouter",
+          provider: openrouterProvider(),
+          catalog: CATALOG,
+          fallback: DEFAULT_MODEL,
+        };
+  const { provider, catalog } = live;
   models.setProvider(provider);
   const known = provider.getModels();
-  const missing = CATALOG.filter((c) => !known.some((m) => m.id === c.id)).map((c) => c.id);
-  if (missing.length) throw new Error(`OpenRouter catalog is missing: ${missing.join(", ")}`);
+  const missing = catalog.filter((c) => !known.some((m) => m.id === c.id)).map((c) => c.id);
+  if (missing.length) throw new Error(`${live.name} catalog is missing: ${missing.join(", ")}`);
   const list = () =>
-    CATALOG.map((c) => {
+    catalog.map((c) => {
       const m = known.find((x) => x.id === c.id)!;
       return {
         ...c,
-        provider: "openrouter",
+        provider: live.id,
         contextWindow: m.contextWindow,
         reasoning: m.reasoning,
         cost: { input: m.cost.input, output: m.cost.output },
       };
     });
-  const defaultId = options.defaultModel ?? DEFAULT_MODEL;
+  const defaultId = options.defaultModel ?? live.fallback;
   const ref = (id: string): ModelRef => {
-    if (!CATALOG.some((c) => c.id === id))
-      throw new Error(`Unknown model ${id}. Pick one of the ${CATALOG.length} catalog models.`);
-    return { provider: "openrouter", modelId: id };
+    if (!catalog.some((c) => c.id === id))
+      throw new Error(`Unknown model ${id}. Pick one of the ${catalog.length} catalog models.`);
+    return { provider: live.id, modelId: id };
   };
   return {
     models,
-    provider: "openrouter",
+    provider: options.provider,
     defaultModel: ref(defaultId),
     list,
     ref,

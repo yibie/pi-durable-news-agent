@@ -14,7 +14,7 @@ export interface Config {
   rootDir: string;
   configDir: string;
   promptsDir: string;
-  provider: "openrouter" | "faux";
+  provider: "openrouter" | "deepseek" | "faux";
   jevBackend: "auto" | "fixture" | "mock" | "openrouter" | "typesafe";
   /** auto | web | fallback | firecrawl | fixture; SearchService warns on anything else and searches the web. */
   searchMode: string;
@@ -54,7 +54,13 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     strict: false,
   });
   const rootDir = repoRoot();
-  const provider = env.DNA_PROVIDER === "faux" ? "faux" : "openrouter";
+  const provider =
+    env.DNA_PROVIDER === "faux"
+      ? "faux"
+      : env.DNA_PROVIDER === "deepseek"
+        ? "deepseek"
+        : "openrouter";
+  const defaultModel = provider === "deepseek" ? "deepseek-flash" : "anthropic/claude-haiku-5.5";
   const searchMode = env.DNA_SEARCH_MODE?.trim() || "auto";
   const config: Config = {
     device: String(values.device ?? env.DNA_DEVICE_NAME ?? "local"),
@@ -75,8 +81,8 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     dailyCredits: int(env.DNA_FIRECRAWL_DAILY_CREDITS, 40),
     sweepQueries: int(env.DNA_SWEEP_QUERIES, 15),
     maxSavedSources: int(env.DNA_MAX_SAVED_SOURCES, 25),
-    model: env.DNA_MODEL ?? "anthropic/claude-haiku-5.5",
-    researchModel: env.DNA_RESEARCH_MODEL ?? env.DNA_MODEL ?? "anthropic/claude-haiku-5.5",
+    model: env.DNA_MODEL ?? defaultModel,
+    researchModel: env.DNA_RESEARCH_MODEL ?? env.DNA_MODEL ?? defaultModel,
     imageModel: env.DNA_IMAGE_MODEL ?? "gpt-image-2.5-flare",
     imageQuality: env.DNA_IMAGE_QUALITY ?? "low",
     openaiKey: env.OPENAI_API_KEY?.trim() || undefined,

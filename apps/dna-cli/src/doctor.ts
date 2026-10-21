@@ -7,13 +7,7 @@ import { managedLine, readCrontab } from "../../dna-server-cron/src/crontab.ts";
 import { probe, type Check } from "./net/probe.ts";
 import { searchEngines } from "./print.ts";
 
-const KEYS = [
-  "OPENROUTER_API_KEY",
-  "OPENAI_API_KEY",
-  "FIRECRAWL_API_KEY",
-  "DNA_CLIENT_TOKEN",
-  "DNA_CRON_TOKEN",
-];
+const KEYS = ["OPENAI_API_KEY", "FIRECRAWL_API_KEY", "DNA_CLIENT_TOKEN", "DNA_CRON_TOKEN"];
 const OPTIONAL: Record<string, string> = {
   OPENAI_API_KEY: "missing, cards without a source image show none",
   FIRECRAWL_API_KEY: "missing, search and page reads use the free engines",
@@ -28,7 +22,10 @@ export async function doctor(
   checks.push({ name: "Node 24", ok: major >= 24, detail: process.versions.node });
   const envFile = join(repoRoot(), ".env");
   const env = existsSync(envFile) ? readFileSync(envFile, "utf8") : "";
-  for (const key of KEYS) {
+  // The agents' key follows DNA_PROVIDER: DeepSeek's own API, or OpenRouter by default.
+  const provider = env.match(/^DNA_PROVIDER=(\S+)/m)?.[1] ?? process.env.DNA_PROVIDER;
+  const providerKey = provider === "deepseek" ? "DEEPSEEK_API_KEY" : "OPENROUTER_API_KEY";
+  for (const key of [providerKey, ...KEYS]) {
     const present = new RegExp(`^${key}=.+`, "m").test(env) || !!process.env[key];
     checks.push({
       name: `${key} is set`,
