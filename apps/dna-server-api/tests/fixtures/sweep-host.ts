@@ -14,6 +14,8 @@ const config = loadConfig([], {
   DNA_PROVIDER: "faux",
   DNA_SEARCH_MODE: "fixture",
   DNA_DATA_DIR: dir,
+  // Tests run on the shipped defaults, even when .env points a device at its own config.
+  DNA_CONFIG_DIR: "",
 });
 const app = await openApp(config);
 

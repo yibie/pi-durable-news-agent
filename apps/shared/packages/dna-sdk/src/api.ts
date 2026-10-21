@@ -163,6 +163,50 @@ export interface TasteQuestion {
   answeredAt?: string;
 }
 
+/** What a pick becomes: one post, a roundup of several cards, a tool recommendation, or a quote post. */
+export const PICK_GENRES = ["single", "roundup", "tool", "quote"] as const;
+export type PickGenre = (typeof PICK_GENRES)[number];
+/** Writing stages; phase one uses selected (in the basket) and dropped (put back into News). */
+export const PICK_STATUSES = ["selected", "drafting", "ready", "published", "dropped"] as const;
+export type PickStatus = (typeof PICK_STATUSES)[number];
+
+/** A card in a pick, with its url and title as they were when picked. */
+export interface PickItem {
+  cardId: number;
+  position: number;
+  url?: string;
+  title: string;
+  sourceName?: string;
+  addedAt: string;
+}
+
+export interface TopicPick {
+  id: number;
+  genre: PickGenre;
+  title?: string;
+  status: PickStatus;
+  note?: string;
+  items: PickItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePickBody {
+  cardIds: number[];
+  genre: PickGenre;
+  title?: string;
+}
+
+/** Every field is optional; addCardId and removeCardId change the pick's cards (a roundup grows or shrinks). */
+export interface UpdatePickBody {
+  genre?: PickGenre;
+  title?: string;
+  status?: PickStatus;
+  note?: string;
+  addCardId?: number;
+  removeCardId?: number;
+}
+
 export interface TasteState {
   keywords: Keyword[];
   recent: {
@@ -498,6 +542,8 @@ export type Frame =
   | { type: "feed.card_updated"; card: Card }
   | { type: "sweep"; sweep: Sweep }
   | { type: "taste.question"; question: TasteQuestion }
+  /** A pick was created or changed (including dropped, which takes it out of the basket). */
+  | { type: "pick"; pick: TopicPick }
   | { type: "agent.state"; state: AgentState }
   | { type: "usage"; usage: UsageDay }
   /** The agent opened a feed tab (open_tab) in every open browser. */

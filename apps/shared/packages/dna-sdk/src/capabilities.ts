@@ -49,6 +49,10 @@ export const CAPABILITIES = {
     routes: ["agent.compaction.get", "agent.compaction.set"],
   },
   "agent.compact": { summary: "Compact the context now", routes: ["agent.compact"] },
+  picks: {
+    summary: "Pick cards for writing: choose a genre, group a roundup, change or drop a pick",
+    routes: ["picks.list", "picks.create", "picks.update"],
+  },
   keywords: {
     summary: "List, add, weight, toggle and remove keywords",
     routes: ["keywords.list", "keywords.add", "keywords.update", "keywords.remove"],

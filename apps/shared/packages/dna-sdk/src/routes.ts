@@ -109,6 +109,24 @@ export const ROUTES = {
     scope: "feedback",
     summary: "Answer a taste question with labels",
   },
+  "picks.list": {
+    method: "GET",
+    path: "/v1/picks",
+    scope: "read",
+    summary: "Picks in the basket (status=all for every stage, dropped included)",
+  },
+  "picks.create": {
+    method: "POST",
+    path: "/v1/picks",
+    scope: "feedback",
+    summary: "Pick cards for writing with a genre: single, roundup, tool or quote",
+  },
+  "picks.update": {
+    method: "POST",
+    path: "/v1/picks/:id",
+    scope: "feedback",
+    summary: "Change a pick's genre, title, note or status, or add and remove a card",
+  },
   "keywords.list": {
     method: "GET",
     path: "/v1/keywords",

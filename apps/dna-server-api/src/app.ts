@@ -12,6 +12,7 @@ import { infoRoutes } from "./routes/info.ts";
 import { keywordRoutes } from "./routes/keywords.ts";
 import { logRoutes } from "./routes/logs.ts";
 import { sourceRoutes } from "./routes/sources.ts";
+import { pickRoutes } from "./routes/picks.ts";
 import { tasteRoutes } from "./routes/taste.ts";
 import type { Handlers } from "./routes/types.ts";
 import { scheduleRoutes } from "./routes/schedule.ts";
@@ -28,6 +29,7 @@ export function createHttpApp(app: App) {
     ...scheduleRoutes(deps),
     ...feedRoutes(deps),
     ...tasteRoutes(deps),
+    ...pickRoutes(deps),
     ...keywordRoutes(deps),
     ...sourceRoutes(deps),
     ...agentRoutes(deps),

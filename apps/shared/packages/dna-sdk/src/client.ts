@@ -7,6 +7,7 @@ import type {
   CardDetail,
   CompactionBody,
   CompactionState,
+  CreatePickBody,
   FeedbackBody,
   FeedbackResult,
   Frame,
@@ -15,6 +16,7 @@ import type {
   LogLine,
   LogQuery,
   Page,
+  TopicPick,
   Timeline,
   TimelineSummary,
   ToolInfo,
@@ -31,6 +33,7 @@ import type {
   TasteState,
   ToolCallDetail,
   ToolCallRow,
+  UpdatePickBody,
   UsageDay,
   WorkflowResult,
 } from "./api.ts";
@@ -281,6 +284,17 @@ export class DnaClient {
       params: { id: questionId },
       body: { labels },
     });
+  }
+
+  // ------------------------------------------------------------ picks
+  picks(status: "active" | "all" = "active") {
+    return this.call<TopicPick[]>("picks.list", { query: { status } });
+  }
+  pick(body: CreatePickBody) {
+    return this.call<TopicPick>("picks.create", { body });
+  }
+  updatePick(id: number, body: UpdatePickBody) {
+    return this.call<TopicPick>("picks.update", { params: { id }, body });
   }
 
   // ------------------------------------------------------------ settings

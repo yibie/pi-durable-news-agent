@@ -9,9 +9,12 @@ import {
   DnaError,
   follow,
   HFS_CATEGORIES,
+  PICK_GENRES,
   searchQuery,
   type Frame,
   type HfsCategory,
+  type PickGenre,
+  type TopicPick,
 } from "@dna/sdk";
 import {
   createLogger,
@@ -253,6 +256,38 @@ const COMMANDS: Record<string, Command> = {
       }
       const q = await client().answer(num(args[0], "question id"), labels(args.slice(1)));
       return { data: q, text: `Answered #${q.id}: ${q.answerLabels.join(", ") || "none"}` };
+    },
+  },
+  picks: {
+    usage:
+      "picks [all] | picks add <card id> <single|roundup|tool|quote> | picks join <pick id> <card id> | picks remove <pick id> <card id> | picks genre <pick id> <genre> | picks drop <pick id>",
+    summary:
+      "Picks in the basket, or pick a card, grow or shrink a roundup, change a genre, drop a pick",
+    async run() {
+      const [action, a, b] = args;
+      const genre = (value: string | undefined) => {
+        if (!PICK_GENRES.includes(value as PickGenre))
+          throw new Usage(`Genres are: ${PICK_GENRES.join(", ")}`);
+        return value as PickGenre;
+      };
+      const shown = (p: TopicPick) => ({ data: p, text: print.pickLines(p).join("\n") });
+      if (!action || action === "all") {
+        const list = await client().picks(action === "all" ? "all" : "active");
+        return {
+          data: list,
+          text: list.length ? list.flatMap(print.pickLines).join("\n") : "No picks yet.",
+        };
+      }
+      if (action === "add")
+        return shown(await client().pick({ cardIds: [num(a, "card id")], genre: genre(b) }));
+      const id = num(a, "pick id");
+      if (action === "join")
+        return shown(await client().updatePick(id, { addCardId: num(b, "card id") }));
+      if (action === "remove")
+        return shown(await client().updatePick(id, { removeCardId: num(b, "card id") }));
+      if (action === "genre") return shown(await client().updatePick(id, { genre: genre(b) }));
+      if (action === "drop") return shown(await client().updatePick(id, { status: "dropped" }));
+      throw new Usage("picks actions are: all, add, join, remove, genre, drop");
     },
   },
   send: {

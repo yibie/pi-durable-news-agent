@@ -18,6 +18,7 @@ import {
   type TasteQuestion,
   type TimelineSummary,
   type ToolInfo,
+  type TopicPick,
   type ToolCallDetail,
   type UsageDay,
 } from "@dna/sdk";
@@ -186,6 +187,13 @@ export const leadsLine = (leads: { site: string }[] | undefined) =>
     : "";
 export const questionLine = (q: TasteQuestion) =>
   `#${pad(q.id, 4)} ${q.status}  ${cleanText(q.question)}${q.cardId ? `  (card ${q.cardId})` : ""}`;
+/** A pick and its cards, one line each: id, genre, stage and title, then card id, title and url. */
+export const pickLines = (p: TopicPick): string[] => [
+  `#${pad(p.id, 4)} ${pad(p.genre, 8)} ${p.status}${p.title ? `  ${cleanText(p.title)}` : ""}`,
+  ...p.items.map(
+    (i) => `      card ${pad(i.cardId, 5)} ${cleanText(i.title)}${i.url ? `  ${i.url}` : ""}`,
+  ),
+];
 export const usageLine = (u: UsageDay) =>
   `${u.day}  model ${usd(u.modelUsd)}  jev ${usd(u.jevUsd)} (${u.jevCalls} calls)  images ${usd(u.imageUsd)}  ${k(u.tokensIn)} in  ${k(u.tokensOut)} out  firecrawl ${u.firecrawlCredits}  sweeps ${u.sweeps}`;
 

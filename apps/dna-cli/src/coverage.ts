@@ -14,6 +14,7 @@ export const CLI_COMMANDS: Record<CapabilityId, string> = {
   "feedback.label": "label",
   "taste.read": "taste",
   "taste.answer": "answer",
+  picks: "picks",
   "chat.send": "send",
   "chat.watch": "watch",
   "chat.abort": "abort",

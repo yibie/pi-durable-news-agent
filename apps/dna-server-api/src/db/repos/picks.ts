@@ -1,0 +1,133 @@
+// Picks: cards the reader chose to write about, each with a genre and a stage. Items keep the card's url and title as
+// they were when picked. A card sits in at most one pick that is not dropped; dropping a pick releases its cards.
+import type { TopicPick, PickGenre, PickItem, PickStatus } from "@dna/sdk";
+import { type Db, nowIso, str, tx } from "../db.ts";
+
+/** What a pick records about a card. */
+export interface PickCard {
+  id: number;
+  url?: string;
+  title: string;
+  sourceName?: string;
+}
+
+const toItem = (r: any): PickItem => ({
+  cardId: r.card_id,
+  position: r.position,
+  url: str(r.url),
+  title: r.title,
+  sourceName: str(r.source_name),
+  addedAt: r.added_at,
+});
+
+export class PicksRepo {
+  constructor(private readonly db: Db) {}
+
+  get(id: number): TopicPick | undefined {
+    const r = this.db.prepare("SELECT * FROM picks WHERE id = ?").get(id);
+    return r ? this.toPick(r) : undefined;
+  }
+
+  /** Picks newest first; dropped ones only when asked. */
+  list(includeDropped = false): TopicPick[] {
+    const where = includeDropped ? "" : "WHERE status != 'dropped'";
+    return (this.db.prepare(`SELECT * FROM picks ${where} ORDER BY id DESC`).all() as any[]).map(
+      (r) => this.toPick(r),
+    );
+  }
+
+  /** The pick that is not dropped and holds this card, if any. */
+  activeFor(cardId: number): TopicPick | undefined {
+    const r = this.db
+      .prepare(
+        `SELECT p.* FROM picks p JOIN pick_items i ON i.pick_id = p.id
+         WHERE i.card_id = ? AND p.status != 'dropped' ORDER BY p.id DESC LIMIT 1`,
+      )
+      .get(cardId);
+    return r ? this.toPick(r) : undefined;
+  }
+
+  create(genre: PickGenre, cards: PickCard[], title?: string): TopicPick {
+    return tx(this.db, () => {
+      const now = nowIso();
+      const id = Number(
+        this.db
+          .prepare("INSERT INTO picks (genre, title, created_at, updated_at) VALUES (?, ?, ?, ?)")
+          .run(genre, title ?? null, now, now).lastInsertRowid,
+      );
+      cards.forEach((card, position) => this.insertItem(id, card, position, now));
+      return this.get(id)!;
+    });
+  }
+
+  update(
+    id: number,
+    patch: { genre?: PickGenre; title?: string; status?: PickStatus; note?: string },
+  ): TopicPick | undefined {
+    const now = nowIso();
+    this.db
+      .prepare(
+        `UPDATE picks SET genre = COALESCE(:genre, genre), title = COALESCE(:title, title),
+         status = COALESCE(:status, status), note = COALESCE(:note, note), updated_at = :now WHERE id = :id`,
+      )
+      .run({
+        id,
+        now,
+        genre: patch.genre ?? null,
+        title: patch.title ?? null,
+        status: patch.status ?? null,
+        note: patch.note ?? null,
+      });
+    return this.get(id);
+  }
+
+  addItem(id: number, card: PickCard): TopicPick | undefined {
+    return tx(this.db, () => {
+      const next = this.db
+        .prepare("SELECT COALESCE(MAX(position) + 1, 0) AS n FROM pick_items WHERE pick_id = ?")
+        .get(id) as { n: number };
+      const now = nowIso();
+      this.insertItem(id, card, next.n, now);
+      this.touch(id, now);
+      return this.get(id);
+    });
+  }
+
+  removeItem(id: number, cardId: number): TopicPick | undefined {
+    const now = nowIso();
+    this.db.prepare("DELETE FROM pick_items WHERE pick_id = ? AND card_id = ?").run(id, cardId);
+    this.touch(id, now);
+    return this.get(id);
+  }
+
+  private insertItem(id: number, card: PickCard, position: number, now: string) {
+    this.db
+      .prepare(
+        `INSERT OR IGNORE INTO pick_items (pick_id, card_id, position, url, title, source_name, added_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(id, card.id, position, card.url ?? null, card.title, card.sourceName ?? null, now);
+  }
+
+  private touch(id: number, now: string) {
+    this.db.prepare("UPDATE picks SET updated_at = ? WHERE id = ?").run(now, id);
+  }
+
+  private toPick(r: any): TopicPick {
+    const items = (
+      this.db
+        .prepare("SELECT * FROM pick_items WHERE pick_id = ? ORDER BY position, added_at")
+        .all(r.id) as any[]
+    ).map(toItem);
+    return {
+      id: r.id,
+      genre: r.genre,
+      title: str(r.title),
+      status: r.status,
+      note: str(r.note),
+      items,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    };
+  }
+}

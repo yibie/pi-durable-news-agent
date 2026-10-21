@@ -22,12 +22,15 @@ import {
   follow,
   k,
   newRequestId,
+  PICK_GENRES,
   searchQuery,
   sumUsage,
   usd,
   type ConnectionState,
   type Info,
+  type PickGenre,
   type Timeline,
+  type TopicPick,
   type WireAssistantMessage,
 } from "@dna/sdk";
 import * as print from "../../dna-cli/src/print.ts";
@@ -146,15 +149,16 @@ export class App {
 
   private async loadSnapshot() {
     await this.run(async () => {
-      const [info, page, sweeps, questions, agent] = await Promise.all([
+      const [info, page, sweeps, questions, picks, agent] = await Promise.all([
         this.client.info(),
         this.client.feed({ limit: 200 }),
         this.client.sweeps({ limit: 30 }),
         this.client.questions("open"),
+        this.client.picks(),
         this.client.agent(),
       ]);
       this.info = info;
-      this.feed.load({ cards: page.items, sweeps, questions, agent });
+      this.feed.load({ cards: page.items, sweeps, questions, picks, agent });
     });
   }
 
@@ -342,6 +346,37 @@ export class App {
           this.feed.apply({ type: "taste.question", question: q });
           this.show("chat");
           return this.flash(`Answered ${q.id}: ${labels.join(" ") || "none"}`);
+        }
+        case "picks": {
+          const [action] = words;
+          const genre = (value: string | undefined) => {
+            if (!PICK_GENRES.includes(value as PickGenre))
+              throw new Error(`Genres are ${PICK_GENRES.join(", ")}`);
+            return value as PickGenre;
+          };
+          const done = (p: TopicPick, what: string) => {
+            this.feed.apply({ type: "pick", pick: p });
+            return this.flash(`${what} pick ${p.id} (${p.genre}, ${p.items.length} cards)`);
+          };
+          if (!action || action === "all") {
+            const list = await cl.picks(action === "all" ? "all" : "active");
+            return this.show(
+              "detail",
+              "picks",
+              list.length ? list.flatMap(print.pickLines) : [c.muted("No picks yet.")],
+            );
+          }
+          if (action === "add")
+            return done(await cl.pick({ cardIds: [id(1)], genre: genre(words[2]) }), "Added to");
+          if (action === "join")
+            return done(await cl.updatePick(id(1), { addCardId: id(2) }), "Joined");
+          if (action === "remove")
+            return done(await cl.updatePick(id(1), { removeCardId: id(2) }), "Removed from");
+          if (action === "genre")
+            return done(await cl.updatePick(id(1), { genre: genre(words[2]) }), "Changed");
+          if (action === "drop")
+            return done(await cl.updatePick(id(1), { status: "dropped" }), "Dropped");
+          throw new Error("/picks actions are all, add, join, remove, genre and drop");
         }
         case "keywords": {
           const kind = words[0] as (typeof KEYWORD_KINDS)[number] | undefined;

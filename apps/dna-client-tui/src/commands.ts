@@ -1,6 +1,6 @@
 // Slash commands with argument completions. Each declares the capability it covers; plain text goes to the agent.
 import type { AutocompleteItem, SlashCommand } from "@earendil-works/pi-tui";
-import { HFS_CATEGORIES, type CapabilityId, type HfsCategory } from "@dna/sdk";
+import { HFS_CATEGORIES, PICK_GENRES, type CapabilityId, type HfsCategory } from "@dna/sdk";
 
 export const KEYWORD_KINDS = ["topic", "signal", "facts", "hype"] as const;
 export const THINKING = ["off", "minimal", "low", "medium", "high"] as const;
@@ -114,6 +114,24 @@ export function buildCommands(state: CompletionState): Command[] {
       getArgumentCompletions: (arg) =>
         lastWord(arg, (i, words) =>
           i === 0 ? state.questionIds() : HFS_CATEGORIES.filter((c) => !words.includes(c)),
+        ),
+    },
+    {
+      name: "picks",
+      cap: "picks",
+      description: "picks for writing: add, join a roundup, remove, genre, drop",
+      argumentHint: "[add <card> <genre> | join <pick> <card> | remove | genre | drop]",
+      getArgumentCompletions: (arg) =>
+        lastWord(arg, (i, words) =>
+          i === 0
+            ? ["all", "add", "join", "remove", "genre", "drop"]
+            : i === 1 && words[0] === "add"
+              ? state.cardIds()
+              : i === 2 && (words[0] === "add" || words[0] === "genre")
+                ? [...PICK_GENRES]
+                : i === 2 && words[0] === "join"
+                  ? state.cardIds()
+                  : [],
         ),
     },
     {
