@@ -70,7 +70,9 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     port: int(values.port as string | undefined, int(env.DNA_PORT, 4850)),
     dataDir: resolve(String(values["data-dir"] ?? env.DNA_DATA_DIR ?? join(rootDir, "data"))),
     rootDir,
-    configDir: join(APP_DIR, "config"),
+    configDir: env.DNA_CONFIG_DIR?.trim()
+      ? resolve(rootDir, env.DNA_CONFIG_DIR.trim())
+      : join(APP_DIR, "config"),
     promptsDir: join(APP_DIR, "prompt_engineering"),
     provider,
     jevBackend:

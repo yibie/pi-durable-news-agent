@@ -1,0 +1,730 @@
+{
+  "sources": [
+    {
+      "kind": "hn_front",
+      "name": "Hacker News front page",
+      "interval_min": 30,
+      "weight": 1.15
+    },
+    {
+      "kind": "hn_search",
+      "name": "Hacker News search",
+      "interval_min": 30,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "Lobsters AI",
+      "url": "https://lobste.rs/t/ai.rss",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "openai.com/blog",
+      "url": "https://openai.com/blog/rss.xml",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "anthropic.com/engineering",
+      "url": "https://anthropic.com/engineering",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "web_page",
+      "name": "anthropic.com/research",
+      "url": "https://anthropic.com/research",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "deepmind.google/blog",
+      "url": "https://deepmind.google/blog/rss.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "ai.meta.com/blog",
+      "url": "https://ai.meta.com/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "claude.dev",
+      "url": "https://claude.dev",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "blog.google/innovation-and-ai",
+      "url": "https://blog.google/technology/ai/rss/",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "developers.googleblog.com",
+      "url": "https://developers.googleblog.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "cloud.google.com/blog/products/ai-machine-learning",
+      "url": "https://cloud.google.com/blog/products/ai-machine-learning",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "openai.com/news",
+      "url": "https://openai.com/blog/rss.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "anthropic.com/news",
+      "url": "https://anthropic.com/news",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "microsoft.ai/news",
+      "url": "https://microsoft.ai/news",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "x.ai/news",
+      "url": "https://x.ai/news",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "mistral.ai/news",
+      "url": "https://mistral.ai/rss.xml",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "web_page",
+      "name": "cohere.com/blog",
+      "url": "https://cohere.com/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "cursor.com/blog",
+      "url": "https://cursor.com/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "blog.replit.com",
+      "url": "https://blog.replit.com/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "langchain.com/blog",
+      "url": "https://www.langchain.com/blog/rss.xml",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "stripe.dev/blog",
+      "url": "https://stripe.dev/blog/feed",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "notion.com/blog/topic/engineering",
+      "url": "https://notion.com/blog/topic/engineering",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "nextjs.org/blog",
+      "url": "https://nextjs.org/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "huggingface.co/blog",
+      "url": "https://huggingface.co/blog/feed.xml",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "together.ai/blog",
+      "url": "https://www.together.ai/blog/rss.xml",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "web_page",
+      "name": "fireworks.ai/blog",
+      "url": "https://fireworks.ai/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "groq.com/blog",
+      "url": "https://groq.com/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "modal.com/blog",
+      "url": "https://modal.com/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "blogs.nvidia.com",
+      "url": "https://blogs.nvidia.com/feed/",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "machinelearning.apple.com",
+      "url": "https://machinelearning.apple.com/rss.xml",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "aws.amazon.com/blogs/machine-learning",
+      "url": "https://aws.amazon.com/blogs/machine-learning/feed",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "huyenchip.com",
+      "url": "https://huyenchip.com/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "hamel.dev",
+      "url": "https://hamel.dev/index.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "jxnl.co/writing",
+      "url": "https://jxnl.co/writing",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "eugeneyan.com/writing",
+      "url": "https://eugeneyan.com/writing",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "lilianweng.github.io",
+      "url": "https://lilianweng.github.io/index.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "blog.garrytan.com",
+      "url": "https://blog.garrytan.com/rss.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "atom",
+      "name": "simonwillison.net",
+      "url": "https://simonwillison.net/atom/everything/",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "linear.app/blog",
+      "url": "https://linear.app/blog",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "atom",
+      "name": "lucumr.pocoo.org",
+      "url": "https://lucumr.pocoo.org/feed.atom",
+      "interval_min": 60,
+      "weight": 1.2
+    },
+    {
+      "kind": "rss",
+      "name": "hillelwayne.com",
+      "url": "https://hillelwayne.com/index.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "andrewkelley.me",
+      "url": "https://andrewkelley.me/rss.xml",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "atom",
+      "name": "htmx.org/essays",
+      "url": "https://htmx.org/essays/atom.xml",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "sqlite.org/forum",
+      "url": "https://sqlite.org/forum/timeline.rss",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "surfingcomplexity.blog",
+      "url": "https://surfingcomplexity.blog/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "blog.jim-nielsen.com",
+      "url": "https://blog.jim-nielsen.com/feed.xml",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "po-ru.com",
+      "url": "https://po-ru.com/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "nnethercote.github.io",
+      "url": "https://nnethercote.github.io/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "fasterthanli.me",
+      "url": "https://fasterthanli.me",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "charity.wtf",
+      "url": "https://charity.wtf/feed.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "eli.thegreenplace.net",
+      "url": "https://eli.thegreenplace.net",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "lastweekinaws.com",
+      "url": "https://lastweekinaws.com/feed",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "interconnected.org/home",
+      "url": "https://interconnected.org/home/feed",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "simonsarris.com",
+      "url": "https://simonsarris.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "paulgraham.com",
+      "url": "https://paulgraham.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "ben-evans.com",
+      "url": "https://www.ben-evans.com/benedictevans?format=rss",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "web_page",
+      "name": "ribbonfarm.com",
+      "url": "https://ribbonfarm.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "studio.ribbonfarm.com",
+      "url": "https://studio.ribbonfarm.com/feed.xml",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "oneusefulthing.org",
+      "url": "https://www.oneusefulthing.org/feed",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "contraptions.venkateshrao.com",
+      "url": "https://contraptions.venkateshrao.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "calv.info",
+      "url": "https://calv.info",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "pwning.systems",
+      "url": "https://pwning.systems",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "kookerella.com",
+      "url": "https://kookerella.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "hadijaveed.me",
+      "url": "https://hadijaveed.me",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "timharford.com",
+      "url": "https://timharford.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "embracethered.com",
+      "url": "https://embracethered.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "terminal-bench-science.ai",
+      "url": "https://terminal-bench-science.ai",
+      "interval_min": 60,
+      "weight": 1.2
+    },
+    {
+      "kind": "web_page",
+      "name": "artificialanalysis.ai",
+      "url": "https://artificialanalysis.ai",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "every.to",
+      "url": "https://every.to",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "du-xiang.com",
+      "url": "https://du-xiang.com",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "answer.ai",
+      "url": "https://answer.ai/index.xml",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "llamaindex.ai/blog",
+      "url": "https://llamaindex.ai/blog",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "context.ai/blog",
+      "url": "https://context.ai/blog",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "blog.pragmaticengineer.com",
+      "url": "https://blog.pragmaticengineer.com/rss/",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "aihero.dev/posts",
+      "url": "https://www.aihero.dev/rss.xml",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "404media.co/rss",
+      "url": "https://www.404media.co/rss/",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "rss",
+      "name": "arstechnica.com/feed",
+      "url": "https://arstechnica.com/feed/",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "rss",
+      "name": "theverge.com/rss/index.xml",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "rss",
+      "name": "techcrunch.com/feed",
+      "url": "https://techcrunch.com/feed/",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "rss",
+      "name": "platformer.news/rss",
+      "url": "https://www.platformer.news/rss/",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "technologyreview.com/feed",
+      "url": "https://www.technologyreview.com/feed/",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "rss",
+      "name": "wired.com/feed/rss",
+      "url": "https://www.wired.com/feed/rss",
+      "interval_min": 60,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "momo5502.com/posts",
+      "url": "https://momo5502.com/posts",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "blog.chrislewis.au",
+      "url": "https://blog.chrislewis.au",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "decomp.dev",
+      "url": "https://decomp.dev",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "r/emulation",
+      "url": "https://www.reddit.com/r/emulation/new/.rss",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "r/ReverseEngineering",
+      "url": "https://www.reddit.com/r/ReverseEngineering/new/.rss",
+      "interval_min": 60,
+      "weight": 1.0
+    },
+    {
+      "kind": "rss",
+      "name": "r/LocalLLaMA",
+      "url": "https://www.reddit.com/r/LocalLLaMA/new/.rss",
+      "interval_min": 60,
+      "weight": 1.3
+    },
+    {
+      "kind": "rss",
+      "name": "r/ClaudeAI",
+      "url": "https://www.reddit.com/r/ClaudeAI/new/.rss",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "r/MachineLearning",
+      "url": "https://www.reddit.com/r/MachineLearning/new/.rss",
+      "interval_min": 60,
+      "weight": 1.15
+    },
+    {
+      "kind": "rss",
+      "name": "Latent Space",
+      "url": "https://www.latent.space/feed",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "github_releases",
+      "name": "pi releases",
+      "url": "https://github.com/earendil-works/pi/releases.atom",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "github_releases",
+      "name": "Claude Code releases",
+      "url": "https://github.com/anthropics/claude-code/releases.atom",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "github_releases",
+      "name": "Codex CLI releases",
+      "url": "https://github.com/openai/codex/releases.atom",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "github_releases",
+      "name": "Gemini CLI releases",
+      "url": "https://github.com/google-gemini/gemini-cli/releases.atom",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "rss",
+      "name": "The Decoder",
+      "url": "https://the-decoder.com/feed/",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "rss",
+      "name": "GitHub Blog",
+      "url": "https://github.blog/feed/",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "atom",
+      "name": "Epoch AI",
+      "url": "https://epoch.ai/atom.xml",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "rss",
+      "name": "METR",
+      "url": "https://metr.org/feed.xml",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "atom",
+      "name": "Aider blog",
+      "url": "https://aider.chat/feed.xml",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "github_releases",
+      "name": "SWE-bench releases",
+      "url": "https://github.com/SWE-bench/SWE-bench/releases.atom",
+      "interval_min": 15,
+      "weight": 0.9
+    },
+    {
+      "kind": "web_page",
+      "name": "Hugging Face Papers",
+      "url": "https://huggingface.co/papers",
+      "interval_min": 30,
+      "weight": 0.9
+    },
+    {
+      "kind": "web_page",
+      "name": "ARC Prize blog",
+      "url": "https://arcprize.org/blog",
+      "interval_min": 30,
+      "weight": 0.9
+    }
+  ]
+}

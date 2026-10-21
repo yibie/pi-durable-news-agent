@@ -61,6 +61,8 @@ export async function bootServer(env: Record<string, string> = {}): Promise<Boot
           DNA_DATA_DIR: dir,
           DNA_LOG_DIR: join(dir, "logs"),
           DNA_DEVICE_NAME: "test",
+          // Tests run on the shipped defaults, even when .env points a device at its own config.
+          DNA_CONFIG_DIR: "",
           DNA_CLIENT_TOKEN: tokens.client,
           DNA_CRON_TOKEN: tokens.cron,
           ...env,

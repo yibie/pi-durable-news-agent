@@ -1,0 +1,57 @@
+{
+  "topic": [
+    "agent harness design",
+    "agent architecture",
+    "context engineering",
+    "RAG retrieval",
+    "local LLM",
+    "open-weight model",
+    "AI evals",
+    "AI product design",
+    "coding agents",
+    "Claude Code",
+    "AI code review",
+    "engineering with AI agents",
+    "personal AI agent",
+    "consumer AI assistant",
+    "agent skills",
+    "AI workflow how-to",
+    "AI decompilation",
+    "reverse engineering with AI"
+  ],
+  "hype": [
+    "AGI",
+    "game changer",
+    "10x",
+    "revolutionary",
+    "replaces engineers",
+    "valuation",
+    "funding round"
+  ],
+  "facts": [
+    "release notes",
+    "changelog",
+    "benchmark results",
+    "paper",
+    "documentation",
+    "open source",
+    "leaderboard",
+    "SWE-bench",
+    "Terminal-Bench",
+    "ARC-AGI",
+    "eval results",
+    "pass@1",
+    "methodology",
+    "reproducible"
+  ],
+  "signal": [
+    "breaking change",
+    "migration",
+    "new API",
+    "pricing change",
+    "deprecation",
+    "security advisory",
+    "available now",
+    "how to"
+  ]
+}
