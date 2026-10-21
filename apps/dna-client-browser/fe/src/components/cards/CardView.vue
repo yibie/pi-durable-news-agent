@@ -9,6 +9,7 @@ import { clean } from "../../client/text";
 import { now, referenceInChat, ui } from "../../client/store";
 import FeedbackBar from "../FeedbackBar.vue";
 import HfsPill from "../HfsPill.vue";
+import PickBar from "../PickBar.vue";
 import { cardComponent } from "./registry";
 
 const props = defineProps<{ card: Card }>();
@@ -85,10 +86,11 @@ const image = computed(() =>
           {{ card.sources!.length }} sources
         </button>
         <span class="grow" />
+        <PickBar :card="card" />
         <button
           class="icon-button small"
           aria-label="Reference in chat"
-          title="Reference this card in the chat"
+          title="在对话里引用这张卡：把卡片编号和标题放进右边的输入框"
           @click="reference"
         >
           <MessageSquareQuote :size="14" />
@@ -97,7 +99,7 @@ const image = computed(() =>
           class="icon-button small"
           data-cap="card.read"
           aria-label="Card details"
-          title="Details"
+          title="详情：来源、相关度、值得看的程度、话题，以及研究子 agent 读完原文后列出的要点"
           @click="ui.card = card.id"
         >
           <Info :size="14" />
@@ -109,7 +111,7 @@ const image = computed(() =>
           target="_blank"
           rel="noopener"
           aria-label="Open the source"
-          title="Open the source"
+          title="打开原文"
           ><ExternalLink :size="14"
         /></a>
       </div>

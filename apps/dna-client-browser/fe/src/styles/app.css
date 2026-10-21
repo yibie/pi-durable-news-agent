@@ -2036,3 +2036,152 @@ a.source:hover {
   gap: 12px;
   padding: 18px var(--s2);
 }
+
+/* Picks: the card's writing actions and the 选题篮 column */
+.pick-bar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.pick-action:hover,
+.pick-action[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--muted);
+}
+.pick-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+}
+.pick-menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  text-align: left;
+  color: var(--text);
+}
+.pick-menu button:hover {
+  background: var(--panel);
+}
+.pick-menu small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.picks-column {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+.picks-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+  font-weight: 500;
+}
+.picks-bar small {
+  color: var(--muted);
+}
+.picks-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.picks-empty {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 4px;
+}
+.pick {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pick.roundup {
+  border-color: var(--accent);
+}
+.pick-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pick-genre {
+  font-size: 12px;
+}
+.pick-count {
+  color: var(--muted);
+}
+.pick-drop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 3px 6px;
+  border: 1px solid transparent;
+}
+.pick-drop:hover {
+  color: var(--text);
+  border-color: var(--line);
+}
+.pick-items {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pick-items li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pick-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pick-title {
+  color: var(--text);
+  text-decoration: none;
+}
+a.pick-title:hover {
+  text-decoration: underline;
+}
+.pick-item-text small {
+  color: var(--muted);
+  font-size: 11px;
+}

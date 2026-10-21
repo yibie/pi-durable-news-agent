@@ -73,15 +73,16 @@ export async function refreshInfo() {
 }
 
 async function loadSnapshot() {
-  const [i, page, sweeps, questions, state] = await Promise.all([
+  const [i, page, sweeps, questions, picks, state] = await Promise.all([
     api.info(),
     api.feed({ limit: 1000 }),
     api.sweeps({ limit: 30 }),
     api.questions("open"),
+    api.picks(),
     api.agent(),
   ]);
   info.value = i;
-  feed.load({ cards: page.items, sweeps, questions, agent: state });
+  feed.load({ cards: page.items, sweeps, questions, picks, agent: state });
   loaded.value = true;
 }
 

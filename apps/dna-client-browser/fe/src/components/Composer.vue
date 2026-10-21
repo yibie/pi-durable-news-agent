@@ -69,24 +69,27 @@ async function abort() {
       v-model="text"
       rows="2"
       aria-label="Message the agent"
-      placeholder="Ask about the news, or tell the agent what to watch"
+      placeholder="问它新闻相关的问题，或者告诉它要关注什么"
       @keydown="onKey"
     />
     <div class="composer-row">
-      <label class="when-busy"
-        ><span>When busy</span>
+      <label
+        class="when-busy"
+        title="它正在干活时你发消息：排队是等它做完再处理，插话是打断它、按你的话改方向"
+        ><span>忙时</span>
         <select v-model="mode" aria-label="When busy">
-          <option value="followUp">Follow up</option>
-          <option value="steer">Steer</option>
+          <option value="followUp">排队</option>
+          <option value="steer">插话</option>
         </select>
       </label>
       <button
         type="button"
         class="button secondary small model-toggle"
         :aria-pressed="layout.modelBar"
+        title="模型：显示或隐藏模型、思考强度和上下文用量"
         @click="layout.modelBar = !layout.modelBar"
       >
-        <Cpu :size="13" />Model
+        <Cpu :size="13" />模型
       </button>
       <span class="grow" />
       <button
@@ -95,9 +98,10 @@ async function abort() {
         data-cap="chat.abort"
         :disabled="!busy"
         aria-label="Stop the agent"
+        title="停止：让 agent 停下手头的事"
         @click="abort"
       >
-        <Square :size="13" />Stop
+        <Square :size="13" />停止
       </button>
       <button
         type="submit"
@@ -105,8 +109,9 @@ async function abort() {
         data-cap="chat.send"
         :disabled="!text.trim() || sending"
         aria-label="Send message"
+        title="发送（Enter）"
       >
-        <Send :size="14" />Send
+        <Send :size="14" />发送
       </button>
     </div>
   </form>

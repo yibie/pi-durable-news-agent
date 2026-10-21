@@ -4,6 +4,7 @@ import AgentColumn from "./components/AgentColumn.vue";
 import CardDetailDialog from "./components/CardDetailDialog.vue";
 import ExecutionsView from "./components/ExecutionsView.vue";
 import FeedColumn from "./components/FeedColumn.vue";
+import PicksColumn from "./components/PicksColumn.vue";
 import SettingsModal from "./components/SettingsModal.vue";
 import TopBar from "./components/TopBar.vue";
 import { layout } from "./client/layout";
@@ -14,10 +15,17 @@ let stop: (() => void) | undefined;
 onMounted(() => (stop = start()));
 onBeforeUnmount(() => stop?.());
 
+/** News takes the free width, the basket a fixed 340px, the agent its dragged width; a lone column fills the row. */
+const PICKS_WIDTH = 340;
 const grid = computed(() => {
-  if (layout.feed && layout.agent)
-    return { gridTemplateColumns: `minmax(320px, 1fr) 6px ${layout.agentWidth}px` };
-  return { gridTemplateColumns: "1fr" };
+  const open = [layout.feed, layout.picks, layout.agent].filter(Boolean).length;
+  if (open === 1) return { gridTemplateColumns: "1fr" };
+  const tracks = [
+    layout.feed ? "minmax(320px, 1fr)" : "",
+    layout.picks ? (layout.feed ? `${PICKS_WIDTH}px` : "minmax(300px, 1fr)") : "",
+    layout.agent ? `6px ${layout.agentWidth}px` : "",
+  ];
+  return { gridTemplateColumns: tracks.filter(Boolean).join(" ") };
 });
 
 let startX = 0;
@@ -39,8 +47,9 @@ function resizeMove(e: PointerEvent) {
     <TopBar />
     <main class="columns" :style="grid">
       <FeedColumn v-if="layout.feed" />
+      <PicksColumn v-if="layout.picks" />
       <div
-        v-if="layout.feed && layout.agent"
+        v-if="(layout.feed || layout.picks) && layout.agent"
         class="resize-handle"
         role="separator"
         aria-orientation="vertical"

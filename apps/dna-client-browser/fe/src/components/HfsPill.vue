@@ -8,6 +8,11 @@ import type { HfsCategory, HfsScores } from "@dna/sdk";
 const props = defineProps<{ hfs?: HfsScores }>();
 const ICONS = { signal: Zap, facts: BadgeCheck, hype: Megaphone };
 const NAMES: Record<HfsCategory, string> = { signal: "Signal", facts: "Facts", hype: "Hype" };
+const MEANINGS: Record<HfsCategory, string> = {
+  signal: "Signal：能不能拿来马上行动",
+  facts: "Facts：有没有扎实的事实依据",
+  hype: "Hype：炒作成分有多少",
+};
 const ranked = computed(() => props.hfs?.ranked ?? []);
 </script>
 
@@ -26,7 +31,7 @@ const ranked = computed(() => props.hfs?.ranked ?? []);
       :data-category="r.category"
       :data-score="r.score"
       :style="{ '--fill': `${Math.max(0, Math.min(100, r.score))}%` }"
-      :title="`${NAMES[r.category]} ${r.score} of 100, confidence ${Math.round(r.confidence * 100)} percent, ranked by jev`"
+      :title="`${NAMES[r.category]} ${r.score} 分（满分 100，jev 把握 ${Math.round(r.confidence * 100)}%）。${MEANINGS[r.category]}`"
     >
       <component :is="ICONS[r.category]" :size="i === 0 ? 15 : 13" />
       <span>{{ NAMES[r.category] }}</span>

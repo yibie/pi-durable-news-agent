@@ -7,6 +7,12 @@ import { api, attempt, notify } from "../client/store";
 const props = defineProps<{ card: Card }>();
 const ICONS = { hype: Megaphone, facts: BadgeCheck, signal: Zap };
 const NAMES: Record<HfsCategory, string> = { hype: "Hype", facts: "Facts", signal: "Signal" };
+/** What a label tells jev: it moves the keywords of that section and becomes an example for its next calls. */
+const TIPS: Record<HfsCategory, string> = {
+  signal: "标为 Signal：这条能拿来马上行动。纠正 jev 的判断，也会成为它以后的参考",
+  facts: "标为 Facts：这条有扎实的事实依据。纠正 jev 的判断，也会成为它以后的参考",
+  hype: "标为 Hype：这条主要是炒作。纠正 jev 的判断，也会成为它以后的参考",
+};
 /** Label buttons in the same order as the card's ranked H/F/S chips. */
 const order = computed<HfsCategory[]>(
   () => props.card.hfs?.ranked.map((r) => r.category) ?? [...HFS_CATEGORIES],
@@ -17,8 +23,8 @@ async function signal(value: "more" | "less") {
   if (r)
     notify(
       value === "more"
-        ? `Showing more like this${r.changed.length ? `, ${r.changed.map((c) => c.term).join(", ")} up` : ""}${r.leads?.length ? `. The next sweep looks at ${r.leads.map((l) => l.site).join(", ")} as a source` : ""}`
-        : `Hidden from News. Showing less like this${r.changed.length ? `, ${r.changed.map((c) => c.term).join(", ")} down` : ""}`,
+        ? `会多推这类内容${r.changed.length ? `：${r.changed.map((c) => c.term).join("、")} 权重上调` : ""}${r.leads?.length ? `。下一轮会把 ${r.leads.map((l) => l.site).join("、")} 当作新来源看看` : ""}`
+        : `已从候选中移除，同类内容会少推一些${r.changed.length ? `：${r.changed.map((c) => c.term).join("、")} 权重下调` : ""}`,
     );
 }
 async function label(category: HfsCategory) {
@@ -37,7 +43,7 @@ async function label(category: HfsCategory) {
       data-cap="feedback.more"
       :class="{ on: card.feedback?.signal === 'more' }"
       :aria-pressed="card.feedback?.signal === 'more'"
-      title="Show me more"
+      title="多看：调高这张卡所属话题和来源的权重"
       aria-label="Show me more"
       @click="signal('more')"
     >
@@ -48,14 +54,14 @@ async function label(category: HfsCategory) {
       data-cap="feedback.less"
       :class="{ on: card.feedback?.signal === 'less' }"
       :aria-pressed="card.feedback?.signal === 'less'"
-      title="Show me less"
+      title="少看：调低这张卡所属话题和来源的权重，并从候选中移除"
       aria-label="Show me less"
       @click="signal('less')"
     >
       <ThumbsDown :size="14" />
     </button>
     <span class="fb-labels" data-cap="feedback.label" role="group" aria-label="Your label">
-      <span class="fb-prefix" aria-hidden="true">Label</span>
+      <span class="fb-prefix" aria-hidden="true">标签</span>
       <button
         v-for="c in order"
         :key="c"
@@ -63,7 +69,7 @@ async function label(category: HfsCategory) {
         :class="[c, { on: card.feedback?.labels.includes(c) }]"
         :aria-pressed="!!card.feedback?.labels.includes(c)"
         :aria-label="`Label ${NAMES[c]}`"
-        :title="`Label this ${NAMES[c]}`"
+        :title="TIPS[c]"
         @click="label(c)"
       >
         <component :is="ICONS[c]" :size="13" />

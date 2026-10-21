@@ -74,6 +74,8 @@ const api = run(
     DNA_SEARCH_MODE: "fixture",
     DNA_FIXTURE_SET: "news",
     DNA_DATA_DIR: join(tmp, "data"),
+    // The suite runs on the shipped defaults, even when .env points this device at its own config.
+    DNA_CONFIG_DIR: "",
     DNA_DEVICE_NAME: "test",
     DNA_CLIENT_TOKEN: tokens.client,
     DNA_CRON_TOKEN: tokens.cron,
@@ -337,7 +339,7 @@ try {
   await opened.close();
 
   // ---------------------------------------------------------------- top bar and agent controls
-  for (const name of ["Executions", "Settings", "News", "Agent"])
+  for (const name of ["执行记录", "设置", "候选", "选题篮", "助手"])
     check(
       (await page.locator(".topbar .bar-button", { hasText: name }).count()) === 1,
       `the top bar button ${name} has a text label`,
@@ -349,9 +351,7 @@ try {
   const spendStat = page.locator('.topbar [data-cap="usage"]');
   check(
     /^\$\d/.test((await spendStat.innerText()).trim()) &&
-      /^Total spend: model \$.*, jev \$.*, images \$/.test(
-        (await spendStat.getAttribute("title")) ?? "",
-      ),
+      /^累计花费：模型 \$.*，jev \$.*，配图 \$/.test((await spendStat.getAttribute("title")) ?? ""),
     "the top bar shows total spend, with model, jev and images on hover",
   );
   const scheduleSelect = page.getByLabel("Sweep schedule");
@@ -551,11 +551,56 @@ try {
   const doomedId = await doomed.getAttribute("data-card-id");
   await doomed.getByRole("button", { name: "Show me less" }).click();
   await page.locator(`.feed-list [data-card-id="${doomedId}"]`).waitFor({ state: "detached" });
-  await page.locator(".toast", { hasText: "Hidden from News" }).waitFor();
+  await page.locator(".toast", { hasText: "已从候选中移除" }).waitFor();
   check(
     (await shownInNews()) === shownBefore - 1 &&
       (await call("GET", `/v1/cards/${doomedId}`)).card.feedback.signal === "less",
     "a thumbs down hides the card from News and records show me less",
+  );
+
+  // ---------------------------------------------------------------- picks: choose a genre, group a roundup, put back
+  const pickable = () => page.locator(".feed-list .feed-row .card");
+  const firstId = await pickable().first().getAttribute("data-card-id");
+  const secondId = await pickable().nth(1).getAttribute("data-card-id");
+  const newsBeforePicks = await shownInNews();
+  const first = page.locator(`.feed-list [data-card-id="${firstId}"]`);
+  await first.getByRole("button", { name: "Pick for writing" }).click();
+  await first.locator('.pick-menu [data-genre="roundup"]').click();
+  await page.locator(`.picks-column [data-pick-card="${firstId}"]`).waitFor();
+  await first.waitFor({ state: "detached" });
+  const roundup = (await call("GET", "/v1/picks")).find((p) =>
+    p.items.some((i) => String(i.cardId) === firstId),
+  );
+  check(
+    roundup?.genre === "roundup" &&
+      (await shownInNews()) === newsBeforePicks - 1 &&
+      (await call("GET", `/v1/cards/${firstId}`)).card.feedback.signal === "more",
+    "picking a card moves it from News into the basket and counts as show me more",
+  );
+  const second = page.locator(`.feed-list [data-card-id="${secondId}"]`);
+  await second.getByRole("button", { name: "Add to a roundup" }).click();
+  await second.locator(`.pick-menu [data-pick="${roundup.id}"]`).click();
+  await page.locator(`.picks-column [data-pick-card="${secondId}"]`).waitFor();
+  check(
+    (await call("GET", "/v1/picks"))
+      .find((p) => p.id === roundup.id)
+      .items.map((i) => String(i.cardId))
+      .join(",") === `${firstId},${secondId}`,
+    "a second card joins the roundup in the basket",
+  );
+  await page.screenshot({ path: join(shots, "picks.png") });
+  await collectCaps();
+  await cleanText("picks");
+  await page
+    .locator(`.picks-column [data-pick-id="${roundup.id}"]`)
+    .getByRole("button", { name: "Put the pick back" })
+    .click();
+  await page.locator(`.feed-list [data-card-id="${firstId}"]`).waitFor();
+  await page.locator(`.feed-list [data-card-id="${secondId}"]`).waitFor();
+  check(
+    (await shownInNews()) === newsBeforePicks &&
+      !(await call("GET", "/v1/picks")).some((p) => p.id === roundup.id),
+    "putting a pick back returns its cards to News",
   );
 
   // ---------------------------------------------------------------- tool row into executions
@@ -788,8 +833,10 @@ try {
     (await page.locator('[data-col="feed"]').count()) === 0,
     "the collapsed column stays collapsed after a reload",
   );
+  await page.getByRole("button", { name: "Toggle the picks column" }).click();
+  check((await page.locator('[data-col="picks"]').count()) === 0, "the picks column collapses");
   await page.getByRole("button", { name: "Toggle the agent column" }).click();
-  await page.locator(".toast", { hasText: "Keep one column open" }).waitFor();
+  await page.locator(".toast", { hasText: "至少保留一栏" }).waitFor();
   check(
     (await page.locator('[data-col="agent"]').count()) === 1,
     "the last open column cannot hide",

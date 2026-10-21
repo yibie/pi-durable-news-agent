@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // News and its tabs. News is always the first tab; timelines open from a card's chip, searches from the search box
-// or the agent's open_tab. A card you voted down leaves News (search and timeline tabs still show it).
+// or the agent's open_tab. A card you voted down or skipped leaves News, and so does a card in the picks basket
+// (search and timeline tabs still show both).
 import { computed } from "vue";
 import { GitCommitVertical, Hash, Link, Newspaper, Search, X } from "@lucide/vue";
 import { closeTab, layout, tabKey, type FeedTab } from "../client/layout";
@@ -20,8 +21,13 @@ const counts = computed(() => {
   return out;
 });
 /** News in the order it arrived, the newest card last and lowest; each rail shows when the item was published. */
+const picked = computed(
+  () => new Set(feedState.value.picks.flatMap((p) => p.items.map((i) => i.cardId))),
+);
 const news = computed(() =>
-  feedState.value.news.filter((c) => c.feedback?.signal !== "less").sort((a, b) => a.id - b.id),
+  feedState.value.news
+    .filter((c) => c.feedback?.signal !== "less" && !picked.value.has(c.id))
+    .sort((a, b) => a.id - b.id),
 );
 const label = (t: FeedTab) =>
   t.kind === "timeline" ? (feed.timeline(t.id)[0]?.timeline?.title ?? t.title) : t.value;
@@ -39,7 +45,7 @@ const active = computed(() => layout.tabs.find((t) => tabKey(t) === layout.tab))
           :aria-selected="layout.tab === 'news'"
           @click="layout.tab = 'news'"
         >
-          <Newspaper :size="15" /><span>News</span><small>{{ news.length }}</small>
+          <Newspaper :size="15" /><span>候选</span><small>{{ news.length }}</small>
         </button>
         <div
           v-for="t in layout.tabs"

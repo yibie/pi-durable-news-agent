@@ -4,6 +4,7 @@ import {
   Activity,
   Clock,
   Coins,
+  ListChecks,
   LoaderCircle,
   PanelLeft,
   PanelRight,
@@ -50,7 +51,13 @@ const spend = computed(() => agentState.value?.spend);
         <span class="tagline">News Worth Your Attention</span>
       </div>
     </div>
-    <div class="agent-status" data-cap="status" :class="{ working: busy }" aria-live="polite">
+    <div
+      class="agent-status"
+      data-cap="status"
+      :class="{ working: busy }"
+      aria-live="polite"
+      title="抓取状态：agent 是否在干活，以及离下一轮抓取还有多久。要装了定时任务才会按时自动抓取"
+    >
       <template v-if="connection !== 'live'"
         ><WifiOff :size="16" /><span>{{
           connection === "unauthorized" ? "Token refused" : "Reconnecting"
@@ -67,6 +74,7 @@ const spend = computed(() => agentState.value?.spend);
         class="schedule-select"
         data-cap="schedule"
         aria-label="Sweep schedule"
+        title="多久抓一轮新闻"
         :value="schedule.everyMinutes ?? 'off'"
         @change="setSchedule(($event.target as HTMLSelectElement).value)"
       >
@@ -77,7 +85,7 @@ const spend = computed(() => agentState.value?.spend);
         v-if="schedule"
         class="schedule-select"
         aria-label="Cards per sweep"
-        title="The most cards one sweep presents; jev ranks the candidates and keeps the top ones"
+        title="每轮最多出几张卡：jev 给候选打分排序，只留前几条"
         :value="schedule.cardsPerSweep"
         @change="setCards(($event.target as HTMLSelectElement).value)"
       >
@@ -96,47 +104,63 @@ const spend = computed(() => agentState.value?.spend);
         data-cap="usage"
         :title="
           spend
-            ? `Total spend: model ${usd(spend.modelUsd)}, jev ${usd(spend.jevUsd)}, images ${usd(spend.imageUsd)}`
-            : 'Total spend'
+            ? `累计花费：模型 ${usd(spend.modelUsd)}，jev ${usd(spend.jevUsd)}，配图 ${usd(spend.imageUsd)}。点开看每天的明细`
+            : '累计花费'
         "
         @click="go('/executions/usage')"
       >
         <Coins :size="15" />{{ usd(spend?.totalUsd ?? 0) }}
       </button>
-      <span class="stat device" :title="`Device ${info?.device ?? ''}`" data-testid="device"
+      <span class="stat device" :title="`连接的设备：${info?.device ?? ''}`" data-testid="device"
         ><Server :size="15" />{{ info?.deviceName ?? info?.device ?? "device" }}</span
       >
       <button
         class="bar-button"
         data-cap="runs.read"
         aria-label="Executions"
-        title="Executions"
+        title="执行记录：每一轮抓取、每次对话调了哪些工具，各花了多少钱"
         @click="go('/executions')"
       >
-        <Activity :size="16" /><span>Executions</span>
+        <Activity :size="16" /><span>执行记录</span>
       </button>
-      <button class="bar-button" aria-label="Settings" title="Settings" @click="ui.settings = true">
-        <SlidersHorizontal :size="16" /><span>Settings</span>
+      <button
+        class="bar-button"
+        aria-label="Settings"
+        title="设置：话题词、来源、搜索引擎、口味、工具"
+        @click="ui.settings = true"
+      >
+        <SlidersHorizontal :size="16" /><span>设置</span>
       </button>
       <button
         class="bar-button"
         :class="{ on: layout.feed }"
         :aria-pressed="layout.feed"
         aria-label="Toggle the news column"
-        title="News column"
+        title="显示或隐藏候选栏"
         @click="toggle('feed')"
       >
-        <PanelLeft :size="16" /><span>News</span>
+        <PanelLeft :size="16" /><span>候选</span>
+      </button>
+      <button
+        class="bar-button"
+        data-cap="picks"
+        :class="{ on: layout.picks }"
+        :aria-pressed="layout.picks"
+        aria-label="Toggle the picks column"
+        title="显示或隐藏选题篮"
+        @click="toggle('picks')"
+      >
+        <ListChecks :size="16" /><span>选题篮</span>
       </button>
       <button
         class="bar-button"
         :class="{ on: layout.agent }"
         :aria-pressed="layout.agent"
         aria-label="Toggle the agent column"
-        title="Agent column"
+        title="显示或隐藏助手栏，在这里和 agent 对话"
         @click="toggle('agent')"
       >
-        <PanelRight :size="16" /><span>Agent</span>
+        <PanelRight :size="16" /><span>助手</span>
       </button>
     </div>
   </header>

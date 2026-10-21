@@ -1,4 +1,5 @@
-// Column layout and feed tabs in localStorage["dna.layout.v1"]: either column collapses to zero width, never both.
+// Column layout and feed tabs in localStorage["dna.layout.v1"]: News, the picks basket and the agent each collapse to
+// zero width, but one always stays open.
 // The News tab is always first. Timeline tabs open from a card's timeline chip; search, keyword and url tabs open from
 // the search box or when the agent calls open_tab. highlight_item switches to News and flashes one card.
 import { nextTick, reactive, ref, watch } from "vue";
@@ -15,6 +16,8 @@ export const tabKey = (t: FeedTab) =>
 
 export interface Layout {
   feed: boolean;
+  /** The picks basket (选题篮), between News and the agent. */
+  picks: boolean;
   agent: boolean;
   agentWidth: number;
   /** The composer's Model toggle: model and thinking controls shown. */
@@ -28,6 +31,7 @@ export interface Layout {
 export const LAYOUT_KEY = "dna.layout.v1";
 const DEFAULTS: Layout = {
   feed: true,
+  picks: true,
   agent: true,
   agentWidth: 560,
   modelBar: false,
@@ -39,7 +43,7 @@ function load(): Layout {
   try {
     const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? "{}") as Record<string, any>;
     const merged = { ...DEFAULTS, ...saved } as Layout;
-    if (!merged.feed && !merged.agent) merged.feed = true;
+    if (!merged.feed && !merged.picks && !merged.agent) merged.feed = true;
     // Earlier layouts kept timeline tabs as { id, title } and the active timeline as its id.
     merged.tabs = (Array.isArray(merged.tabs) ? merged.tabs : [])
       .map((t: any) => (t.kind ? t : { kind: "timeline", id: t.id, title: t.title }))
@@ -59,10 +63,12 @@ function load(): Layout {
 export const layout = reactive<Layout>(load());
 watch(layout, (value) => localStorage.setItem(LAYOUT_KEY, JSON.stringify(value)), { deep: true });
 
-export function toggle(column: "feed" | "agent"): boolean {
-  const other = column === "feed" ? "agent" : "feed";
-  if (layout[column] && !layout[other]) {
-    notify("Keep one column open");
+export type Column = "feed" | "picks" | "agent";
+const COLUMNS: Column[] = ["feed", "picks", "agent"];
+
+export function toggle(column: Column): boolean {
+  if (layout[column] && COLUMNS.every((c) => c === column || !layout[c])) {
+    notify("至少保留一栏");
     return false;
   }
   layout[column] = !layout[column];
