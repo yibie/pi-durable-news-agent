@@ -70,6 +70,16 @@ test("does not retry a 400", async (t) => {
   assert.equal(fetch.mock.callCount(), 1);
 });
 
+test("direct TypeSafe gets the bare model name, and a 400 keeps the reason", async (t) => {
+  const direct = new JevClient({ provider: "typesafe", apiKey: "dummy-key", retryDelayMs: 0 });
+  const fetch = stub(t, async () => ok(valid));
+  await direct.systemOne({ text: "x" }, questions, { model: "~typesafe/jev-latest" });
+  const sent = JSON.parse(String((fetch.mock.calls[0].arguments[1] as RequestInit).body));
+  assert.equal(sent.model, "jev-latest");
+  fetch.mock.mockImplementation(async () => ok({ detail: { message: "Unknown model: x" } }, 400));
+  await assert.rejects(direct.systemOne({ text: "x" }, questions), /HTTP 400\. .*Unknown model: x/);
+});
+
 test("an undeclared choice is a contract error, never retried", async (t) => {
   const bad = structuredClone(valid) as any;
   bad.answers.kind.choice = "rumor";

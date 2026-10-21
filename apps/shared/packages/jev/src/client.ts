@@ -25,6 +25,10 @@ const DEFAULT_MODELS = {
   typesafe: "jev-latest",
 } as const;
 
+/** Commands name jev by its OpenRouter id; TypeSafe's own endpoint answers 400 to that and wants the bare name. */
+const modelFor = (provider: JevProvider, model: string) =>
+  provider === "typesafe" ? model.replace(/^~typesafe\//, "") : model;
+
 const KEY_ENV = {
   openrouter: "OPENROUTER_API_KEY",
   typesafe: "TYPESAFE_API_KEY",
@@ -181,10 +185,12 @@ export class JevClient {
     opts: { model?: string; signal?: AbortSignal } = {},
   ): Promise<SystemOneResult> {
     opts.signal?.throwIfAborted();
-    const requestedModel =
+    const requestedModel = modelFor(
+      this.provider,
       opts.model ??
-      this.model ??
-      (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]);
+        this.model ??
+        (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]),
+    );
     const body: SystemOneRequest = { model: requestedModel, state, questions };
     validateRequest(body);
     let requestText: string;
@@ -242,14 +248,20 @@ export class JevClient {
           continue;
         }
         if (!res.ok) {
-          await res.body?.cancel();
+          // A 4xx body says which field was rejected; keep a short slice of it (it never echoes the key).
+          const detail =
+            res.status >= 400 && res.status < 500 && res.status !== 401
+              ? (await res.text().catch(() => "")).replace(/\s+/g, " ").trim().slice(0, 300)
+              : (await res.body?.cancel(), "");
           const hint =
             res.status === 401
               ? ` Check the ${KEY_ENV[this.provider]} key.`
               : res.status === 402
                 ? " Check account credits."
                 : "";
-          throw new Error(`${this.provider} HTTP ${res.status}.${hint}`);
+          throw new Error(
+            `${this.provider} HTTP ${res.status}.${hint}${detail ? ` ${detail}` : ""}`,
+          );
         }
         const responseText = await res.text();
         signal.throwIfAborted();
