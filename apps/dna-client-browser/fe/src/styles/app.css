@@ -541,7 +541,11 @@ h4 {
   font-size: 12px;
   flex: none;
 }
+.card-meta .time {
+  white-space: nowrap;
+}
 .card-meta .source {
+  min-width: 6em;
   color: var(--text);
   font-weight: 500;
   white-space: nowrap;
@@ -587,6 +591,15 @@ h4 {
 @container (max-width: 640px) {
   .card {
     grid-template-columns: 150px minmax(0, 1fr);
+  }
+}
+/* With the picks basket and the agent open, News is narrow: the text gets the whole card and the image steps aside. */
+@container (max-width: 720px) {
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card-media {
+    display: none;
   }
 }
 .card-title {
