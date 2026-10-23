@@ -14,8 +14,11 @@ const config = loadConfig([], {
   DNA_PROVIDER: "faux",
   DNA_SEARCH_MODE: "fixture",
   DNA_DATA_DIR: dir,
-  // Tests run on the shipped defaults, even when .env points a device at its own config.
+  // Tests run on the shipped defaults, even when .env points a device at its own config,
+  // and never read the device's publish ledger or write into its archive.
   DNA_CONFIG_DIR: "",
+  DNA_LEDGER_IMPORT: "",
+  DNA_PUBLISHED_DIR: "",
 });
 const app = await openApp(config);
 

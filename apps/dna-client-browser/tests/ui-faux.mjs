@@ -74,8 +74,11 @@ const api = run(
     DNA_SEARCH_MODE: "fixture",
     DNA_FIXTURE_SET: "news",
     DNA_DATA_DIR: join(tmp, "data"),
-    // The suite runs on the shipped defaults, even when .env points this device at its own config.
+    // The suite runs on the shipped defaults, even when .env points this device at its own config,
+    // and never reads this device's publish ledger or writes into its archive.
     DNA_CONFIG_DIR: "",
+    DNA_LEDGER_IMPORT: "",
+    DNA_PUBLISHED_DIR: "",
     DNA_DEVICE_NAME: "test",
     DNA_CLIENT_TOKEN: tokens.client,
     DNA_CRON_TOKEN: tokens.cron,
