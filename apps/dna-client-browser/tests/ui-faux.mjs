@@ -172,12 +172,29 @@ try {
         "true",
     "3 story cards render from 4 developments in the News tab",
   );
-  const heights = await news.evaluateAll((els) =>
-    els.map((e) => Math.round(e.getBoundingClientRect().height)),
-  );
+  // A wide News column gives every card one height; a narrow one (the basket and the agent open) lets cards grow from
+  // that height so the title is never squeezed out.
+  const cardShape = await page.evaluate(() => {
+    const list = document.querySelector(".feed-list").getBoundingClientRect().width;
+    const cards = [...document.querySelectorAll(".feed-list .card")];
+    const min = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--card-h"));
+    return {
+      wide: list > 860,
+      heights: cards.map((c) => Math.round(c.getBoundingClientRect().height)),
+      min,
+      titlesShown: cards.every((c) => {
+        const t = c.querySelector(".card-title")?.getBoundingClientRect();
+        const m = c.querySelector(".card-main").getBoundingClientRect();
+        return !t || (t.height > 10 && t.bottom <= m.bottom + 1);
+      }),
+    };
+  });
   check(
-    new Set(heights).size === 1,
-    `every card has one height (${[...new Set(heights)].join(", ")} px)`,
+    cardShape.titlesShown &&
+      (cardShape.wide
+        ? new Set(cardShape.heights).size === 1
+        : cardShape.heights.every((h) => h >= cardShape.min)),
+    `every card shows its title, ${cardShape.wide ? "one height" : `at least ${cardShape.min} px`} (${[...new Set(cardShape.heights)].join(", ")} px)`,
   );
   const rails = await page.locator(".feed-row").evaluateAll((rows) =>
     rows.map((r) => ({

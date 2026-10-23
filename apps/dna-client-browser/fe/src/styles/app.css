@@ -649,13 +649,58 @@ h4 {
     grid-template-columns: 150px minmax(0, 1fr);
   }
 }
-/* With the picks basket and the agent open, News is narrow: the text gets the whole card and the image steps aside. */
+/* With the picks basket and the agent open, News is narrow: the text gets the whole card and the image steps aside.
+   The header and footer may wrap here, so cards keep one minimum height and grow instead of squeezing the title out;
+   the body still stops after about two title lines and three of text. */
 @container (max-width: 860px) {
   .card {
     grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: var(--card-h);
   }
   .card-media {
     display: none;
+  }
+  .card-main {
+    flex: none;
+    max-height: calc(var(--fs-title) * 4.1 + var(--fs-body) * 4.4 + 36px);
+  }
+  .card-main .card-title {
+    -webkit-line-clamp: 3;
+  }
+  .card-foot {
+    margin-top: auto;
+  }
+}
+/* Very narrow: a slimmer time rail without the topic, source and time on one line, the pick buttons and icons on the
+   next, tighter spacing. */
+@container (max-width: 640px) {
+  .feed-row {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: var(--s1);
+  }
+  .feed-row .rail-time {
+    font-size: var(--fs-meta);
+    padding: 2px 0;
+  }
+  .feed-row .rail-keyword {
+    display: none;
+  }
+  .card-content {
+    padding: 12px 12px 10px;
+  }
+  .card-meta {
+    gap: 6px;
+  }
+  .card-meta .grow {
+    flex-basis: 100%;
+    height: 0;
+  }
+  .card-meta .pick-bar {
+    gap: 3px;
+  }
+  .card-meta .pick-action {
+    padding: 3px 5px;
   }
 }
 .card-title {
