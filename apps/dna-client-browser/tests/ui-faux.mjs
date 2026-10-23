@@ -196,19 +196,32 @@ try {
         : cardShape.heights.every((h) => h >= cardShape.min)),
     `every card shows its title, ${cardShape.wide ? "one height" : `at least ${cardShape.min} px`} (${[...new Set(cardShape.heights)].join(", ")} px)`,
   );
-  const rails = await page.locator(".feed-row").evaluateAll((rows) =>
-    rows.map((r) => ({
-      railTop: Math.round(r.querySelector(".rail").getBoundingClientRect().top),
-      cardTop: Math.round(r.querySelector(".card").getBoundingClientRect().top),
-      time: r.querySelector(".rail-time")?.textContent?.trim() ?? "",
-      icon: !!r.querySelector(".rail-node svg"),
-      keyword: r.querySelector(".rail-keyword")?.textContent?.trim() ?? "",
-    })),
+  const heads = await news.evaluateAll((cards) =>
+    cards.map((c) => {
+      const when = c.querySelector(".card-when").getBoundingClientRect();
+      const meta = c.querySelector(".card-meta").getBoundingClientRect();
+      return {
+        rail: !!c.closest(".feed-row").querySelector(".rail"),
+        icon: !!c.querySelector(".source-icon img, .source-icon svg"),
+        tip: c.querySelector(".source-icon").getAttribute("title") ?? "",
+        age: c.querySelector(".card-when strong").textContent.trim(),
+        at: c.querySelector(".card-when small").textContent.trim(),
+        topRight: Math.abs(when.right - meta.right) <= 2 && when.top - meta.top <= 2,
+      };
+    }),
   );
   check(
-    rails.length === 3 &&
-      rails.every((r) => r.railTop === r.cardTop && r.time && r.icon && r.keyword),
-    `each card has a rail of time, icon and keyword aligned with it (${rails.map((r) => r.keyword).join(", ")})`,
+    heads.length === 3 &&
+      heads.every(
+        (h) =>
+          !h.rail &&
+          h.icon &&
+          h.tip.startsWith("来源：") &&
+          /(前|刚刚|不详|今天或昨天)$/.test(h.age) &&
+          h.at &&
+          h.topRight,
+      ),
+    `each card shows its source as an icon and how fresh it is in its top right corner (${heads.map((h) => `${h.age} ${h.at}`).join("; ")})`,
   );
   const media = await news.first().locator("a.card-media");
   check(

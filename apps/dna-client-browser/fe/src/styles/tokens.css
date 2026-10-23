@@ -52,6 +52,7 @@
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   --syn-key: #8ab4f8;
   --chip-fill: #3a3a3a;
+  --icon-tile: #ecebe6;
   --signal-tint: rgba(243, 134, 161, 0.24);
   --facts-tint: rgba(87, 196, 138, 0.22);
   --hype-tint: rgba(240, 166, 64, 0.22);
@@ -108,6 +109,7 @@
   --shadow: 0 10px 30px rgba(70, 55, 30, 0.18);
   --syn-key: #2f5fa8;
   --chip-fill: #e2dac9;
+  --icon-tile: #fffdf8;
   --signal-tint: rgba(176, 63, 102, 0.16);
   --facts-tint: rgba(43, 122, 75, 0.15);
   --hype-tint: rgba(156, 95, 20, 0.15);

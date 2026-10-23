@@ -32,6 +32,7 @@ import { Dates } from "./news/dates.ts";
 import { fixtureDecide, fixtureHttp } from "./news/fixtures.ts";
 import { Judge } from "./news/hfs.ts";
 import { liveHttp } from "./news/http.ts";
+import { Favicons } from "./news/favicons.ts";
 import { Images } from "./news/images.ts";
 import { Quick } from "./news/quick.ts";
 import { Schedule } from "./news/schedule.ts";
@@ -108,6 +109,11 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     quality: config.imageQuality,
     offline: config.provider === "faux" || config.searchMode === "fixture",
   });
+  const favicons = new Favicons({
+    dataDir: config.dataDir,
+    log,
+    offline: config.provider === "faux" || config.searchMode === "fixture",
+  });
   const bus = new Bus();
   const quick = new Quick({ catalog, store, log });
   const dates = new Dates({ http, store, log, quick });
@@ -119,6 +125,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     judge,
     search,
     images,
+    favicons,
     http,
     catalog,
     quick,

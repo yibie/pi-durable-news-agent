@@ -136,6 +136,25 @@ const toClassification = (r: any): Classification => ({
   createdAt: r.created_at,
 });
 
+/** Where an item was found, as a host for its icon: Hacker News and GitHub by kind, a feed or page by its url, and an
+ * item without a source (an agent's search) by its own link. Feed subdomains fall back to the site. */
+export function sourceSite(
+  kind: unknown,
+  sourceUrl: unknown,
+  itemUrl: unknown,
+): string | undefined {
+  if (kind === "hn_front" || kind === "hn_search") return "news.ycombinator.com";
+  if (kind === "github_releases") return "github.com";
+  const url = typeof sourceUrl === "string" && sourceUrl ? sourceUrl : itemUrl;
+  if (typeof url !== "string" || !url) return undefined;
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^(www|feeds?|rss)\./, "");
+    return host === "twitter.com" ? "x.com" : host;
+  } catch {
+    return undefined;
+  }
+}
+
 const toImage = (r: any): CardImage | undefined =>
   r ? { id: r.id, origin: r.origin, status: r.status, url: r.url ?? undefined } : undefined;
 
@@ -998,10 +1017,11 @@ export class NewsRepo {
       .prepare(
         `SELECT c.*, i.url AS item_url, i.title AS item_title, i.source_name, i.published_at, i.discussion_url,
                 i.matched_topic,
-                s.title AS story_title,
+                s.title AS story_title, src.kind AS source_kind, src.url AS source_url,
                 im.id AS im_id, im.origin AS im_origin, im.status AS im_status, im.url AS im_url
          FROM cards c
          LEFT JOIN items i ON i.id = c.item_id
+         LEFT JOIN sources src ON src.id = i.source_id
          LEFT JOIN stories s ON s.id = c.story_id
          LEFT JOIN images im ON im.id = c.image_id
          WHERE c.id = ?`,
@@ -1052,6 +1072,7 @@ export class NewsRepo {
       ),
       url: str(r.item_url),
       sourceName: str(r.source_name),
+      sourceSite: sourceSite(r.source_kind, r.source_url, r.item_url),
       discussionUrl: str(r.discussion_url),
       publishedAt: str(r.published_at),
       topic: str(r.matched_topic),

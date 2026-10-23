@@ -1,23 +1,24 @@
 <script setup lang="ts">
-// Every card, one fixed height: the image (3:2, links to the source; a skeleton while it generates), then source,
-// time, the timeline chip and links, the generative body (clamped), H/F/S and feedback.
+// Every card, one fixed height in a wide column: the image (3:2, links to the source; a skeleton while it generates),
+// then the source's icon, the timeline chip, the pick buttons and links, and in the top right corner how fresh it is;
+// then the generative body (clamped), H/F/S and feedback.
 import { computed, ref } from "vue";
 import { ExternalLink, GitCommitVertical, ImageOff, Info, MessageSquareQuote } from "@lucide/vue";
-import { ago, type Card } from "@dna/sdk";
+import type { Card } from "@dna/sdk";
 import { openTimeline } from "../../client/layout";
 import { clean } from "../../client/text";
 import { now, referenceInChat, ui } from "../../client/store";
+import { cardWhen } from "../../client/time";
 import FeedbackBar from "../FeedbackBar.vue";
 import HfsPill from "../HfsPill.vue";
 import PickBar from "../PickBar.vue";
+import SourceIcon from "../SourceIcon.vue";
 import { cardComponent } from "./registry";
 
 const props = defineProps<{ card: Card }>();
 const body = computed(() => cardComponent(props.card.component));
 const broken = ref(false);
-const when = computed(() =>
-  props.card.publishedAt ? (now.value, ago(props.card.publishedAt)) : "date unknown",
-);
+const when = computed(() => cardWhen(props.card.publishedAt, props.card.createdAt, now.value));
 /** Drop "card 22 "Title"" into the composer so the agent knows exactly which card you mean. */
 const reference = () => referenceInChat(`card ${props.card.id} "${clean(props.card.title)}"`);
 /** The title and the source open the article in a new tab. */
@@ -55,17 +56,7 @@ const image = computed(() =>
     </a>
     <div class="card-content">
       <div class="card-meta">
-        <a
-          v-if="card.url"
-          class="source"
-          :href="card.url"
-          target="_blank"
-          rel="noopener"
-          :title="`Open ${clean(card.sourceName ?? 'the source')}`"
-          >{{ clean(card.sourceName ?? "Web") }}</a
-        >
-        <span v-else class="source">{{ clean(card.sourceName ?? "Web") }}</span>
-        <span class="time">{{ when }}</span>
+        <SourceIcon :card="card" />
         <button
           v-if="card.timeline"
           class="timeline-chip"
@@ -85,35 +76,45 @@ const image = computed(() =>
         >
           {{ card.sources!.length }} sources
         </button>
+        <div class="card-actions">
+          <PickBar :card="card" />
+          <button
+            class="icon-button small"
+            aria-label="Reference in chat"
+            title="在对话里引用这张卡：把卡片编号和标题放进右边的输入框"
+            @click="reference"
+          >
+            <MessageSquareQuote :size="14" />
+          </button>
+          <button
+            class="icon-button small"
+            data-cap="card.read"
+            aria-label="Card details"
+            title="详情：来源、相关度、值得看的程度、话题，以及研究子 agent 读完原文后列出的要点"
+            @click="ui.card = card.id"
+          >
+            <Info :size="14" />
+          </button>
+          <a
+            v-if="card.url"
+            class="icon-button small"
+            :href="card.url"
+            target="_blank"
+            rel="noopener"
+            aria-label="Open the source"
+            title="打开原文"
+            ><ExternalLink :size="14"
+          /></a>
+        </div>
         <span class="grow" />
-        <PickBar :card="card" />
-        <button
-          class="icon-button small"
-          aria-label="Reference in chat"
-          title="在对话里引用这张卡：把卡片编号和标题放进右边的输入框"
-          @click="reference"
+        <time
+          class="card-when"
+          :class="when.freshness"
+          :datetime="card.publishedAt"
+          :title="when.title"
+          ><strong>{{ when.age }}</strong
+          ><small>{{ when.at }}</small></time
         >
-          <MessageSquareQuote :size="14" />
-        </button>
-        <button
-          class="icon-button small"
-          data-cap="card.read"
-          aria-label="Card details"
-          title="详情：来源、相关度、值得看的程度、话题，以及研究子 agent 读完原文后列出的要点"
-          @click="ui.card = card.id"
-        >
-          <Info :size="14" />
-        </button>
-        <a
-          v-if="card.url"
-          class="icon-button small"
-          :href="card.url"
-          target="_blank"
-          rel="noopener"
-          aria-label="Open the source"
-          title="打开原文"
-          ><ExternalLink :size="14"
-        /></a>
       </div>
       <div class="card-main" :class="{ linked: !!card.url }" @click="openFromBody">
         <component :is="body" :card="card" />

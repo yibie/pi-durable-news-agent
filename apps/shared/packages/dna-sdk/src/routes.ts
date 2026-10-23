@@ -323,6 +323,12 @@ export const ROUTES = {
     scope: "read",
     summary: "Card image bytes",
   },
+  "favicons.get": {
+    method: "GET",
+    path: "/v1/favicons/:id",
+    scope: "read",
+    summary: "A source site's icon by host, fetched once and cached; 404 when the site has none",
+  },
 } as const satisfies Record<string, RouteSpec>;
 
 export type RouteId = keyof typeof ROUTES;

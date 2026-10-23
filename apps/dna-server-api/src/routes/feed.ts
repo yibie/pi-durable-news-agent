@@ -22,6 +22,7 @@ export function feedRoutes({
   | "cards.get"
   | "cards.feedback"
   | "images.get"
+  | "favicons.get"
 > {
   const { store } = app;
   return {
@@ -101,6 +102,14 @@ export function feedRoutes({
       }
       if (image.url) return res.redirect(302, image.url);
       throw notFound(`Image ${image.id} has no bytes`);
+    },
+    "favicons.get": async (req, res) => {
+      const icon = await app.favicons.get(String(req.params.id));
+      if (!icon) throw notFound(`No icon for ${req.params.id}`);
+      // Served from this origin, so an SVG icon must not run anything if it is opened on its own.
+      res.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'");
+      res.set("X-Content-Type-Options", "nosniff");
+      return res.type(icon.type).sendFile(icon.file, { maxAge: "7d" });
     },
   };
 }

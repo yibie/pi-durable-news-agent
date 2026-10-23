@@ -7,13 +7,8 @@ import { CircleAlert, FlaskConical, Send } from "@lucide/vue";
 import type { TopicPick } from "@dna/sdk";
 import { now } from "../client/store";
 import { clean } from "../client/text";
-import {
-  ackPublish,
-  beijingTime as time,
-  publishNow,
-  publishState,
-  rehearse,
-} from "../client/writing";
+import { beijingTime as time } from "../client/time";
+import { ackPublish, publishNow, publishState, rehearse } from "../client/writing";
 
 const props = defineProps<{ pick: TopicPick }>();
 

@@ -17,14 +17,8 @@ import {
 } from "../client/picks";
 import { feedState, now } from "../client/store";
 import { clean } from "../client/text";
-import {
-  beijingTime,
-  closeWriting,
-  loadSpacing,
-  openPick,
-  openWriting,
-  spacing,
-} from "../client/writing";
+import { beijingTime } from "../client/time";
+import { closeWriting, loadSpacing, openPick, openWriting, spacing } from "../client/writing";
 import PickDetail from "./PickDetail.vue";
 
 const STAGES: Record<PickStage, { name: string; hint: string; empty: string }> = {

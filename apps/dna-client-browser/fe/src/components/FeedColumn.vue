@@ -20,7 +20,7 @@ const counts = computed(() => {
     if (c.timeline) out.set(c.timeline.id, Math.max(out.get(c.timeline.id) ?? 0, c.timeline.count));
   return out;
 });
-/** News in the order it arrived, the newest card last and lowest; each rail shows when the item was published. */
+/** News in the order it arrived, the newest card last and lowest; each card shows when its item was published. */
 const picked = computed(
   () => new Set(feedState.value.picks.flatMap((p) => p.items.map((i) => i.cardId))),
 );

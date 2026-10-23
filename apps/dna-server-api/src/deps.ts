@@ -7,6 +7,7 @@ import type { Bus } from "./events.ts";
 import type { Dates } from "./news/dates.ts";
 import type { Judge } from "./news/hfs.ts";
 import type { Http } from "./news/http.ts";
+import type { Favicons } from "./news/favicons.ts";
 import type { Images } from "./news/images.ts";
 import type { Quick } from "./news/quick.ts";
 import type { Schedule } from "./news/schedule.ts";
@@ -20,6 +21,8 @@ export interface Deps {
   judge: Judge;
   search: SearchService;
   images: Images;
+  /** Source sites' icons for the cards. */
+  favicons: Favicons;
   http: Http;
   catalog: ModelCatalog;
   /** The quick model for one-shot jobs. */

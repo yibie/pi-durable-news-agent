@@ -28,14 +28,6 @@ export async function loadSpacing() {
   if (st) spacing.value = st;
 }
 
-/** Times on the publishing side are Beijing time, as everywhere in the content studio. */
-export const beijingTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("zh-CN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Shanghai",
-  });
-
 let writer: AgentModel | undefined;
 export const writerView = shallowRef(new AgentModel().state);
 let stopStream: AbortController | undefined;

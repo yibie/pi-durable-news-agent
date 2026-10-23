@@ -77,6 +77,8 @@ export interface Card {
   title: string;
   url?: string;
   sourceName?: string;
+  /** The host of the site the item was found on (news.ycombinator.com, x.com, a blog), for its icon. */
+  sourceSite?: string;
   discussionUrl?: string;
   publishedAt?: string;
   /** The topic keyword the item matched when it was gathered. */

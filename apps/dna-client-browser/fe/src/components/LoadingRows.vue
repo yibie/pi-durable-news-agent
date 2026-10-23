@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Loading placeholders that match what is coming: card rows (rail plus card), list lines, or a block.
+// Loading placeholders that match what is coming: card rows, list lines, or a block.
 withDefaults(
   defineProps<{ kind?: "cards" | "lines" | "block"; count?: number; label?: string }>(),
   {
@@ -14,7 +14,6 @@ withDefaults(
   <div class="loading" :class="kind" role="status" :aria-label="label">
     <template v-if="kind === 'cards'">
       <div v-for="i in count" :key="i" class="feed-row">
-        <div class="rail"><span class="sk sk-dot" /></div>
         <div class="card sk-card">
           <span class="sk sk-media" />
           <div class="sk-text">

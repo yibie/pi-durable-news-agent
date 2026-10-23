@@ -455,11 +455,9 @@ h4 {
   font-size: var(--fs-ui);
 }
 
-/* One row per card: the rail (time, H/F/S icon, keyword) aligned with the card */
+/* One row per card */
 .feed-row {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: var(--s2);
+  min-width: 0;
 }
 /* The card the agent pointed at with highlight_item */
 .feed-row.highlight .card {
@@ -472,76 +470,7 @@ h4 {
     box-shadow: 0 0 0 6px var(--accent-soft);
   }
 }
-.rail {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding-top: 14px;
-  text-align: center;
-}
-.rail::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: calc(-1 * var(--s2));
-  left: 50%;
-  width: 1px;
-  background: var(--line);
-}
-.feed-row:last-child .rail::before {
-  bottom: 0;
-}
-.rail > * {
-  position: relative;
-  background: var(--bg);
-}
-.rail-time {
-  font-family: var(--mono);
-  font-size: var(--fs-ui);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  padding: 2px 4px;
-}
-.rail-time small {
-  color: var(--faint);
-  font-size: var(--fs-meta);
-}
-.rail-node {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-}
-.rail-node.signal {
-  color: var(--signal);
-  border-color: var(--signal);
-}
-.rail-node.facts {
-  color: var(--facts);
-  border-color: var(--facts);
-}
-.rail-node.hype {
-  color: var(--hype);
-  border-color: var(--hype);
-}
-.rail-time.undated {
-  color: var(--faint);
-}
-.rail-keyword {
-  max-width: 96px;
-  padding: 2px 4px;
-  font-size: var(--fs-meta);
-  color: var(--muted);
-  overflow-wrap: anywhere;
-  line-height: 1.3;
-}
-
-/* Cards: one height, the image on the left at 3:2 */
+/* Cards: one height in a wide column, the image on the left at 3:2 */
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -597,17 +526,56 @@ h4 {
   font-size: var(--fs-ui);
   flex: none;
 }
-.card-meta .time {
-  white-space: nowrap;
+.source-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--raised);
 }
-.card-meta .source {
-  min-width: 6em;
-  color: var(--text);
-  font-weight: 500;
+/* Site icons are drawn for light pages (GitHub's is black), so they sit on a light tile in both themes. */
+.source-icon:has(img) {
+  background: var(--icon-tile);
+}
+.source-icon img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+/* How fresh the item is, in the top right corner: the age, colored by the 24 and 48 hour lines, and the publish time. */
+.card-when {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
+  text-align: right;
+}
+.card-when strong {
+  font-size: var(--fs-ui);
+  font-weight: 600;
+  color: var(--text);
+}
+.card-when small {
+  font-size: var(--fs-meta);
+  color: var(--faint);
+}
+.card-when.fresh strong {
+  color: var(--facts);
+}
+.card-when.old strong,
+.card-when.unknown strong {
+  color: var(--muted);
+  font-weight: 500;
 }
 .timeline-chip {
   display: inline-flex;
@@ -672,29 +640,18 @@ h4 {
     margin-top: auto;
   }
 }
-/* Very narrow: a slimmer time rail without the topic, source and time on one line, the pick buttons and icons on the
-   next, tighter spacing. */
+/* Very narrow: the source icon and the time on one line, the pick buttons and icons on the next, tighter spacing. */
 @container (max-width: 640px) {
-  .feed-row {
-    grid-template-columns: 70px minmax(0, 1fr);
-    gap: var(--s1);
-  }
-  .feed-row .rail-time {
-    font-size: var(--fs-meta);
-    padding: 2px 0;
-  }
-  .feed-row .rail-keyword {
-    display: none;
-  }
   .card-content {
     padding: 12px 12px 10px;
   }
   .card-meta {
     gap: 6px;
   }
-  .card-meta .grow {
+  .card-meta .card-actions {
+    order: 5;
     flex-basis: 100%;
-    height: 0;
+    gap: 6px;
   }
   .card-meta .pick-bar {
     gap: 3px;
@@ -2097,13 +2054,6 @@ table.usage th {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-a.source {
-  text-decoration: none;
-}
-a.source:hover {
-  text-decoration: underline;
-}
-
 /* Loading placeholders */
 .loading {
   display: flex;
@@ -2131,11 +2081,6 @@ a.source:hover {
 }
 .sk-block {
   height: 160px;
-}
-.sk-dot {
-  width: 30px;
-  height: 30px;
-  margin-top: 30px;
 }
 .sk-card {
   border-color: var(--line);
