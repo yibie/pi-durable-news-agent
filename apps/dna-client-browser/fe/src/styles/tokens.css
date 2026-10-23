@@ -1,4 +1,4 @@
-/* The typesafe look from jev-duel, inverted to dark. Inter and JetBrains Mono ship in public/fonts (SIL OFL). */
+/* The typesafe look from jev-duel, inverted to dark, with a warm light 护眼 theme. Inter and JetBrains Mono ship in public/fonts (SIL OFL). */
 @font-face {
   font-family: "Inter";
   font-weight: 400;
@@ -38,6 +38,34 @@
   --hype: #f0a640;
   --bad: #e5675a;
   --ok: #57c48a;
+  --text-soft: #d8d8d4;
+  --on-accent: #121212;
+  --line-soft: #1f1f1f;
+  --line-strong: #444;
+  --bad-line: #4a2320;
+  --ok-line: #1f4a30;
+  --skeleton-hi: #303030;
+  --fill: #5a5a5a;
+  --hatch: #333;
+  --well: #0d0d0d;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --syn-key: #8ab4f8;
+  --chip-fill: #3a3a3a;
+  --signal-tint: rgba(243, 134, 161, 0.24);
+  --facts-tint: rgba(87, 196, 138, 0.22);
+  --hype-tint: rgba(240, 166, 64, 0.22);
+  color-scheme: dark;
+  /* Text sizes, one scale: meta (times, counts), ui (buttons, chips), nav (tabs, top bar), body (reading text),
+     title (card and draft titles), display (dialog headings). The 字号 setting swaps the scale. */
+  --fs-meta: 13px;
+  --fs-ui: 14px;
+  --fs-nav: 15px;
+  --fs-body: 16px;
+  --fs-title: 18px;
+  --fs-display: 20px;
+  /* News cards share one height, so it grows with the text size. */
+  --card-h: 256px;
   --radius: 0;
   --s1: 8px;
   --s2: 16px;
@@ -48,4 +76,58 @@
     -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono:
     "JetBrains Mono", ui-monospace, "SF Mono", Menlo, "PingFang SC", "Microsoft YaHei", monospace;
+}
+
+/* 护眼: warm paper, dark brown-gray text, softer accents dark enough to read on it. */
+:root[data-theme="paper"] {
+  --bg: #f3eee3;
+  --panel: #faf7f0;
+  --raised: #e9e2d3;
+  --text: #2b2722;
+  --text-soft: #3a352d;
+  --muted: #5c5548;
+  --faint: #7a7264;
+  --line: #dad1be;
+  --line-soft: #e5ddcc;
+  --line-strong: #bfb39b;
+  --accent: #b03f66;
+  --accent-soft: #f2dce2;
+  --signal: #b03f66;
+  --facts: #2b7a4b;
+  --hype: #9c5f14;
+  --bad: #b5372b;
+  --ok: #2b7a4b;
+  --on-accent: #fffdf8;
+  --bad-line: #e2b5ad;
+  --ok-line: #b3d3bd;
+  --skeleton-hi: #f4efe5;
+  --fill: #b3a891;
+  --hatch: #d5cbb7;
+  --well: #ece6d8;
+  --scrim: rgba(60, 48, 30, 0.35);
+  --shadow: 0 10px 30px rgba(70, 55, 30, 0.18);
+  --syn-key: #2f5fa8;
+  --chip-fill: #e2dac9;
+  --signal-tint: rgba(176, 63, 102, 0.16);
+  --facts-tint: rgba(43, 122, 75, 0.15);
+  --hype-tint: rgba(156, 95, 20, 0.15);
+  color-scheme: light;
+}
+:root[data-size="small"] {
+  --fs-meta: 12px;
+  --fs-ui: 13px;
+  --fs-nav: 14px;
+  --fs-body: 15px;
+  --fs-title: 17px;
+  --fs-display: 19px;
+  --card-h: 240px;
+}
+:root[data-size="large"] {
+  --fs-meta: 14px;
+  --fs-ui: 15px;
+  --fs-nav: 16px;
+  --fs-body: 18px;
+  --fs-title: 20px;
+  --fs-display: 22px;
+  --card-h: 288px;
 }

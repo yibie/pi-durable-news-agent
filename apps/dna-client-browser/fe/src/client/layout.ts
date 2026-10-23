@@ -1,5 +1,6 @@
-// Column layout and feed tabs in localStorage["dna.layout.v1"]: News, the picks basket and the agent each collapse to
-// zero width, but one always stays open.
+// Column layout, feed tabs and the display (theme, text size) in localStorage["dna.layout.v1"]: News, the picks
+// basket and the agent each collapse to zero width, but one always stays open. The basket and the agent keep the width
+// the reader dragged them to.
 // The News tab is always first. Timeline tabs open from a card's timeline chip; search, keyword and url tabs open from
 // the search box or when the agent calls open_tab. highlight_item switches to News and flashes one card.
 import { nextTick, reactive, ref, watch } from "vue";
@@ -18,12 +19,18 @@ export const tabKey = (t: FeedTab) =>
 export type PickStage = Exclude<PickStatus, "dropped">;
 export const PICK_STAGES: PickStage[] = ["selected", "drafting", "ready", "published"];
 
+export type Theme = "dark" | "paper";
+export type TextSize = "small" | "normal" | "large";
+export const PICKS_MIN = 320;
+
 export interface Layout {
   feed: boolean;
   /** The picks basket (选题篮), between News and the agent. */
   picks: boolean;
   /** The basket's stage tab; it follows the open pick's stage. */
   picksTab: PickStage;
+  /** The basket's width; it stays put whether a draft is open or not. */
+  picksWidth: number;
   agent: boolean;
   agentWidth: number;
   /** The composer's Model toggle: model and thinking controls shown. */
@@ -32,6 +39,9 @@ export interface Layout {
   tabs: FeedTab[];
   /** The active tab: "news" or a tab key. */
   tab: string;
+  /** 深色 or 护眼 (warm paper). */
+  theme: Theme;
+  textSize: TextSize;
 }
 
 export const LAYOUT_KEY = "dna.layout.v1";
@@ -39,11 +49,14 @@ const DEFAULTS: Layout = {
   feed: true,
   picks: true,
   picksTab: "selected",
+  picksWidth: 480,
   agent: true,
   agentWidth: 560,
   modelBar: false,
   tabs: [],
   tab: "news",
+  theme: "dark",
+  textSize: "normal",
 };
 
 function load(): Layout {
@@ -52,6 +65,10 @@ function load(): Layout {
     const merged = { ...DEFAULTS, ...saved } as Layout;
     if (!merged.feed && !merged.picks && !merged.agent) merged.feed = true;
     if (!PICK_STAGES.includes(merged.picksTab)) merged.picksTab = "selected";
+    if (!Number.isFinite(merged.picksWidth) || merged.picksWidth < PICKS_MIN)
+      merged.picksWidth = DEFAULTS.picksWidth;
+    if (merged.theme !== "paper") merged.theme = "dark";
+    if (!["small", "normal", "large"].includes(merged.textSize)) merged.textSize = "normal";
     // Earlier layouts kept timeline tabs as { id, title } and the active timeline as its id.
     merged.tabs = (Array.isArray(merged.tabs) ? merged.tabs : [])
       .map((t: any) => (t.kind ? t : { kind: "timeline", id: t.id, title: t.title }))
@@ -70,6 +87,16 @@ function load(): Layout {
 
 export const layout = reactive<Layout>(load());
 watch(layout, (value) => localStorage.setItem(LAYOUT_KEY, JSON.stringify(value)), { deep: true });
+
+// The theme and text size live on <html>, set before the first paint so the page never flashes the other theme.
+watch(
+  () => [layout.theme, layout.textSize] as const,
+  ([theme, size]) => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.size = size;
+  },
+  { immediate: true },
+);
 
 export type Column = "feed" | "picks" | "agent";
 const COLUMNS: Column[] = ["feed", "picks", "agent"];

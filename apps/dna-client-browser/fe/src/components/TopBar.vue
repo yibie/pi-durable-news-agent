@@ -15,6 +15,7 @@ import {
 } from "@lucide/vue";
 import { usd } from "@dna/sdk";
 import { layout, toggle } from "../client/layout";
+import DisplayMenu from "./DisplayMenu.vue";
 import { go } from "../client/route";
 import { agentState, api, attempt, connection, feed, info, now, ui } from "../client/store";
 
@@ -131,6 +132,7 @@ const spend = computed(() => agentState.value?.spend);
       >
         <SlidersHorizontal :size="16" /><span>设置</span>
       </button>
+      <DisplayMenu />
       <button
         class="bar-button"
         :class="{ on: layout.feed }"

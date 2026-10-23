@@ -618,6 +618,9 @@ try {
   const writing = (await call("GET", "/v1/picks")).find((p) =>
     p.items.some((i) => String(i.cardId) === writeId),
   );
+  const basketWidth = async () =>
+    Math.round((await page.locator(".picks-column").boundingBox()).width);
+  const widthBefore = await basketWidth();
   await page
     .locator(`.picks-column [data-pick-id="${writing.id}"]`)
     .getByRole("button", { name: "Open the draft" })
@@ -626,8 +629,8 @@ try {
   await page.locator(".writer-column").waitFor();
   check(
     (await page.locator(".pick-detail").getByRole("button", { name: "Start writing" }).count()) ===
-      0,
-    "writing starts in one place: the writer column, not the pick's detail",
+      0 && (await basketWidth()) === widthBefore,
+    "writing starts in one place, the writer column, and opening a pick keeps the basket's width",
   );
   await page.getByLabel("Writing requirements").fill("写给不写代码的读者");
   await page.locator(".writer-column").getByRole("button", { name: "Start writing" }).click();
@@ -962,6 +965,57 @@ try {
   );
   await page.getByRole("button", { name: "Toggle the agent column" }).click();
   await page.locator('[data-col="agent"]').waitFor();
+
+  // ---------------------------------------------------------------- basket width and the 显示 menu
+  await page.getByRole("button", { name: "Toggle the picks column" }).click();
+  await page.locator('[data-col="picks"]').waitFor();
+  const picksBox = async () => await page.locator(".picks-column").boundingBox();
+  const startBox = await picksBox();
+  const handle = await page
+    .getByRole("separator", { name: "Resize the picks column" })
+    .boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + handle.width / 2 - 100, handle.y + 200, { steps: 5 });
+  await page.mouse.up();
+  const dragged = Math.round((await picksBox()).width);
+  await page.reload();
+  await page.locator('[data-col="picks"]').waitFor();
+  check(
+    dragged === Math.round(startBox.width) + 100 &&
+      Math.round((await picksBox()).width) === dragged,
+    "dragging the basket's edge widens it, and the width survives a reload",
+  );
+  const htmlData = () =>
+    page.evaluate(() => ({
+      theme: document.documentElement.dataset.theme,
+      size: document.documentElement.dataset.size,
+      bg: getComputedStyle(document.body).backgroundColor,
+      font: getComputedStyle(document.body).fontSize,
+    }));
+  await page.getByRole("button", { name: "Theme and text size" }).click();
+  await page.getByRole("button", { name: "Eye-care theme" }).click();
+  await page.getByRole("button", { name: "Large text" }).click();
+  await cleanText("display menu");
+  await page.screenshot({ path: join(shots, "paper.png") });
+  await page.reload();
+  await page.locator('[data-col="feed"]').waitFor();
+  const paper = await htmlData();
+  check(
+    paper.theme === "paper" &&
+      paper.size === "large" &&
+      paper.bg === "rgb(243, 238, 227)" &&
+      paper.font === "18px",
+    "the 显示 menu switches to the 护眼 theme and large text, and both survive a reload",
+  );
+  await page.getByRole("button", { name: "Theme and text size" }).click();
+  await page.getByRole("button", { name: "Dark theme" }).click();
+  await page.getByRole("button", { name: "Normal text" }).click();
+  const dark = await htmlData();
+  check(
+    dark.theme === "dark" && dark.bg === "rgb(18, 18, 18)" && dark.font === "16px",
+    "and back to the dark theme with normal text",
+  );
 
   // ---------------------------------------------------------------- capabilities
   const { CAPABILITY_IDS } = await import(
