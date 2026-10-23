@@ -99,12 +99,16 @@ async function save() {
         </select>
         <small>{{ shownDraft.layout ?? "无配图" }}，{{ shownDraft.lint.chars }} 字</small>
       </div>
-      <img
+      <a
         v-if="shownDraft.imageId"
-        class="draft-image"
-        :src="`/api/v1/images/${shownDraft.imageId}`"
-        alt="Draft image"
-      />
+        class="draft-image-link"
+        :href="`/api/v1/images/${shownDraft.imageId}`"
+        target="_blank"
+        rel="noopener"
+        title="点开看原图"
+      >
+        <img class="draft-image" :src="`/api/v1/images/${shownDraft.imageId}`" alt="Draft image" />
+      </a>
       <p v-if="shownDraft.quoteUrl" class="draft-quote">
         引用：<a :href="shownDraft.quoteUrl" target="_blank" rel="noopener">{{
           shownDraft.quoteUrl

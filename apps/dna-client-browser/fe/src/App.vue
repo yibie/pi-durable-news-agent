@@ -8,6 +8,7 @@ import PicksColumn from "./components/PicksColumn.vue";
 import SettingsModal from "./components/SettingsModal.vue";
 import TopBar from "./components/TopBar.vue";
 import { layout } from "./client/layout";
+import { openPickId } from "./client/writing";
 import { route } from "./client/route";
 import { start, toast, ui } from "./client/store";
 
@@ -15,14 +16,14 @@ let stop: (() => void) | undefined;
 onMounted(() => (stop = start()));
 onBeforeUnmount(() => stop?.());
 
-/** News takes the free width, the basket a fixed 340px, the agent its dragged width; a lone column fills the row. */
-const PICKS_WIDTH = 340;
+/** News takes the free width, the basket a fixed width (wider while a draft is open), the agent its dragged width; a lone column fills the row. */
 const grid = computed(() => {
+  const picksWidth = openPickId.value === undefined ? 380 : 560;
   const open = [layout.feed, layout.picks, layout.agent].filter(Boolean).length;
   if (open === 1) return { gridTemplateColumns: "1fr" };
   const tracks = [
     layout.feed ? "minmax(320px, 1fr)" : "",
-    layout.picks ? (layout.feed ? `${PICKS_WIDTH}px` : "minmax(300px, 1fr)") : "",
+    layout.picks ? (layout.feed ? `${picksWidth}px` : "minmax(300px, 1fr)") : "",
     layout.agent ? `6px ${layout.agentWidth}px` : "",
   ];
   return { gridTemplateColumns: tracks.filter(Boolean).join(" ") };
