@@ -34,6 +34,7 @@ default:
 # Install every workspace package (apps/ is the npm workspace root)
 install:
     npm install --no-audit --no-fund
+    npm run build -w @dna/argmap
 
 # Types, lint, format and unit tests
 check: test::unit

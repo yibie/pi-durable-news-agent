@@ -603,6 +603,63 @@ try {
     "putting a pick back returns its cards to News",
   );
 
+  // ---------------------------------------------------------------- writing: the writer drafts a pick, ready gate
+  const writeId = await pickable().first().getAttribute("data-card-id");
+  const toWrite = page.locator(`.feed-list [data-card-id="${writeId}"]`);
+  await toWrite.getByRole("button", { name: "Pick for writing" }).click();
+  await toWrite.locator('.pick-menu [data-genre="single"]').click();
+  await page.locator(`.picks-column [data-pick-card="${writeId}"]`).waitFor();
+  const writing = (await call("GET", "/v1/picks")).find((p) =>
+    p.items.some((i) => String(i.cardId) === writeId),
+  );
+  await page
+    .locator(`.picks-column [data-pick-id="${writing.id}"]`)
+    .getByRole("button", { name: "Open the draft" })
+    .click();
+  await page.locator(".pick-detail").waitFor();
+  await page.locator(".writer-column").waitFor();
+  await page.locator(".pick-detail").getByRole("button", { name: "Start writing" }).click();
+  await page.locator(".draft-image").waitFor({ timeout: 20_000 });
+  await page.waitForFunction(() =>
+    document.querySelector('[data-testid="writer-chat"] .msg.agent .bubble'),
+  );
+  const drafted = await page.locator(".draft-body").inputValue();
+  check(
+    drafted.includes("原文：") &&
+      (await page.locator('.pick-stage[data-stage="drafting"]').count()) === 1,
+    "the writer drafts the pick: an image and text with its link block, and the pick is in 写作中",
+  );
+  await page.screenshot({ path: join(shots, "writing.png") });
+  await collectCaps();
+  await cleanText("writing");
+  await page.locator(".draft-body").fill(`${drafted}\n**加粗**`);
+  await page.getByRole("button", { name: "Save the edit" }).click();
+  await page.locator(".draft-problems").waitFor();
+  await page.getByRole("button", { name: "Mark ready" }).click();
+  await page.locator(".toast.bad").waitFor();
+  check(
+    (await page.locator(".toast.bad").textContent()).includes("not ready") &&
+      (await call("GET", "/v1/picks")).find((p) => p.id === writing.id).status === "drafting",
+    "a draft with Markdown cannot go to 待发布",
+  );
+  await page.locator(".draft-body").fill(drafted);
+  await page.getByRole("button", { name: "Save the edit" }).click();
+  await page.waitForFunction(() => !document.querySelector(".draft-problems"));
+  await page.getByRole("button", { name: "Mark ready" }).click();
+  await page.locator('.pick-stage[data-stage="ready"]').waitFor();
+  check(
+    (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3,
+    "the reader's edits are kept as revisions and the clean draft goes to 待发布",
+  );
+  await page.getByRole("button", { name: "Back to the picks" }).click();
+  await page.locator('.pick-stage-head[data-stage="ready"]').waitFor();
+  await page.locator('[data-testid="chat"]').waitFor();
+  await page
+    .locator(`.picks-column [data-pick-id="${writing.id}"]`)
+    .getByRole("button", { name: "Put the pick back" })
+    .click();
+  await page.locator(`.feed-list [data-card-id="${writeId}"]`).waitFor();
+
   // ---------------------------------------------------------------- tool row into executions
   await page.waitForFunction(() =>
     document.querySelector('[data-tool="present_news"][data-status="done"]:not([disabled])'),

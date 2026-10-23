@@ -290,6 +290,33 @@ const COMMANDS: Record<string, Command> = {
       throw new Usage("picks actions are: all, add, join, remove, genre, drop");
     },
   },
+  write: {
+    usage: "write <pick id> [message] | write drafts <pick id> | write stop <pick id>",
+    summary:
+      "Start a pick's writer or send it a message, list the pick's drafts, or stop the writer",
+    async run() {
+      const [action, a] = args;
+      if (action === "drafts") {
+        const list = await client().drafts(num(a, "pick id"));
+        return {
+          data: list,
+          text: list.length ? list.map(print.draftText).join("\n\n") : "No drafts yet.",
+        };
+      }
+      if (action === "stop") {
+        await client().stopWriter(num(a, "pick id"));
+        return { data: { ok: true }, text: `Stopped the writer of pick ${a}` };
+      }
+      const message = args.slice(1).join(" ").trim();
+      const r = await client().write(num(action, "pick id"), message ? { message } : {});
+      return {
+        data: r,
+        text: message
+          ? `Sent to the writer of pick ${r.pick.id}`
+          : `The writer of pick ${r.pick.id} is on conversation ${r.conversationId}`,
+      };
+    },
+  },
   send: {
     usage: "send <text> [--steer] [--wait seconds]",
     summary: "Send the agent a message (followUp), or steer the current run",

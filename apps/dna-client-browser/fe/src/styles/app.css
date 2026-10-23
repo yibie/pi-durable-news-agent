@@ -2198,3 +2198,151 @@ a.pick-title:hover {
   color: var(--muted);
   font-size: 11px;
 }
+
+/* Writing: the basket's stages, a pick's draft, the writer in the agent column. */
+.pick-stage-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 2px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pick-stage-head small {
+  font-weight: 400;
+}
+.pick-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+}
+.pick-open:hover {
+  border-color: var(--accent);
+}
+.pick-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pick-detail-head,
+.draft-meta,
+.draft-actions,
+.writer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pick-stage {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.pick-stage[data-stage="ready"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.pick-detail-title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pick-sources {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.pick-sources a {
+  color: var(--text);
+}
+.pick-empty-draft,
+.writer-start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pick-empty-draft p,
+.writer-start p {
+  margin: 0;
+}
+.draft-meta small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.draft-meta select {
+  font-size: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.draft-image {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fffdf8;
+}
+.draft-quote {
+  margin: 0;
+  font-size: 12px;
+  word-break: break-all;
+}
+.draft-problems {
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  border: 1px solid var(--bad, #e03131);
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.draft-problems li {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.draft-body {
+  min-height: 260px;
+  resize: vertical;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 10px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.draft-body[readonly] {
+  opacity: 0.75;
+}
+.writer-bar {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.writer-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  font-size: 13px;
+}
+.writer-busy {
+  font-size: 11px;
+  color: var(--accent);
+  flex: none;
+}

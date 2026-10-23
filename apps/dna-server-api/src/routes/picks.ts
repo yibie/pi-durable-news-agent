@@ -5,6 +5,7 @@ import { PICK_GENRES, PICK_STATUSES, type Card, type TopicPick } from "@dna/sdk"
 import type { PickCard } from "../db/repos/picks.ts";
 import { int, invalid, notFound } from "../errors.ts";
 import { applyFeedback } from "../news/taste.ts";
+import { readyProblems } from "../writing/drafts.ts";
 import { bodyOf, num, oneOf, str, type Handlers, type RouteDeps } from "./types.ts";
 
 const asPickCard = (card: Card): PickCard => ({
@@ -85,6 +86,12 @@ export function pickRoutes({
         );
       if (removeCardId && !current.items.some((i) => i.cardId === removeCardId))
         throw invalid(`Card ${removeCardId} is not in pick ${id}`);
+      if (status === "published")
+        throw invalid("A pick is marked published by publishing it, not by hand");
+      if (status === "ready") {
+        const problems = readyProblems(store, current);
+        if (problems.length) throw invalid(`Pick ${id} is not ready: ${problems.join("; ")}`);
+      }
       let pick: TopicPick | undefined = current;
       if (addCardId) {
         const card = pickable(addCardId, id);

@@ -26,7 +26,7 @@ export interface ImageDeps {
   offline?: boolean;
 }
 
-const PLACEHOLDER_PNG = Buffer.from(
+export const PLACEHOLDER_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAABAAAAAJCAYAAAA7KqwyAAAAGElEQVR42mNkYPhfz0AEYBxVSF+FDAwAAKkCBHsPl7IAAAAASUVORK5CYII=",
   "base64",
 );

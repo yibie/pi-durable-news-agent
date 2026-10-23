@@ -187,8 +187,54 @@ export interface TopicPick {
   status: PickStatus;
   note?: string;
   items: PickItem[];
+  /** The pick's writer conversation, once writing started. */
+  conversationId?: string;
+  /** The newest draft's revision; absent before the first draft. */
+  draftRevision?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/** A post's text checks: Markdown lines (X shows them literally) and X's weighted length (CJK counts 2). */
+export interface PostLint {
+  markdown: { line: number; text: string }[];
+  weighted: number;
+  chars: number;
+  overLimit: boolean;
+}
+
+/** One version of a pick's post: the text and the argmap image it goes out with. */
+export interface Draft {
+  id: number;
+  pickId: number;
+  revision: number;
+  body: string;
+  imageId?: number;
+  /** A quote post: the post on X it quotes. */
+  quoteUrl?: string;
+  layout?: string;
+  /** The renderer's self-check findings for the image (overlap, overflow, too tall). */
+  warnings: string[];
+  author: "writer" | "reader";
+  note?: string;
+  lint: PostLint;
+  createdAt: string;
+}
+
+/** Start the pick's writer, or send it a message (a revision request) once it exists. */
+export interface WriteBody {
+  message?: string;
+}
+
+export interface WriteResult {
+  pick: TopicPick;
+  conversationId: string;
+}
+
+/** The reader's own edit: a new revision with the newest image. */
+export interface SaveDraftBody {
+  body: string;
+  note?: string;
 }
 
 export interface CreatePickBody {
@@ -544,6 +590,8 @@ export type Frame =
   | { type: "taste.question"; question: TasteQuestion }
   /** A pick was created or changed (including dropped, which takes it out of the basket). */
   | { type: "pick"; pick: TopicPick }
+  /** A new draft revision (the writer saved one or the reader edited). */
+  | { type: "draft"; draft: Draft }
   | { type: "agent.state"; state: AgentState }
   | { type: "usage"; usage: UsageDay }
   /** The agent opened a feed tab (open_tab) in every open browser. */

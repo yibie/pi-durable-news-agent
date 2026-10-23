@@ -10,6 +10,7 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@dna/argmap": "*",
     "@dna/durable-agent": "*",
     "@dna/jev": "*",
     "@dna/sdk": "*",

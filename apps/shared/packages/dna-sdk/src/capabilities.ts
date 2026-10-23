@@ -53,6 +53,11 @@ export const CAPABILITIES = {
     summary: "Pick cards for writing: choose a genre, group a roundup, change or drop a pick",
     routes: ["picks.list", "picks.create", "picks.update"],
   },
+  writing: {
+    summary:
+      "Write a pick with its writer: start it, ask for revisions, stop it, read and edit the drafts",
+    routes: ["picks.write", "picks.stop", "drafts.list", "drafts.save"],
+  },
   keywords: {
     summary: "List, add, weight, toggle and remove keywords",
     routes: ["keywords.list", "keywords.add", "keywords.update", "keywords.remove"],

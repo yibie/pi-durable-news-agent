@@ -135,6 +135,13 @@ export function buildCommands(state: CompletionState): Command[] {
         ),
     },
     {
+      name: "write",
+      cap: "writing",
+      description: "a pick's writer: start it or send a message, list drafts, stop it",
+      argumentHint: "<pick> [message] | drafts <pick> | stop <pick>",
+      getArgumentCompletions: (arg) => lastWord(arg, (i) => (i === 0 ? ["drafts", "stop"] : [])),
+    },
+    {
       name: "keywords",
       cap: "keywords",
       description: "keywords per section with weights",

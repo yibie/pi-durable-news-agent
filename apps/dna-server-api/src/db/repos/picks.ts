@@ -113,12 +113,31 @@ export class PicksRepo {
     this.db.prepare("UPDATE picks SET updated_at = ? WHERE id = ?").run(now, id);
   }
 
+  /** Remember the pick's writer conversation (set once, when writing starts). */
+  setConversation(id: number, conversationId: string): TopicPick | undefined {
+    this.db
+      .prepare(
+        "UPDATE picks SET conversation_id = ?, updated_at = ? WHERE id = ? AND conversation_id IS NULL",
+      )
+      .run(conversationId, nowIso(), id);
+    return this.get(id);
+  }
+
+  /** The pick a writer conversation belongs to. */
+  byConversation(conversationId: string): TopicPick | undefined {
+    const r = this.db.prepare("SELECT * FROM picks WHERE conversation_id = ?").get(conversationId);
+    return r ? this.toPick(r) : undefined;
+  }
+
   private toPick(r: any): TopicPick {
     const items = (
       this.db
         .prepare("SELECT * FROM pick_items WHERE pick_id = ? ORDER BY position, added_at")
         .all(r.id) as any[]
     ).map(toItem);
+    const draft = this.db
+      .prepare("SELECT MAX(revision) AS n FROM drafts WHERE pick_id = ?")
+      .get(r.id) as { n: number | null };
     return {
       id: r.id,
       genre: r.genre,
@@ -126,6 +145,8 @@ export class PicksRepo {
       status: r.status,
       note: str(r.note),
       items,
+      conversationId: str(r.conversation_id),
+      draftRevision: draft.n ?? undefined,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     };

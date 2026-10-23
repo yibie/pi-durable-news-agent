@@ -1,0 +1,23 @@
+{
+  "name": "@dna/argmap",
+  "private": true,
+  "description": "argmap: an article's argument as one hand-drawn Excalidraw image (10 layouts), rendered to PNG in headless Chromium",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "esbuild entry.js --bundle --format=iife --outfile=web/bundle.js --define:process.env.NODE_ENV='\"production\"' --log-level=warning && rm -rf web/fonts && cp -R ../../../../node_modules/@excalidraw/excalidraw/dist/prod/fonts web/fonts",
+    "check": "tsc -p .",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
+    "playwright": "1.64.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}

@@ -378,6 +378,29 @@ export class App {
             return done(await cl.updatePick(id(1), { status: "dropped" }), "Dropped");
           throw new Error("/picks actions are all, add, join, remove, genre and drop");
         }
+        case "write": {
+          const [action] = words;
+          if (action === "drafts") {
+            const list = await cl.drafts(id(1));
+            return this.show(
+              "detail",
+              `drafts of pick ${words[1]}`,
+              list.length
+                ? list.flatMap((d) => print.draftText(d).split("\n"))
+                : [c.muted("No drafts yet.")],
+            );
+          }
+          if (action === "stop") {
+            await cl.stopWriter(id(1));
+            return this.flash(`Stopped the writer of pick ${words[1]}`);
+          }
+          const message = words.slice(1).join(" ").trim();
+          const r = await cl.write(id(0), message ? { message } : {});
+          this.feed.apply({ type: "pick", pick: r.pick });
+          return this.flash(
+            message ? `Sent to the writer of pick ${r.pick.id}` : `Writing pick ${r.pick.id}`,
+          );
+        }
         case "keywords": {
           const kind = words[0] as (typeof KEYWORD_KINDS)[number] | undefined;
           if (kind && !KEYWORD_KINDS.includes(kind))

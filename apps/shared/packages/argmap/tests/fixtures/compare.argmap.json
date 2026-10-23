@@ -1,0 +1,134 @@
+{
+  "layout": "compare",
+  "sides": ["判 trace 对错（Hamel）", "客服 agent（IBM）", "公平性评测（Ai2）"],
+  "dims": ["常看的那个数", "换个设定", "作者的做法"],
+  "landmark": "一个评测分数能不能拿来拍板？先看它是在什么设定下测的，换个设定，分数就会变。",
+  "reader": "拿评测分数决定模型或 agent 能不能上线的工程师",
+  "footnote": "注：Hamel 用租房客服 agent 的 98 条人工标注 trace 比了 6 个 decision model；IBM 用的是 τ²-bench 零售留出集与 GPT-4.1；Ai2 的 FairStress 有 300 个二选一场景，覆盖 29 个领域。0.40 / 0.10 是 Hamel 举的假设例子。橙色是我们的判断。",
+  "article": {
+    "title": "Hamel Husain《How To Use Decision Models for Evals》· IBM Research《ALTK-Evolve》· Ai2《FairStress》",
+    "url": "https://hamel.dev/blog/posts/decision-model-evals/",
+    "published": "均为 2026-10-20"
+  },
+  "nodes": [
+    {
+      "id": "H1",
+      "kind": "evidence",
+      "side": "判 trace 对错（Hamel）",
+      "dim": "常看的那个数",
+      "col": 1,
+      "row": 0,
+      "title": "默认阈值 0.50",
+      "point": "decision model 给每条 trace 打一个失败概率，API 默认 0.50 以上才算失败。",
+      "quote": "The APIs turn this score into a decision using a default decision threshold of 0.50",
+      "source": "https://hamel.dev/blog/posts/decision-model-evals/"
+    },
+    {
+      "id": "H2",
+      "kind": "evidence",
+      "side": "判 trace 对错（Hamel）",
+      "dim": "换个设定",
+      "col": 1,
+      "row": 0,
+      "title": "好模型也可能一个错都抓不到",
+      "point": "失败都打 0.40、正常都打 0.10 的模型，阈值设 0.30 能全分开，用默认的 0.50 一个都抓不到。",
+      "quote": "Even though this model classifies traces perfectly at a threshold of 0.30, the default threshold of 0.50 would catch nothing.",
+      "source": "https://hamel.dev/blog/posts/decision-model-evals/"
+    },
+    {
+      "id": "H3",
+      "kind": "evidence",
+      "side": "判 trace 对错（Hamel）",
+      "dim": "作者的做法",
+      "col": 1,
+      "row": 0,
+      "title": "先定底线，再调阈值",
+      "point": "先按用途给 precision 和 recall 定底线（这篇是 80%），过不了的模型不进候选，阈值再用人工标注的 trace 调。",
+      "quote": "set minimum precision and recall requirements for your use case. Rule out models that cannot meet these.",
+      "source": "https://hamel.dev/blog/posts/decision-model-evals/"
+    },
+    {
+      "id": "I1",
+      "kind": "evidence",
+      "side": "客服 agent（IBM）",
+      "dim": "常看的那个数",
+      "col": 2,
+      "row": 0,
+      "title": "平均准确率 82.5%",
+      "point": "零售场景每题跑 4 次，加上学到的 guideline 后平均做对 82.5%。",
+      "quote": "Mean Accuracy climbs in both domains — retail +4.4 pts (78.1 → 82.5)",
+      "source": "https://huggingface.co/blog/ibm-research/altk-evolve-bc"
+    },
+    {
+      "id": "I2",
+      "kind": "evidence",
+      "side": "客服 agent（IBM）",
+      "dim": "换个设定",
+      "col": 2,
+      "row": 0,
+      "title": "4 次全对只有 67.5%",
+      "point": "作者的理由：退款 4 次办对 3 次，仍有四分之一的客户被办砸。",
+      "quote": "a support agent that resolves a refund 3 times out of 4 still fails a quarter of real customers",
+      "source": "https://huggingface.co/blog/ibm-research/altk-evolve-bc"
+    },
+    {
+      "id": "I3",
+      "kind": "evidence",
+      "side": "客服 agent（IBM）",
+      "dim": "作者的做法",
+      "col": 2,
+      "row": 0,
+      "title": "两个数一起报",
+      "point": "平均准确率看能力，4 次全对率看可靠性；guideline 让后者涨了 10 个点，前者只涨 4.4。",
+      "quote": "the strict Pass^4 rises +10 pts in retail (57.5 → 67.5)",
+      "source": "https://huggingface.co/blog/ibm-research/altk-evolve-bc"
+    },
+    {
+      "id": "F1",
+      "kind": "evidence",
+      "side": "公平性评测（Ai2）",
+      "dim": "常看的那个数",
+      "col": 3,
+      "row": 0,
+      "title": "换了身份，还选不选同一个人",
+      "point": "常见做法是两份条件相同的材料只换族裔等身份，看模型的选择变不变。",
+      "quote": "Standard demographic fairness benchmarks often test whether a model selects the same candidate in otherwise identical scenarios after the candidates’ demographic identities are swapped.",
+      "source": "https://huggingface.co/blog/allenai/fairstress"
+    },
+    {
+      "id": "F2",
+      "kind": "evidence",
+      "side": "公平性评测（Ai2）",
+      "dim": "换个设定",
+      "col": 3,
+      "row": 0,
+      "title": "选对了，却不一样容易被说动",
+      "point": "加一段同样的说服话术，模型放弃正确选择的概率随受益一方的身份而变，15 个模型平均差 6.9 到 9.3 个百分点。",
+      "quote": "the average gap in abandoning correct answers was 6.9 percentage points with implied identity and 9.3 points with explicit labels.",
+      "source": "https://huggingface.co/blog/allenai/fairstress"
+    },
+    {
+      "id": "F3",
+      "kind": "evidence",
+      "side": "公平性评测（Ai2）",
+      "dim": "作者的做法",
+      "col": 3,
+      "row": 0,
+      "title": "两种问法都要测",
+      "point": "同一批 BBQ 题改成聊天模板、是非问法并让模型自己作答后，4 个模型里有 3 个测出的偏向方向反了过来。",
+      "quote": "the direction of measured bias depends partly on how a benchmark asks the question and scores the answer",
+      "source": "https://huggingface.co/blog/allenai/fairstress"
+    },
+    {
+      "id": "K1",
+      "kind": "our-take",
+      "col": 2,
+      "row": 1,
+      "title": "分数要和测它的设定一起报",
+      "point": "这三篇里，只换一个设定，分数就跟着变，有时连方向都反过来。",
+      "quote": "",
+      "source": ""
+    }
+  ],
+  "edges": []
+}

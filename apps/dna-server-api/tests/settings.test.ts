@@ -144,7 +144,7 @@ test("the tool list: every tool once with its agents, params from the schema, wh
   const byName = new Map(tools.map((t) => [t.name, t]));
   assert.equal(byName.size, tools.length, "each tool once");
   const search = byName.get("search_web")!;
-  assert.deepEqual(search.agents.sort(), ["news-desk", "news-researcher"]);
+  assert.deepEqual(search.agents.sort(), ["news-desk", "news-researcher", "writer"]);
   assert.deepEqual(
     search.params.map((p) => [p.name, p.type, p.required]),
     [

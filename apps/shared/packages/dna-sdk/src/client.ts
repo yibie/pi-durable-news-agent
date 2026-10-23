@@ -34,6 +34,10 @@ import type {
   ToolCallDetail,
   ToolCallRow,
   UpdatePickBody,
+  WriteBody,
+  WriteResult,
+  Draft,
+  SaveDraftBody,
   UsageDay,
   WorkflowResult,
 } from "./api.ts";
@@ -295,6 +299,18 @@ export class DnaClient {
   }
   updatePick(id: number, body: UpdatePickBody) {
     return this.call<TopicPick>("picks.update", { params: { id }, body });
+  }
+  write(id: number, body: WriteBody = {}) {
+    return this.call<WriteResult>("picks.write", { params: { id }, body });
+  }
+  stopWriter(id: number) {
+    return this.call<{ ok: true }>("picks.stop", { params: { id } });
+  }
+  drafts(id: number) {
+    return this.call<Draft[]>("drafts.list", { params: { id } });
+  }
+  saveDraft(id: number, body: SaveDraftBody) {
+    return this.call<Draft>("drafts.save", { params: { id }, body });
   }
 
   // ------------------------------------------------------------ settings

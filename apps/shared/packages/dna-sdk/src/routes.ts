@@ -127,6 +127,30 @@ export const ROUTES = {
     scope: "feedback",
     summary: "Change a pick's genre, title, note or status, or add and remove a card",
   },
+  "picks.write": {
+    method: "POST",
+    path: "/v1/picks/:id/write",
+    scope: "chat",
+    summary: "Start the pick's writer (once), or send it a message such as a revision request",
+  },
+  "picks.stop": {
+    method: "POST",
+    path: "/v1/picks/:id/stop",
+    scope: "chat",
+    summary: "Interrupt the pick's writer",
+  },
+  "drafts.list": {
+    method: "GET",
+    path: "/v1/picks/:id/drafts",
+    scope: "read",
+    summary: "Every draft revision of a pick, newest first",
+  },
+  "drafts.save": {
+    method: "POST",
+    path: "/v1/picks/:id/drafts",
+    scope: "chat",
+    summary: "Save the reader's own edit of the post as a new revision with the newest image",
+  },
   "keywords.list": {
     method: "GET",
     path: "/v1/keywords",

@@ -190,6 +190,60 @@ const deepResearcher: FauxRule = (turn) => {
   );
 };
 
+// A pick's writer: read the pick and its first source, draw a two-card flow, save the draft, then answer. A reader's
+// message after that (a revision request) saves one more revision with the same image.
+const writer: FauxRule = (turn) => {
+  if (!("writer" in turn.sections)) return undefined;
+  if (!called(turn, "read_pick").length) return call("read_pick", {});
+  const pick = resultOf(turn, "read_pick")[0]?.text ?? "";
+  const url = pick.match(/\| (https?:\/\/\S+)/)?.[1] ?? "https://example.com/source";
+  const item = Number(pick.match(/^item (\d+)/m)?.[1]);
+  if (item && !called(turn, "read_source").length) return call("read_source", { item_id: item });
+  if (!called(turn, "render_argmap").length && !/newest draft: revision/.test(pick))
+    return call("render_argmap", {
+      argmap: {
+        layout: "flow",
+        landmark: "一次发布改了什么：它让 agent 的运行可以中断后接着跑",
+        reader: "在生产环境跑 agent 的工程师",
+        nodes: [
+          {
+            id: "K1",
+            kind: "thesis",
+            title: "运行可以中断后接着跑",
+            point: "进程崩了也不丢进度。",
+            quote: "Runs resume after a crash.",
+            source: url,
+            col: 1,
+            row: 0,
+          },
+          {
+            id: "K2",
+            kind: "our-take",
+            title: "先在小任务上试",
+            point: "长任务最受益。",
+            col: 2,
+            row: 0,
+          },
+        ],
+        edges: [{ from: "K1", to: "K2", kind: "supports" }],
+      },
+    });
+  const imageId = Number(
+    (resultOf(turn, "render_argmap")[0]?.text ?? pick)
+      .match(/image_id (\d+)|image (\d+)/)
+      ?.slice(1)
+      .find(Boolean),
+  );
+  const revisions = called(turn, "save_draft").length;
+  if (!revisions)
+    return call("save_draft", {
+      body: `这次发布让 agent 的运行可以在进程崩溃后接着跑。\n\n我的判断：长任务最先受益。\n\n原文：${url}\n#Agent #工程`,
+      image_id: imageId || undefined,
+      note: /newest draft/.test(pick) ? "按读者意见改" : "初稿",
+    });
+  return say(`写好了：推进链版式，一张图加正文（第 ${revisions} 次保存）。`);
+};
+
 // "FAUX_CALL <tool> <json args>" calls one tool and echoes its result: drives single tools in tests and demos.
 const direct: FauxRule = (turn) => {
   const m = turn.lastUser.match(/^FAUX_CALL (\w+) (\{.*\})$/s);
@@ -213,4 +267,11 @@ const publishDate: FauxRule = (turn) => {
   return say(JSON.stringify({ published: day }));
 };
 
-export const fauxRules = (): FauxRule[] => [publishDate, direct, researcher, deepResearcher, desk];
+export const fauxRules = (): FauxRule[] => [
+  publishDate,
+  direct,
+  researcher,
+  deepResearcher,
+  writer,
+  desk,
+];

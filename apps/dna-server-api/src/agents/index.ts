@@ -37,6 +37,14 @@ import { runNewsSweep } from "./tools/run-news-sweep.ts";
 import { saveSource } from "./tools/save-source.ts";
 import { scrapeUrl } from "./tools/scrape-url.ts";
 import { searchWeb } from "./tools/search-web.ts";
+import {
+  readPick,
+  readSource,
+  recentLayouts,
+  renderArgmapTool,
+  saveDraftTool,
+} from "./tools/writer.ts";
+import { writerPrompt } from "../writing/rules.ts";
 
 export const DESK_TOOLS = [
   "run_news_sweep",
@@ -69,11 +77,21 @@ export const RESEARCHER_TOOLS = [
   "report_findings",
 ] as const;
 export const DEEP_RESEARCH_TOOLS = ["deep_search", "open_page", "read_item"] as const;
+export const WRITER_TOOLS = [
+  "read_pick",
+  "read_source",
+  "search_web",
+  "recent_layouts",
+  "render_argmap",
+  "save_draft",
+] as const;
 
 export interface Agents {
   newsDesk: Extension;
   newsResearcher: Extension;
   deepResearch: Extension;
+  /** A pick's writer: one conversation per pick. */
+  writer: Extension;
   observe: Extension;
   /** Install order for the registry. */
   all: Extension[];
@@ -83,6 +101,8 @@ export interface Agents {
   researcher(): AgentChange;
   /** What a deep-research child runs with: the reader's deep research model and thinking level. */
   deepResearcher(): AgentChange;
+  /** What a pick's writer conversation runs with: the writer model (DNA_WRITER_MODEL). */
+  writerAgent(): AgentChange;
   /** Each agent's tools, for the tool list clients show. */
   tools: Record<string, readonly { name: string; description: string; parameters: unknown }[]>;
 }
@@ -160,6 +180,28 @@ export function createAgents(deps: Deps): Agents {
       extensions: [deepResearch, observe],
     };
   };
+  const writerTools = [
+    readPick(deps),
+    readSource(deps),
+    shared.searchWeb,
+    recentLayouts(deps),
+    renderArgmapTool(deps),
+    saveDraftTool(deps),
+  ];
+  const writer = defineExtension({
+    name: "writer",
+    tools: writerTools,
+    sections: [section("writer", () => writerPrompt(deps.config), { tag: false })],
+    hooks: [allowOnly("writer", WRITER_TOOLS)],
+  });
+  const writerAgent = (): AgentChange => ({
+    model:
+      deps.catalog.provider === "faux"
+        ? deps.catalog.defaultModel
+        : deps.catalog.ref(deps.config.writerModel),
+    thinkingLevel: "medium",
+    extensions: [writer, observe],
+  });
   const deskTools = [
     runNewsSweep(deps, sweepTask),
     listCandidates(deps),
@@ -194,15 +236,18 @@ export function createAgents(deps: Deps): Agents {
     newsDesk,
     newsResearcher,
     deepResearch,
+    writer,
     observe,
-    all: [newsDesk, newsResearcher, deepResearch, observe],
+    all: [newsDesk, newsResearcher, deepResearch, writer, observe],
     defaults: [newsDesk, observe],
     researcher,
     deepResearcher,
+    writerAgent,
     tools: {
       "news-desk": deskTools,
       "news-researcher": researcherTools,
       "deep-research": deepResearchTools,
+      writer: writerTools,
     },
   };
 }
