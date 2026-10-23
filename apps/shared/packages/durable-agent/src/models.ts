@@ -1,7 +1,11 @@
 // The model catalog: Haiku 5.5 (default) plus 29 more models, all through OpenRouter.
 // DNA_PROVIDER=deepseek uses DeepSeek's own API instead (DEEPSEEK_API_KEY), with its two chat models.
+// Either one can add Claude through Anthropic's own API (`anthropic: true`), signed in through a credential store
+// such as pi's auth.json; OpenRouter-style Claude ids then resolve to the native ones.
 // DNA_PROVIDER=faux swaps in a free deterministic model with the same 1M window.
+import type { CredentialStore } from "@earendil-works/pi-ai";
 import { createModels, type MutableModels } from "@earendil-works/pi-ai/models";
+import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
 import { deepseekProvider } from "@earendil-works/pi-ai/providers/deepseek";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import type { ModelRef } from "@earendil-works/pi-durable";
@@ -86,6 +90,20 @@ export const DEEPSEEK_CATALOG: readonly CatalogEntry[] = [
   { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", tier: "A", icon: "deepseek.png" },
 ];
 
+/** Anthropic's direct API: native ids, used next to the provider above when Claude is signed in. */
+export const ANTHROPIC_CATALOG: readonly CatalogEntry[] = [
+  { id: "claude-opus-5-5", name: "Claude Opus 5.5", tier: "S+", icon: "anthropic.png" },
+  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", tier: "S+", icon: "anthropic.png" },
+  { id: "claude-fable-5-1", name: "Claude Fable 5.1", tier: "S+", icon: "anthropic.png" },
+  { id: "claude-haiku-5-5", name: "Claude Haiku 5.5", tier: "A", icon: "anthropic.png" },
+];
+
+/** anthropic/claude-haiku-5.5 (OpenRouter) to claude-haiku-5-5 (Anthropic). */
+export function nativeClaudeId(id: string): string | undefined {
+  const m = /^anthropic\/(claude-[a-z]+-[\d.]+)$/.exec(id);
+  return m ? m[1]!.replaceAll(".", "-") : undefined;
+}
+
 export interface ModelCatalog {
   readonly models: MutableModels;
   readonly provider: CatalogProvider;
@@ -100,8 +118,12 @@ export function createModelCatalog(options: {
   provider: CatalogProvider;
   installFaux?: (models: MutableModels) => void;
   defaultModel?: string;
+  /** Also offer Claude through Anthropic's own API. */
+  anthropic?: boolean;
+  /** Where signed-in providers keep their credentials (OAuth refreshes write back here). */
+  credentials?: CredentialStore;
 }): ModelCatalog {
-  const models = createModels();
+  const models = createModels(options.credentials ? { credentials: options.credentials } : {});
   if (options.provider === "faux") {
     if (!options.installFaux) throw new Error("A faux catalog needs installFaux");
     options.installFaux(models);
@@ -146,27 +168,48 @@ export function createModelCatalog(options: {
           catalog: CATALOG,
           fallback: DEFAULT_MODEL,
         };
-  const { provider, catalog } = live;
-  models.setProvider(provider);
-  const known = provider.getModels();
-  const missing = catalog.filter((c) => !known.some((m) => m.id === c.id)).map((c) => c.id);
-  if (missing.length) throw new Error(`${live.name} catalog is missing: ${missing.join(", ")}`);
-  const list = () =>
-    catalog.map((c) => {
+  const lives = [
+    live,
+    ...(options.anthropic
+      ? [
+          {
+            id: "anthropic",
+            name: "Anthropic",
+            provider: anthropicProvider(),
+            catalog: ANTHROPIC_CATALOG,
+            fallback: "claude-haiku-5-5",
+          },
+        ]
+      : []),
+  ];
+  const entries = lives.flatMap((l) => {
+    models.setProvider(l.provider);
+    const known = l.provider.getModels();
+    const missing = l.catalog.filter((c) => !known.some((m) => m.id === c.id)).map((c) => c.id);
+    if (missing.length) throw new Error(`${l.name} catalog is missing: ${missing.join(", ")}`);
+    return l.catalog.map((c) => {
       const m = known.find((x) => x.id === c.id)!;
       return {
         ...c,
-        provider: live.id,
+        provider: l.id,
         contextWindow: m.contextWindow,
         reasoning: m.reasoning,
         cost: { input: m.cost.input, output: m.cost.output },
       };
     });
+  });
+  const list = () => entries;
   const defaultId = options.defaultModel ?? live.fallback;
+  const find = (id: string) =>
+    entries.find((m) => m.id === id) ??
+    (options.anthropic && live.id !== "openrouter"
+      ? entries.find((m) => m.id === nativeClaudeId(id))
+      : undefined);
   const ref = (id: string): ModelRef => {
-    if (!catalog.some((c) => c.id === id))
-      throw new Error(`Unknown model ${id}. Pick one of the ${catalog.length} catalog models.`);
-    return { provider: live.id, modelId: id };
+    const entry = find(id);
+    if (!entry)
+      throw new Error(`Unknown model ${id}. Pick one of the ${entries.length} catalog models.`);
+    return { provider: entry.provider, modelId: entry.id };
   };
   return {
     models,
@@ -174,6 +217,6 @@ export function createModelCatalog(options: {
     defaultModel: ref(defaultId),
     list,
     ref,
-    info: (id) => list().find((m) => m.id === id),
+    info: (id) => find(id),
   };
 }

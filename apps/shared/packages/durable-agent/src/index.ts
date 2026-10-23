@@ -1,6 +1,7 @@
 export * from "./lock.ts";
 export * from "./compaction.ts";
 export * from "./models.ts";
+export * from "./credentials.ts";
 export * from "./harness.ts";
 export * from "./prompts.ts";
 export * from "./tools.ts";

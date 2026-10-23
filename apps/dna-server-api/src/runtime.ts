@@ -7,6 +7,7 @@ import type { Context } from "@earendil-works/chord";
 import { JevClient, type Decide } from "@dna/jev";
 import type { CompactionState } from "@dna/sdk";
 import {
+  AuthFileStore,
   createModelCatalog,
   DEFAULT_POINTS,
   fit,
@@ -73,6 +74,9 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     provider: config.provider,
     installFaux: (models) => installScriptedFaux(models, fauxRules()),
     defaultModel: config.provider === "faux" ? undefined : config.model,
+    ...(config.anthropicAuth
+      ? { anthropic: true, credentials: new AuthFileStore(config.anthropicAuth) }
+      : {}),
   });
   const judge = new Judge({
     decide: decideFor(config),

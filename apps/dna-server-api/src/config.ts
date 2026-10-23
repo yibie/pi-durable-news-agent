@@ -27,6 +27,10 @@ export interface Config {
   maxSavedSources: number;
   model: string;
   researchModel: string;
+  /** A pi-style auth.json signed in to Anthropic: adds Claude (native ids) next to the provider above. */
+  anthropicAuth?: string;
+  /** The writer's model: Claude Opus 5.5 when Anthropic is signed in, DeepSeek V4 Pro on DeepSeek, else the agent's. */
+  writerModel: string;
   imageModel: string;
   imageQuality: string;
   openaiKey?: string;
@@ -85,6 +89,14 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     maxSavedSources: int(env.DNA_MAX_SAVED_SOURCES, 25),
     model: env.DNA_MODEL ?? defaultModel,
     researchModel: env.DNA_RESEARCH_MODEL ?? env.DNA_MODEL ?? defaultModel,
+    anthropicAuth: provider === "faux" ? undefined : env.DNA_ANTHROPIC_AUTH?.trim() || undefined,
+    writerModel:
+      env.DNA_WRITER_MODEL?.trim() ||
+      (provider !== "faux" && env.DNA_ANTHROPIC_AUTH?.trim()
+        ? "claude-opus-5-5"
+        : provider === "deepseek"
+          ? "deepseek-v4-pro"
+          : (env.DNA_MODEL ?? defaultModel)),
     imageModel: env.DNA_IMAGE_MODEL ?? "gpt-image-2.5-flare",
     imageQuality: env.DNA_IMAGE_QUALITY ?? "low",
     openaiKey: env.OPENAI_API_KEY?.trim() || undefined,
