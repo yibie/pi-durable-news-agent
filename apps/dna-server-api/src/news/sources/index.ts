@@ -14,6 +14,7 @@ import { fetchHnFront, fetchHnSearch } from "./hn.ts";
 import { fetchFeed } from "./rss.ts";
 import type { Fetcher } from "./types.ts";
 import { fetchWebPage } from "./webpage.ts";
+import { fetchXUser, xHandle } from "./x.ts";
 
 export const FETCHERS: Record<Source["kind"], Fetcher> = {
   rss: fetchFeed,
@@ -21,7 +22,9 @@ export const FETCHERS: Record<Source["kind"], Fetcher> = {
   hn_front: fetchHnFront,
   hn_search: fetchHnSearch,
   github_releases: fetchGithubReleases,
-  web_page: fetchWebPage,
+  // An X profile url is an account, read through the twitter CLI.
+  web_page: (source, ctx) =>
+    xHandle(source.url) ? fetchXUser(source, ctx) : fetchWebPage(source, ctx),
 };
 
 /** Feed entries live a day in the cache. */
@@ -103,6 +106,17 @@ export async function fetchSource(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const status = (error as { status?: number }).status;
+    const skip = (error as { skip?: string }).skip;
+    if (skip) {
+      deps.store.sources.fetched(source.id, { ok: true, status: `skipped: ${skip}`.slice(0, 200) });
+      deps.log?.warn("source.skipped", {
+        sourceId: source.id,
+        source: source.name,
+        reason: skip,
+        error: message,
+      });
+      return { source, ok: false, status: "skipped", docs: [], disabled: false, error: skip };
+    }
     if (status === 429 || status === 403) {
       const reason = status === 429 ? "429 rate limited" : "403 blocked";
       deps.log?.warn("source.skipped", { sourceId: source.id, source: source.name, reason });

@@ -725,6 +725,328 @@
       "url": "https://arcprize.org/blog",
       "interval_min": 30,
       "weight": 0.9
+    },
+    {
+      "kind": "web_page",
+      "name": "@karpathy",
+      "url": "https://x.com/karpathy",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@lilianweng",
+      "url": "https://x.com/lilianweng",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ylecun",
+      "url": "https://x.com/ylecun",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@DrJimFan",
+      "url": "https://x.com/DrJimFan",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@fchollet",
+      "url": "https://x.com/fchollet",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@alexalbert__",
+      "url": "https://x.com/alexalbert__",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@_philschmid",
+      "url": "https://x.com/_philschmid",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@osanseviero",
+      "url": "https://x.com/osanseviero",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@drfeifei",
+      "url": "https://x.com/drfeifei",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@bcherny",
+      "url": "https://x.com/bcherny",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@_avichawla",
+      "url": "https://x.com/_avichawla",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@akshay_pachaar",
+      "url": "https://x.com/akshay_pachaar",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@trq212",
+      "url": "https://x.com/trq212",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@mitchellh",
+      "url": "https://x.com/mitchellh",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@thsottiaux",
+      "url": "https://x.com/thsottiaux",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@AmandaAskell",
+      "url": "https://x.com/AmandaAskell",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@amasad",
+      "url": "https://x.com/amasad",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@levie",
+      "url": "https://x.com/levie",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@nikunj",
+      "url": "https://x.com/nikunj",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@steipete",
+      "url": "https://x.com/steipete",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@danshipper",
+      "url": "https://x.com/danshipper",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@adityaag",
+      "url": "https://x.com/adityaag",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@nutlope",
+      "url": "https://x.com/nutlope",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@addyosmani",
+      "url": "https://x.com/addyosmani",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@goodside",
+      "url": "https://x.com/goodside",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@nicholasbs",
+      "url": "https://x.com/nicholasbs",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@simonw",
+      "url": "https://x.com/simonw",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@swyx",
+      "url": "https://x.com/swyx",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@mattpocockuk",
+      "url": "https://x.com/mattpocockuk",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@mckaywrigley",
+      "url": "https://x.com/mckaywrigley",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@saranormous",
+      "url": "https://x.com/saranormous",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@danielgross",
+      "url": "https://x.com/danielgross",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@emollick",
+      "url": "https://x.com/emollick",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@garrytan",
+      "url": "https://x.com/garrytan",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@yoheinakajima",
+      "url": "https://x.com/yoheinakajima",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@paraga",
+      "url": "https://x.com/paraga",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jxnlco",
+      "url": "https://x.com/jxnlco",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@svpino",
+      "url": "https://x.com/svpino",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@bindureddy",
+      "url": "https://x.com/bindureddy",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@MervinPraison",
+      "url": "https://x.com/MervinPraison",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@hwchase17",
+      "url": "https://x.com/hwchase17",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@yacineMTB",
+      "url": "https://x.com/yacineMTB",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@garymarcus",
+      "url": "https://x.com/garymarcus",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@DeRonin_",
+      "url": "https://x.com/DeRonin_",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@sairahul1",
+      "url": "https://x.com/sairahul1",
+      "interval_min": 120,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jeremyphoward",
+      "url": "https://x.com/jeremyphoward",
+      "interval_min": 120,
+      "weight": 1.0
     }
   ]
 }
