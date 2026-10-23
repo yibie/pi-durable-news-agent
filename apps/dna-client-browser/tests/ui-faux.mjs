@@ -574,11 +574,14 @@ try {
   const roundup = (await call("GET", "/v1/picks")).find((p) =>
     p.items.some((i) => String(i.cardId) === firstId),
   );
+  const stageTab = (s) => page.locator(`.picks-column [data-stage-tab="${s}"]`);
   check(
     roundup?.genre === "roundup" &&
+      (await stageTab("selected").getAttribute("aria-selected")) === "true" &&
+      (await stageTab("selected").locator("small").innerText()) === "1" &&
       (await shownInNews()) === newsBeforePicks - 1 &&
       (await call("GET", `/v1/cards/${firstId}`)).card.feedback.signal === "more",
-    "picking a card moves it from News into the basket and counts as show me more",
+    "picking a card moves it from News into the basket's 已选 tab and counts as show me more",
   );
   const second = page.locator(`.feed-list [data-card-id="${secondId}"]`);
   await second.getByRole("button", { name: "Add to a roundup" }).click();
@@ -663,8 +666,9 @@ try {
   await page.getByRole("button", { name: "Mark ready" }).click();
   await page.locator('.pick-stage[data-stage="ready"]').waitFor();
   check(
-    (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3,
-    "the reader's edits are kept as revisions and the clean draft goes to 待发布",
+    (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3 &&
+      (await stageTab("ready").getAttribute("aria-selected")) === "true",
+    "the reader's edits are kept as revisions, the clean draft goes to 待发布 and the stage tab follows it",
   );
   await page.getByRole("button", { name: "Rehearse" }).click();
   await page.locator(".publish-line", { hasText: "上次排练" }).waitFor();
@@ -685,9 +689,25 @@ try {
   );
   await collectCaps();
   await cleanText("publishing");
-  await page.getByRole("button", { name: "Back to the picks" }).click();
-  await page.locator('.pick-stage-head[data-stage="published"]').waitFor();
+  await stageTab("ready").click();
+  await page.locator('.picks-list[data-stage-list="ready"] .picks-spacing').waitFor();
+  check(
+    (await page.locator(".picks-spacing").textContent()).includes("最早") &&
+      (await page.locator(".pick-detail").count()) === 0,
+    "a stage tab goes back to its list, and 待发布 says when the next post may go",
+  );
+  await stageTab("published").click();
+  await page
+    .locator(`.picks-list[data-stage-list="published"] [data-pick-id="${writing.id}"]`)
+    .waitFor();
   await page.locator('[data-testid="chat"]').waitFor();
+  check(
+    (await stageTab("published").getAttribute("aria-selected")) === "true" &&
+      (await page.locator(".picks-list [data-pick-id]").count()) === 1,
+    "已发布 lists only the published pick, and the agent column is the news assistant again",
+  );
+  await page.screenshot({ path: join(shots, "stage-tabs.png") });
+  await cleanText("stage tabs");
 
   // ---------------------------------------------------------------- tool row into executions
   await page.waitForFunction(() =>

@@ -7,7 +7,13 @@ import { CircleAlert, FlaskConical, Send } from "@lucide/vue";
 import type { TopicPick } from "@dna/sdk";
 import { now } from "../client/store";
 import { clean } from "../client/text";
-import { ackPublish, publishNow, publishState, rehearse } from "../client/writing";
+import {
+  ackPublish,
+  beijingTime as time,
+  publishNow,
+  publishState,
+  rehearse,
+} from "../client/writing";
 
 const props = defineProps<{ pick: TopicPick }>();
 
@@ -22,8 +28,6 @@ const PHASES: Record<string, string> = {
   settle: "确认结果",
   pending: "点发布",
 };
-const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
 
 const st = computed(() => publishState.value);
 const waitUntil = computed(() => {
@@ -61,7 +65,11 @@ async function go() {
         class="publish-line"
         :title="st.last ? `上一条：${st.last.draftKey}，${time(st.last.at)}` : ''"
       >
-        {{ waitUntil ? `最早 ${time(waitUntil)} 可以发（两条之间隔 30 分钟）` : "现在可以发" }}
+        {{
+          waitUntil
+            ? `最早 ${time(waitUntil)} 可以发（北京时间，两条之间隔 30 分钟）`
+            : "现在可以发"
+        }}
       </p>
       <p v-if="mine" class="publish-line running">
         正在{{ mine.rehearsal ? "排练" : "发布" }}：{{ PHASES[mine.phase] ?? mine.phase }}

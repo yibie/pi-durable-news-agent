@@ -2111,15 +2111,49 @@ a.source:hover {
 }
 .picks-bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 8px 0 12px;
   border-bottom: 1px solid var(--line);
   flex: none;
-  font-weight: 500;
 }
-.picks-bar small {
+.picks-mark {
+  display: inline-flex;
+  align-items: center;
   color: var(--muted);
+}
+.picks-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  overflow-x: auto;
+  min-width: 0;
+}
+.picks-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 9px 10px;
+  color: var(--muted);
+  font-size: 15px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.picks-tab small {
+  color: var(--faint);
+  font-family: var(--mono);
+}
+.picks-tab[aria-selected="true"] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.picks-spacing {
+  margin: 0 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 .picks-list {
   flex: 1;
@@ -2205,18 +2239,6 @@ a.pick-title:hover {
 }
 
 /* Writing: the basket's stages, a pick's draft, the writer in the agent column. */
-.pick-stage-head {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 6px 2px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.pick-stage-head small {
-  font-weight: 400;
-}
 .pick-open {
   display: inline-flex;
   align-items: center;
@@ -2253,6 +2275,8 @@ a.pick-title:hover {
   border-color: var(--accent);
 }
 .pick-detail-title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: 17px;
   line-height: 1.4;

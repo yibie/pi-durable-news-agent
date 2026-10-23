@@ -1,7 +1,9 @@
 // Picks in the browser: genre names and hints for the writing workflow, and the actions the card and the basket share.
 import type { Card, PickGenre, TopicPick } from "@dna/sdk";
 import { clean } from "./text";
+import { layout } from "./layout";
 import { api, attempt, feed, notify } from "./store";
+import { openPickId } from "./writing";
 
 export const GENRE_NAMES: Record<PickGenre, string> = {
   single: "单篇",
@@ -28,7 +30,10 @@ const applied = (p: TopicPick | undefined) => {
 
 export async function pickCard(card: Card, genre: PickGenre) {
   const p = applied(await attempt(() => api.pick({ cardIds: [card.id], genre })));
-  if (p) notify(`已选用为${GENRE_NAMES[genre]}，放进选题篮`);
+  if (!p) return;
+  // Show the new pick, unless the reader is in the middle of another one.
+  if (openPickId.value === undefined) layout.picksTab = "selected";
+  notify(`已选用为${GENRE_NAMES[genre]}，放进选题篮`);
 }
 
 export async function joinRoundup(card: Card, pick: TopicPick) {

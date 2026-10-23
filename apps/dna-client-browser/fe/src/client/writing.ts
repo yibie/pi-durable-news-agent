@@ -2,6 +2,7 @@
 // own conversation, so it gets its own stream and agent model while a pick is open; the main stream stays as it is.
 import { computed, ref, shallowRef, watch } from "vue";
 import { AgentModel, follow, type Draft, type PublishState, type TopicPick } from "@dna/sdk";
+import { layout, PICK_STAGES, type PickStage } from "./layout";
 import { api, attempt, feed, feedState, notify, onFrame } from "./store";
 
 /** The pick open in the basket (detail view) and in the agent column (its writer). */
@@ -19,6 +20,21 @@ export const shownDraft = computed(
 
 /** Where publishing stands for the open pick: spacing, its ledger line, a running publish, its last rehearsal. */
 export const publishState = shallowRef<PublishState>({});
+/** Where publishing stands for the basket's 待发布 tab: the earliest next post and a running publish. */
+export const spacing = shallowRef<PublishState>({});
+
+export async function loadSpacing() {
+  const st = await attempt(() => api.publishState());
+  if (st) spacing.value = st;
+}
+
+/** Times on the publishing side are Beijing time, as everywhere in the content studio. */
+export const beijingTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Shanghai",
+  });
 
 let writer: AgentModel | undefined;
 export const writerView = shallowRef(new AgentModel().state);
@@ -86,8 +102,21 @@ watch(
   },
 );
 
+// The basket's stage tab follows the open pick: 开始写, 进入待发布 and 发布 move it, and back to the list lands there.
+watch(
+  () => openPick.value?.status,
+  (status) => {
+    if (status && PICK_STAGES.includes(status as PickStage)) layout.picksTab = status as PickStage;
+  },
+);
+
 onFrame((frame) => {
   if (frame.type === "publish") {
+    spacing.value = {
+      earliestAt: frame.state.earliestAt,
+      last: frame.state.last,
+      running: frame.state.running,
+    };
     const mine = frame.pickId === openPickId.value;
     publishState.value = mine
       ? frame.state

@@ -3,12 +3,11 @@
 // can edit in place (saved as a new revision). Older revisions stay one select away. 进入待发布 asks the server,
 // which refuses a draft with Markdown, a missing link block or an image with problems.
 import { computed, ref, watch } from "vue";
-import { ArrowLeft, CircleAlert, PenLine, Save, Send, Undo2 } from "@lucide/vue";
+import { CircleAlert, PenLine, Save, Send, Undo2 } from "@lucide/vue";
 import { layout, toggle } from "../client/layout";
 import { GENRE_NAMES, pickName } from "../client/picks";
 import { clean } from "../client/text";
 import {
-  closeWriting,
   draftProblems,
   drafts,
   openPick,
@@ -52,18 +51,9 @@ async function save() {
 <template>
   <div v-if="openPick" class="pick-detail" :data-pick-id="openPick.id">
     <header class="pick-detail-head">
-      <button
-        class="button secondary small"
-        aria-label="Back to the picks"
-        title="回到选题篮列表"
-        @click="closeWriting"
-      >
-        <ArrowLeft :size="13" />选题篮
-      </button>
-      <span class="grow" />
+      <h3 class="pick-detail-title">{{ GENRE_NAMES[openPick.genre] }}：{{ pickName(openPick) }}</h3>
       <span class="pick-stage" :data-stage="openPick.status">{{ STAGES[openPick.status] }}</span>
     </header>
-    <h3 class="pick-detail-title">{{ GENRE_NAMES[openPick.genre] }}：{{ pickName(openPick) }}</h3>
     <ol class="pick-sources">
       <li v-for="i in openPick.items" :key="i.cardId">
         <a v-if="i.url" :href="i.url" target="_blank" rel="noopener">{{ clean(i.title) }}</a>

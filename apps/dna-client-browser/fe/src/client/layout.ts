@@ -3,7 +3,7 @@
 // The News tab is always first. Timeline tabs open from a card's timeline chip; search, keyword and url tabs open from
 // the search box or when the agent calls open_tab. highlight_item switches to News and flashes one card.
 import { nextTick, reactive, ref, watch } from "vue";
-import type { TabBy } from "@dna/sdk";
+import type { PickStatus, TabBy } from "@dna/sdk";
 import { notify, onFrame } from "./store";
 
 export type FeedTab =
@@ -14,10 +14,16 @@ export type FeedTab =
 export const tabKey = (t: FeedTab) =>
   t.kind === "timeline" ? `timeline-${t.id}` : `${t.kind}-${t.value.toLowerCase()}`;
 
+/** The basket's stage tabs, in workflow order. */
+export type PickStage = Exclude<PickStatus, "dropped">;
+export const PICK_STAGES: PickStage[] = ["selected", "drafting", "ready", "published"];
+
 export interface Layout {
   feed: boolean;
   /** The picks basket (选题篮), between News and the agent. */
   picks: boolean;
+  /** The basket's stage tab; it follows the open pick's stage. */
+  picksTab: PickStage;
   agent: boolean;
   agentWidth: number;
   /** The composer's Model toggle: model and thinking controls shown. */
@@ -32,6 +38,7 @@ export const LAYOUT_KEY = "dna.layout.v1";
 const DEFAULTS: Layout = {
   feed: true,
   picks: true,
+  picksTab: "selected",
   agent: true,
   agentWidth: 560,
   modelBar: false,
@@ -44,6 +51,7 @@ function load(): Layout {
     const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? "{}") as Record<string, any>;
     const merged = { ...DEFAULTS, ...saved } as Layout;
     if (!merged.feed && !merged.picks && !merged.agent) merged.feed = true;
+    if (!PICK_STAGES.includes(merged.picksTab)) merged.picksTab = "selected";
     // Earlier layouts kept timeline tabs as { id, title } and the active timeline as its id.
     merged.tabs = (Array.isArray(merged.tabs) ? merged.tabs : [])
       .map((t: any) => (t.kind ? t : { kind: "timeline", id: t.id, title: t.title }))
