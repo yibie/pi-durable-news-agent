@@ -35,6 +35,10 @@ restart DEVICE:
 down DEVICE:
     {{ net }} down "$1"
 
+# This Mac's API and UI as launchd services that start at login: install, restart, uninstall, status
+service ACTION="status":
+    NODE_NO_WARNINGS=1 npx tsx src/net/service.ts "$1"
+
 # Crontab on a device: install, remove, status
 cron DEVICE ACTION="status":
     {{ net }} cron "$1" "$2"

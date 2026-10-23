@@ -18,7 +18,7 @@
     <key>PATH</key><string>__PATH__</string>
     <key>HOME</key><string>__HOME__</string>
     <key>NODE_NO_WARNINGS</key><string>1</string>
-    <key>DNA_HUB_HOST</key><string>0.0.0.0</string>
+    <key>DNA_HUB_HOST</key><string>__HUB_HOST__</string>
     <key>DNA_HUB_PORT</key><string>__HUB_PORT__</string>
     <key>DNA_HUB_HOSTS</key><string>__HUB_HOSTS__</string>
     <key>DNA_API_URL</key><string>__API_URL__</string>

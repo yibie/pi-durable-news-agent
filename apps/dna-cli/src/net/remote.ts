@@ -40,7 +40,7 @@ async function facts(d: NetDevice) {
 }
 const abs = (p: string, home: string) =>
   p === "~" ? home : p.startsWith("~/") ? `${home}/${p.slice(2)}` : p;
-const fill = (template: string, values: Record<string, string>) =>
+export const fill = (template: string, values: Record<string, string>) =>
   template.replace(/__([A-Z_]+)__/g, (m, key: string) => {
     if (!(key in values)) throw new Error(`Template placeholder ${m} has no value`);
     return values[key];
@@ -189,6 +189,7 @@ export async function installService(d: NetDevice): Promise<Step> {
         APP: `${code}/apps/dna-client-browser`,
         LOG: `${code}/logs/hub.out`,
         DEVICE: d.id,
+        HUB_HOST: "0.0.0.0",
         HUB_PORT: String(d.ui.port),
         HUB_HOSTS: new URL(d.ui.url).host,
         API_URL: `http://127.0.0.1:${d.port}`,
