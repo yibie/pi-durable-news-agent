@@ -20,6 +20,8 @@ import {
   type ToolInfo,
   type TopicPick,
   type Draft,
+  type LedgerEntry,
+  type PublishState,
   type ToolCallDetail,
   type UsageDay,
 } from "@dna/sdk";
@@ -199,6 +201,24 @@ export const draftText = (d: Draft): string =>
   [
     `revision ${d.revision} by ${d.author}  ${d.layout ?? "no image"}  weighted ${d.lint.weighted}${d.lint.markdown.length ? `  ${d.lint.markdown.length} markdown lines` : ""}${d.warnings.length ? `  ${d.warnings.length} image problems` : ""}`,
     d.body,
+  ].join("\n");
+export const ledgerLine = (e: LedgerEntry): string =>
+  `${e.at.slice(0, 16).replace("T", " ")}  ${pad(e.status, 8)} ${e.draftKey}${e.backend ? `  ${e.backend}` : ""}${e.note ? `  ${cleanText(e.note).slice(0, 120)}` : ""}`;
+export const publishText = (s: PublishState): string =>
+  [
+    s.earliestAt ? `next post at ${s.earliestAt}` : "a post may go now",
+    ...(s.last ? [`last activity: ${ledgerLine(s.last)}`] : []),
+    ...(s.pick ? [`this pick: ${ledgerLine(s.pick)}`] : []),
+    ...(s.running
+      ? [
+          `running: pick ${s.running.pickId} ${s.running.rehearsal ? "rehearsal" : "publish"}, ${s.running.phase}`,
+        ]
+      : []),
+    ...(s.rehearsal
+      ? [
+          `last rehearsal: ${s.rehearsal.wouldPost ? "would post" : "would not post"}, composer ${s.rehearsal.clean ? "left empty" : "NOT empty"}: ${s.rehearsal.detail}`,
+        ]
+      : []),
   ].join("\n");
 export const usageLine = (u: UsageDay) =>
   `${u.day}  model ${usd(u.modelUsd)}  jev ${usd(u.jevUsd)} (${u.jevCalls} calls)  images ${usd(u.imageUsd)}  ${k(u.tokensIn)} in  ${k(u.tokensOut)} out  firecrawl ${u.firecrawlCredits}  sweeps ${u.sweeps}`;

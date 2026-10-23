@@ -38,6 +38,10 @@ export interface Config {
   clientToken: string;
   cronToken: string;
   stallMinutes: number;
+  /** The old jsonl publish ledger to import on start (selfPromotion's publish-ledger.jsonl), so spacing sees it. */
+  ledgerImport?: string;
+  /** Where a published post is archived as <date>-pick-<id>.md and .png (selfPromotion's 13-published/x). */
+  publishedDir?: string;
 }
 
 /** apps/dna-server-api: its prompts and default config live with it. */
@@ -104,6 +108,8 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     clientToken: env.DNA_CLIENT_TOKEN?.trim() ?? "",
     cronToken: env.DNA_CRON_TOKEN?.trim() ?? "",
     stallMinutes: int(env.DNA_STALL_MINUTES, 30),
+    ledgerImport: env.DNA_LEDGER_IMPORT?.trim() || undefined,
+    publishedDir: env.DNA_PUBLISHED_DIR?.trim() || undefined,
   };
   config.deviceName =
     env.DNA_DEVICE_LABEL?.trim() ||

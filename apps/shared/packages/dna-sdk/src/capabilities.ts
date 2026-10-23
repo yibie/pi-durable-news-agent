@@ -58,6 +58,11 @@ export const CAPABILITIES = {
       "Write a pick with its writer: start it, ask for revisions, stop it, read and edit the drafts",
     routes: ["picks.write", "picks.stop", "drafts.list", "drafts.save"],
   },
+  publish: {
+    summary:
+      "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack after checking X",
+    routes: ["picks.publish", "publish.state", "ledger.list", "picks.ack"],
+  },
   keywords: {
     summary: "List, add, weight, toggle and remove keywords",
     routes: ["keywords.list", "keywords.add", "keywords.update", "keywords.remove"],

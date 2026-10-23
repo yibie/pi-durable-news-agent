@@ -151,6 +151,32 @@ export const ROUTES = {
     scope: "chat",
     summary: "Save the reader's own edit of the post as a new revision with the newest image",
   },
+  "picks.publish": {
+    method: "POST",
+    path: "/v1/picks/:id/publish",
+    scope: "chat",
+    summary:
+      "Post a ready pick to X (30 minutes after the last post unless override gives a reason), or rehearse it",
+  },
+  "publish.state": {
+    method: "GET",
+    path: "/v1/publish",
+    scope: "read",
+    summary:
+      "Where publishing stands: the earliest next post, a running publish, a pick's ledger line",
+  },
+  "ledger.list": {
+    method: "GET",
+    path: "/v1/ledger",
+    scope: "read",
+    summary: "The publish ledger, newest first",
+  },
+  "picks.ack": {
+    method: "POST",
+    path: "/v1/picks/:id/ack",
+    scope: "chat",
+    summary: "After checking X: a pending or unknown publish of this pick did not post",
+  },
   "keywords.list": {
     method: "GET",
     path: "/v1/keywords",

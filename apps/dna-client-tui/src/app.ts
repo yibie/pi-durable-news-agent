@@ -378,6 +378,24 @@ export class App {
             return done(await cl.updatePick(id(1), { status: "dropped" }), "Dropped");
           throw new Error("/picks actions are all, add, join, remove, genre and drop");
         }
+        case "publish": {
+          const [action] = words;
+          if (action === "state") {
+            const s = await cl.publishState(words[1] ? id(1) : undefined);
+            return this.show("detail", "publishing", print.publishText(s).split("\n"));
+          }
+          if (action === "ledger")
+            return this.show("detail", "ledger", (await cl.ledger(50)).map(print.ledgerLine));
+          if (action === "ack") {
+            const note = words.slice(2).join(" ").trim();
+            if (!note) throw new Error("/publish ack <pick> <what you checked on X>");
+            await cl.ack(id(1), { note });
+            return this.flash(`Acked pick ${words[1]}`);
+          }
+          const rehearsal = words[1] === "rehearsal";
+          await cl.publish(id(0), { rehearsal });
+          return this.flash(`${rehearsal ? "Rehearsing" : "Publishing"} pick ${words[0]}`);
+        }
         case "write": {
           const [action] = words;
           if (action === "drafts") {

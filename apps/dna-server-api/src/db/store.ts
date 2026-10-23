@@ -5,6 +5,7 @@ import { lockFile } from "@dna/durable-agent";
 import { type Db, openDb } from "./db.ts";
 import { migrate } from "./migrate.ts";
 import { DraftsRepo } from "./repos/drafts.ts";
+import { LedgerRepo } from "./repos/ledger.ts";
 import { NewsRepo } from "./repos/news.ts";
 import { PicksRepo } from "./repos/picks.ts";
 import { SettingsRepo } from "./repos/settings.ts";
@@ -21,6 +22,7 @@ export interface Store {
   taste: TasteRepo;
   picks: PicksRepo;
   drafts: DraftsRepo;
+  ledger: LedgerRepo;
   sweeps: SweepsRepo;
   telemetry: TelemetryRepo;
   close(): void;
@@ -39,6 +41,7 @@ export function openStore(dataDir: string, configDir: string): Store {
     taste: new TasteRepo(db),
     picks: new PicksRepo(db),
     drafts: new DraftsRepo(db),
+    ledger: new LedgerRepo(db),
     sweeps: new SweepsRepo(db),
     telemetry: new TelemetryRepo(db),
     close() {

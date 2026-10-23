@@ -17,6 +17,7 @@ export const TUI_COMMANDS: Record<CapabilityId, string> = {
   "taste.answer": "/answer",
   picks: "/picks",
   writing: "/write",
+  publish: "/publish",
   "chat.send": "plain text",
   "chat.watch": "/chat",
   "chat.abort": "/abort",

@@ -237,6 +237,52 @@ export interface SaveDraftBody {
   note?: string;
 }
 
+export const LEDGER_STATUSES = ["pending", "ok", "unknown", "failed", "ack"] as const;
+/** pending: about to click Post; ok: posted; unknown: may have posted, a person checks X; failed: did not post;
+ * ack: a person said a pending or unknown one did not post. */
+export type LedgerStatus = (typeof LEDGER_STATUSES)[number];
+
+/** One line of the publish ledger, the record of what went out to X. */
+export interface LedgerEntry {
+  id: number;
+  /** pick:<id> for the workbench; imported lines keep the old draft file name. */
+  draftKey: string;
+  pickId?: number;
+  draftId?: number;
+  status: LedgerStatus;
+  backend?: string;
+  tweetId?: string;
+  note?: string;
+  at: string;
+  imported: boolean;
+}
+
+/** Where publishing stands: the spacing rule (30 minutes between posts) and the pick's own ledger state. */
+export interface PublishState {
+  /** The earliest time the next post may go out; absent when it may go now. */
+  earliestAt?: string;
+  /** The last post activity the spacing rule counts. */
+  last?: LedgerEntry;
+  /** The pick's newest ledger line, if any. */
+  pick?: LedgerEntry;
+  /** A publish (or rehearsal) is running now. */
+  running?: { pickId: number; rehearsal: boolean; phase: string };
+  /** The pick's last rehearsal: would it post, and was the composer left empty afterwards. */
+  rehearsal?: { at: string; wouldPost: boolean; clean: boolean; detail: string };
+}
+
+export interface PublishBody {
+  /** Post now inside the 30 minute spacing: the reason is written into the ledger. */
+  override?: string;
+  /** Do everything except click Post, then clear the composer. */
+  rehearsal?: boolean;
+}
+
+export interface AckBody {
+  /** What the person checked on X, for the ledger. */
+  note: string;
+}
+
 export interface CreatePickBody {
   cardIds: number[];
   genre: PickGenre;
@@ -592,6 +638,8 @@ export type Frame =
   | { type: "pick"; pick: TopicPick }
   /** A new draft revision (the writer saved one or the reader edited). */
   | { type: "draft"; draft: Draft }
+  /** Publishing moved: a phase of a running publish, or a new ledger line. */
+  | { type: "publish"; state: PublishState; pickId: number; phase: string; entry?: LedgerEntry }
   | { type: "agent.state"; state: AgentState }
   | { type: "usage"; usage: UsageDay }
   /** The agent opened a feed tab (open_tab) in every open browser. */

@@ -1,7 +1,7 @@
 // Writing in the browser: the pick the reader opened, its drafts, and its writer conversation. The writer runs in its
 // own conversation, so it gets its own stream and agent model while a pick is open; the main stream stays as it is.
 import { computed, ref, shallowRef, watch } from "vue";
-import { AgentModel, follow, type Draft, type TopicPick } from "@dna/sdk";
+import { AgentModel, follow, type Draft, type PublishState, type TopicPick } from "@dna/sdk";
 import { api, attempt, feed, feedState, notify, onFrame } from "./store";
 
 /** The pick open in the basket (detail view) and in the agent column (its writer). */
@@ -16,6 +16,9 @@ export const shownRevision = ref<number>();
 export const shownDraft = computed(
   () => drafts.value.find((d) => d.revision === shownRevision.value) ?? drafts.value[0],
 );
+
+/** Where publishing stands for the open pick: spacing, its ledger line, a running publish, its last rehearsal. */
+export const publishState = shallowRef<PublishState>({});
 
 let writer: AgentModel | undefined;
 export const writerView = shallowRef(new AgentModel().state);
@@ -70,7 +73,13 @@ watch(
     if (id !== before?.[0]) {
       drafts.value = [];
       shownRevision.value = undefined;
-      if (id) void loadDrafts(id);
+      publishState.value = {};
+      if (id) {
+        void loadDrafts(id);
+        void attempt(() => api.publishState(id)).then((st) => {
+          if (st && openPickId.value === id) publishState.value = st;
+        });
+      }
     }
     if (!id || !conversation) return unfollow();
     if (conversation !== before?.[1] || id !== before?.[0]) follow_(Number(conversation));
@@ -78,6 +87,33 @@ watch(
 );
 
 onFrame((frame) => {
+  if (frame.type === "publish") {
+    const mine = frame.pickId === openPickId.value;
+    publishState.value = mine
+      ? frame.state
+      : {
+          ...publishState.value,
+          earliestAt: frame.state.earliestAt,
+          last: frame.state.last,
+          running: frame.state.running,
+        };
+    if (mine && frame.phase === "rehearsed" && frame.state.rehearsal)
+      notify(
+        frame.state.rehearsal.wouldPost && frame.state.rehearsal.clean
+          ? "排练通过：能发出去，编辑框已清空"
+          : `排练有问题：${frame.state.rehearsal.detail}`,
+        frame.state.rehearsal.wouldPost && frame.state.rehearsal.clean ? "info" : "bad",
+      );
+    if (mine && frame.phase === "ok") notify("已发布到 X");
+    if (mine && (frame.phase === "unknown" || frame.phase === "failed"))
+      notify(
+        frame.phase === "unknown"
+          ? "发布状态不明：可能已经发出去了，先到 X 上看一眼"
+          : `没有发出去：${frame.entry?.note ?? ""}`,
+        "bad",
+      );
+    return;
+  }
   if (frame.type !== "draft" || frame.draft.pickId !== openPickId.value) return;
   drafts.value = [frame.draft, ...drafts.value.filter((d) => d.id !== frame.draft.id)].sort(
     (a, b) => b.revision - a.revision,
@@ -125,4 +161,25 @@ export async function saveEdit(p: TopicPick, body: string) {
 export async function setStage(p: TopicPick, status: "drafting" | "ready") {
   const r = applied(await attempt(() => api.updatePick(p.id, { status })));
   if (r) notify(status === "ready" ? "已进入待发布" : "已退回写作中");
+}
+
+// The publish frames carry the state; a start notice only shows if the run has not already finished.
+export async function rehearse(p: TopicPick) {
+  const st = await attempt(() => api.publish(p.id, { rehearsal: true }));
+  if (st && publishState.value.running?.pickId === p.id)
+    notify("开始排练：会在 X 的编辑框里把稿子填好、核对，但不点发布，最后清空");
+}
+
+export async function publishNow(p: TopicPick, override?: string) {
+  const st = await attempt(() => api.publish(p.id, override ? { override } : {}));
+  if (st && publishState.value.running?.pickId === p.id)
+    notify("开始发布：在 X 上填稿、上传配图，然后点发布");
+}
+
+export async function ackPublish(p: TopicPick, note: string) {
+  const e = await attempt(() => api.ack(p.id, { note }));
+  if (e) {
+    publishState.value = { ...publishState.value, pick: e };
+    notify("已记下：上次没有发出去，可以重新发布");
+  }
 }

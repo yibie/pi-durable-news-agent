@@ -2,6 +2,7 @@
 // Google News, with Hacker News and cached feed matches beside them; see web.ts) and direct fetches with Readability.
 // Firecrawl is opt in (DNA_SEARCH_MODE=firecrawl) and budgeted, and it falls back to the free chain on any failure.
 import type { SearchEngineHealth } from "@dna/sdk";
+import { PAGE_TEXT_CAP } from "../page.ts";
 import type { Logger } from "@dna/sdk/node";
 import type { CachedDoc } from "../../db/repos/sources.ts";
 import type { Store } from "../../db/store.ts";
@@ -282,15 +283,17 @@ export class SearchService {
     };
   }
 
-  /** Cache first; a fresh scraped body over 200 chars is never fetched again. */
+  /** Cache first; a fresh scraped body over 200 chars is never fetched again, unless a sweep cut it off. */
   async scrape(
     url: string,
     call: CallRef = {},
   ): Promise<{ doc: CachedDoc; via: "cache" | "firecrawl" | "http"; credits: number }> {
     const cached = this.deps.store.sources.cached(url);
+    const length = cached?.contentMd?.length ?? 0;
     if (
       cached &&
-      (cached.contentMd?.length ?? 0) > 200 &&
+      length > 200 &&
+      length !== PAGE_TEXT_CAP &&
       cached.fetchVia !== "feed" &&
       this.deps.store.sources.isFresh(cached)
     )

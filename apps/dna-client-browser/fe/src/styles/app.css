@@ -2346,3 +2346,50 @@ a.pick-title:hover {
   color: var(--accent);
   flex: none;
 }
+.publish-panel {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.publish-panel h4 {
+  margin: 0;
+  font-size: 13px;
+}
+.publish-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.publish-line.running {
+  color: var(--accent);
+}
+.publish-line.bad,
+.publish-blocked p {
+  color: var(--bad);
+}
+.publish-blocked,
+.publish-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.publish-blocked p,
+.publish-confirm p {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.publish-blocked input,
+.publish-confirm input {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+.publish-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

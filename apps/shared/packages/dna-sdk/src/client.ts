@@ -38,6 +38,10 @@ import type {
   WriteResult,
   Draft,
   SaveDraftBody,
+  PublishBody,
+  PublishState,
+  LedgerEntry,
+  AckBody,
   UsageDay,
   WorkflowResult,
 } from "./api.ts";
@@ -311,6 +315,18 @@ export class DnaClient {
   }
   saveDraft(id: number, body: SaveDraftBody) {
     return this.call<Draft>("drafts.save", { params: { id }, body });
+  }
+  publish(id: number, body: PublishBody = {}) {
+    return this.call<PublishState>("picks.publish", { params: { id }, body });
+  }
+  publishState(pickId?: number) {
+    return this.call<PublishState>("publish.state", { query: { pickId } });
+  }
+  ledger(limit?: number) {
+    return this.call<LedgerEntry[]>("ledger.list", { query: { limit } });
+  }
+  ack(id: number, body: AckBody) {
+    return this.call<LedgerEntry>("picks.ack", { params: { id }, body });
   }
 
   // ------------------------------------------------------------ settings

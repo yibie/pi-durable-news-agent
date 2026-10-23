@@ -21,6 +21,8 @@ import {
 } from "@dna/durable-agent";
 import { createLogger, type Logger } from "@dna/sdk/node";
 import { createAgents, type Agents } from "./agents/index.ts";
+import { fakePoster, Publisher } from "./publishing/publisher.ts";
+import { postToX } from "./publishing/x.ts";
 import { fauxRules } from "./agents/faux-script.ts";
 import type { Config } from "./config.ts";
 import { openStore } from "./db/store.ts";
@@ -45,6 +47,8 @@ export interface App extends Deps {
   harness: DurableHarness;
   ctx: Context;
   agents: Agents;
+  /** Posting ready picks to X: the reader's button, with the ledger and the spacing rule. */
+  publisher: Publisher;
   main: Conversation;
   compaction: CompactionSetting;
   /** The main agent's model id and context window, read live. */
@@ -122,6 +126,9 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     schedule: new Schedule({ store, cronSchedule: config.cronSchedule }),
   };
   const agents = createAgents(deps);
+  const offline = config.provider === "faux" || config.searchMode === "fixture";
+  const publisher = new Publisher(deps, offline ? fakePoster : postToX);
+  publisher.start();
 
   const compaction: CompactionSetting = store.settings.get("compaction", {
     points: DEFAULT_POINTS,
@@ -176,6 +183,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     harness,
     ctx,
     agents,
+    publisher,
     main,
     compaction,
     mainModel,

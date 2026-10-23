@@ -651,14 +651,28 @@ try {
     (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3,
     "the reader's edits are kept as revisions and the clean draft goes to 待发布",
   );
+  await page.getByRole("button", { name: "Rehearse" }).click();
+  await page.locator(".publish-line", { hasText: "上次排练" }).waitFor();
+  check(
+    (await call("GET", `/v1/publish?pickId=${writing.id}`)).rehearsal?.wouldPost === true &&
+      (await call("GET", "/v1/ledger")).length === 0,
+    "a rehearsal checks the composer and writes nothing to the ledger",
+  );
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm publish" }).click();
+  await page.locator('.pick-stage[data-stage="published"]').waitFor();
+  check(
+    (await call("GET", "/v1/ledger"))
+      .filter((e) => e.draftKey === `pick:${writing.id}`)
+      .map((e) => e.status)
+      .join(",") === "ok,pending",
+    "publishing writes pending then ok to the ledger and the pick is published",
+  );
+  await collectCaps();
+  await cleanText("publishing");
   await page.getByRole("button", { name: "Back to the picks" }).click();
-  await page.locator('.pick-stage-head[data-stage="ready"]').waitFor();
+  await page.locator('.pick-stage-head[data-stage="published"]').waitFor();
   await page.locator('[data-testid="chat"]').waitFor();
-  await page
-    .locator(`.picks-column [data-pick-id="${writing.id}"]`)
-    .getByRole("button", { name: "Put the pick back" })
-    .click();
-  await page.locator(`.feed-list [data-card-id="${writeId}"]`).waitFor();
 
   // ---------------------------------------------------------------- tool row into executions
   await page.waitForFunction(() =>

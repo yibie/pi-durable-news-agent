@@ -6,6 +6,9 @@ import type { Store } from "../db/store.ts";
 import { extractArticle } from "./extract.ts";
 import type { Http } from "./http.ts";
 
+/** A sweep reads at most this much of a page; scrape treats a cache this long as cut off and fetches again. */
+export const PAGE_TEXT_CAP = 12_000;
+
 export async function pageText(
   deps: { http: Http; store: Store; log?: Logger },
   item: Pick<Item, "id" | "url" | "title" | "excerpt" | "cacheId">,
@@ -20,7 +23,7 @@ export async function pageText(
       headers: { accept: "text/html,application/xhtml+xml" },
       timeoutMs: 12_000,
     });
-    const article = extractArticle(res.text, res.url || item.url, 12_000);
+    const article = extractArticle(res.text, res.url || item.url, PAGE_TEXT_CAP);
     if (article.text.length < 200) return undefined;
     deps.store.sources.cache({
       url: item.url,

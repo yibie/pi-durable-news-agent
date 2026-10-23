@@ -17,6 +17,7 @@ import {
   shownRevision,
   startWriting,
 } from "../client/writing";
+import PublishPanel from "./PublishPanel.vue";
 
 const STAGES = {
   selected: "已选",
@@ -151,6 +152,7 @@ async function save() {
           <Send :size="13" />进入待发布
         </button>
       </div>
+      <PublishPanel :pick="openPick" />
     </template>
   </div>
 </template>
