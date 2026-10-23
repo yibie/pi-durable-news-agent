@@ -87,12 +87,9 @@ export class Devtools {
     return raw.match(pattern)?.slice(1);
   }
 
-  /** "<id>: <url>" lines from list_pages. */
+  /** list_pages lines are "<id>: <title> (<url>) [selected]"; the url is the last parenthesised part. */
   async pages(): Promise<{ id: number; url: string }[]> {
-    return [...(await this.tool("list_pages")).matchAll(/^\s*(\d+): (\S*)/gm)].map((m) => ({
-      id: Number(m[1]),
-      url: m[2]!,
-    }));
+    return parsePages(await this.tool("list_pages"));
   }
 
   close(): void {
@@ -101,4 +98,11 @@ export class Devtools {
     this.child?.kill();
     this.child = undefined;
   }
+}
+
+export function parsePages(text: string): { id: number; url: string }[] {
+  return [...text.matchAll(/^\s*(\d+): (.*)$/gm)].map((m) => {
+    const line = m[2]!.replace(/\s*\[selected\]\s*$/, "");
+    return { id: Number(m[1]), url: line.match(/\((\S+)\)$/)?.[1] ?? line };
+  });
 }

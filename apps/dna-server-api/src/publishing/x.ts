@@ -37,7 +37,7 @@ const composerState = (quoteId?: string) => `() => {
   const media = document.querySelectorAll('[data-testid=attachments] img, [data-testid=attachments] [role=img]').length;
   const card = ${quoteId ? `!!document.querySelector('a[href*="${quoteId}"]')` : "false"};
   const bare = ${quoteId ? `text.includes('${quoteId}')` : "false"};
-  return 'len=' + text.length + ';btn=' + (bt ? (bt.disabled ? 'disabled' : 'enabled') : 'missing') + ';media=' + media + ';card=' + card + ';bare=' + bare;
+  return 'len=' + text.trim().length + ';btn=' + (bt ? (bt.disabled ? 'disabled' : 'enabled') : 'missing') + ';media=' + media + ';card=' + card + ';bare=' + bare;
 }`;
 
 interface ComposerState {

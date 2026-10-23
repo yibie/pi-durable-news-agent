@@ -47,6 +47,8 @@ const { values: flags, positionals } = parseArgs({
     seconds: { type: "string" },
     on: { type: "boolean", default: false },
     off: { type: "boolean", default: false },
+    rehearsal: { type: "boolean", default: false },
+    override: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
   allowPositionals: true,
@@ -319,7 +321,7 @@ const COMMANDS: Record<string, Command> = {
   },
   publish: {
     usage:
-      "publish <pick id> [--rehearsal] [--override <reason>] | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked>",
+      "publish <pick id> [--rehearsal] [--override=<reason>] | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked>",
     summary:
       "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack a publish that did not post",
     async run() {
@@ -341,15 +343,8 @@ const COMMANDS: Record<string, Command> = {
         const e = await client().ack(num(a, "pick id"), { note });
         return { data: e, text: print.ledgerLine(e) };
       }
-      const rehearsal = args.includes("--rehearsal");
-      const at = args.indexOf("--override");
-      const override =
-        at >= 0
-          ? args
-              .slice(at + 1)
-              .join(" ")
-              .trim() || undefined
-          : undefined;
+      const rehearsal = flags.rehearsal;
+      const override = flags.override?.trim() || undefined;
       const s = await client().publish(num(action, "pick id"), { rehearsal, override });
       return {
         data: s,
