@@ -84,6 +84,8 @@ export class Publisher {
     const pick = store.picks.get(pickId);
     if (!pick) throw notFound(`No pick ${pickId}`);
     const rehearsal = !!opts.rehearsal;
+    // The old channel may still be posting until the cutover: read its newest lines before checking spacing.
+    if (this.deps.config.ledgerImport) store.ledger.importJsonl(this.deps.config.ledgerImport);
     if (this.running)
       throw invalid(
         `Pick ${this.running.pickId} is being ${this.running.rehearsal ? "rehearsed" : "published"} now`,
