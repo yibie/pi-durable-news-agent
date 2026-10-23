@@ -50,6 +50,8 @@ export function writingRoutes({
       let pick = pickOf(req.params.id);
       const message = str(bodyOf(req), "message", { max: 20_000, optional: true });
       if (!pick.conversationId) {
+        // On the first start the reader's message is the brief's note, read before the first draft.
+        if (message) pick = store.picks.update(pick.id, { note: message })!;
         const id = await harness.harness.commit(async (tx) => {
           const child = await tx.createConversation({ ownership: { kind: "ownerless" } });
           await configure(tx, child.id, app.agents.writerAgent());
@@ -68,9 +70,12 @@ export function writingRoutes({
           ctx,
         );
         if (pick.status === "selected") pick = store.picks.update(pick.id, { status: "drafting" })!;
-        app.log.info("writing.started", { pickId: pick.id, conversationId: pick.conversationId });
-      }
-      if (message) {
+        app.log.info("writing.started", {
+          pickId: pick.id,
+          conversationId: pick.conversationId,
+          note: !!message,
+        });
+      } else if (message) {
         const writer = await conversation(pick);
         await writer.submit(
           {

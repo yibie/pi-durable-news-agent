@@ -221,7 +221,7 @@ export interface Draft {
   createdAt: string;
 }
 
-/** Start the pick's writer, or send it a message (a revision request) once it exists. */
+/** Start the pick's writer, or send it a message (a revision request) once it exists. On the first start the message is the reader's requirements: it becomes the pick's note and part of the writing brief. */
 export interface WriteBody {
   message?: string;
 }

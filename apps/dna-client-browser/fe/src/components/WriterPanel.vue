@@ -16,6 +16,7 @@ import {
 import ToolCallRow from "./ToolCallRow.vue";
 
 const text = ref("");
+const brief = ref("");
 const sending = ref(false);
 const list = ref<HTMLElement>();
 const items = computed(() => writerView.value.items);
@@ -46,6 +47,20 @@ async function send() {
   sending.value = true;
   if (await sendToWriter(p, message)) text.value = "";
   sending.value = false;
+}
+async function start() {
+  const p = openPick.value;
+  if (!p || sending.value) return;
+  sending.value = true;
+  await startWriting(p, brief.value);
+  brief.value = "";
+  sending.value = false;
+}
+function onStartKey(e: KeyboardEvent) {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    void start();
+  }
 }
 function onKey(e: KeyboardEvent) {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
@@ -84,11 +99,20 @@ function onKey(e: KeyboardEvent) {
           <p>
             写手会读完原文、选版式出图、按写作规则写正文，写好的稿子出现在左边。之后在这里告诉它怎么改。
           </p>
+          <textarea
+            v-model="brief"
+            rows="4"
+            aria-label="Writing requirements"
+            placeholder="这篇的要求（可不填），比如：写给不写代码的读者；重点讲它怎么省钱；配图用对比版式"
+            @keydown="onStartKey"
+          />
           <button
             class="button"
             data-cap="writing"
             aria-label="Start writing"
-            @click="startWriting(openPick)"
+            title="开始写（Enter）。上面写了要求的话，写手动笔前就会看到"
+            :disabled="sending"
+            @click="start"
           >
             <PenLine :size="14" />开始写
           </button>
@@ -98,6 +122,9 @@ function onKey(e: KeyboardEvent) {
             <div v-if="isBrief(item.text)" class="chip-line">
               <span class="chip"><PenLine :size="14" />开始写选题 {{ openPick.id }}</span>
             </div>
+            <p v-if="isBrief(item.text) && openPick.note" class="writer-note">
+              你的要求：{{ clean(openPick.note) }}
+            </p>
             <div v-else class="msg user" data-role="user">
               <div class="bubble">{{ clean(item.text) }}</div>
             </div>

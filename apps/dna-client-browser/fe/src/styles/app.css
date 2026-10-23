@@ -2280,6 +2280,19 @@ a.pick-title:hover {
 .writer-start p {
   margin: 0;
 }
+.writer-start textarea {
+  resize: vertical;
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  color: var(--text);
+}
+.writer-note {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
 .draft-meta small {
   color: var(--muted);
   font-size: 13px;

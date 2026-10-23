@@ -4,6 +4,7 @@
 // which refuses a draft with Markdown, a missing link block or an image with problems.
 import { computed, ref, watch } from "vue";
 import { ArrowLeft, CircleAlert, PenLine, Save, Send, Undo2 } from "@lucide/vue";
+import { layout, toggle } from "../client/layout";
 import { GENRE_NAMES, pickName } from "../client/picks";
 import { clean } from "../client/text";
 import {
@@ -15,7 +16,6 @@ import {
   setStage,
   shownDraft,
   shownRevision,
-  startWriting,
 } from "../client/writing";
 import PublishPanel from "./PublishPanel.vue";
 
@@ -72,15 +72,18 @@ async function save() {
     </ol>
 
     <div v-if="!openPick.conversationId" class="pick-empty-draft">
-      <p>还没开始写。写手会读完原文，按写作规则出图、写正文。</p>
-      <button
-        class="button"
-        data-cap="writing"
-        aria-label="Start writing"
-        @click="startWriting(openPick)"
-      >
-        <PenLine :size="14" />开始写
-      </button>
+      <p v-if="layout.agent">还没开始写。在右边写下这篇的要求（可不填），点「开始写」。</p>
+      <template v-else>
+        <p>还没开始写。写作栏在右边，现在收起来了。</p>
+        <button
+          class="button secondary"
+          aria-label="Open the writer column"
+          title="打开右边的写作栏：在那里写要求、开始写、改稿"
+          @click="toggle('agent')"
+        >
+          <PenLine :size="14" />打开写作栏
+        </button>
+      </template>
     </div>
     <p v-else-if="!drafts.length" class="pick-empty-draft">写手在写，稿子出来后会显示在这里。</p>
 

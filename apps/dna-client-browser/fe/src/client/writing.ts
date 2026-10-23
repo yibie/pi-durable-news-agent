@@ -134,8 +134,10 @@ const applied = (p: TopicPick | undefined) => {
   return p;
 };
 
-export async function startWriting(p: TopicPick) {
-  const r = await attempt(() => api.write(p.id));
+/** Start the pick's writer; the reader's requirements, if any, go into its brief. */
+export async function startWriting(p: TopicPick, note = "") {
+  const message = note.trim();
+  const r = await attempt(() => api.write(p.id, message ? { message } : {}));
   if (r) {
     applied(r.pick);
     notify("开始写了：写手会读原文、出图、写正文，写好会出现在这里");

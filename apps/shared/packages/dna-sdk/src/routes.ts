@@ -131,7 +131,8 @@ export const ROUTES = {
     method: "POST",
     path: "/v1/picks/:id/write",
     scope: "chat",
-    summary: "Start the pick's writer (once), or send it a message such as a revision request",
+    summary:
+      "Start the pick's writer (once, with the reader's requirements as its brief), or send it a message such as a revision request",
   },
   "picks.stop": {
     method: "POST",

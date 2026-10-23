@@ -621,8 +621,20 @@ try {
     .click();
   await page.locator(".pick-detail").waitFor();
   await page.locator(".writer-column").waitFor();
-  await page.locator(".pick-detail").getByRole("button", { name: "Start writing" }).click();
+  check(
+    (await page.locator(".pick-detail").getByRole("button", { name: "Start writing" }).count()) ===
+      0,
+    "writing starts in one place: the writer column, not the pick's detail",
+  );
+  await page.getByLabel("Writing requirements").fill("写给不写代码的读者");
+  await page.locator(".writer-column").getByRole("button", { name: "Start writing" }).click();
   await page.locator(".draft-image").waitFor({ timeout: 20_000 });
+  check(
+    (await page.locator(".writer-note").textContent()).includes("写给不写代码的读者") &&
+      (await call("GET", "/v1/picks")).find((p) => p.id === writing.id).note ===
+        "写给不写代码的读者",
+    "the requirements typed before writing are kept on the pick and shown with the brief",
+  );
   await page.waitForFunction(() =>
     document.querySelector('[data-testid="writer-chat"] .msg.agent .bubble'),
   );

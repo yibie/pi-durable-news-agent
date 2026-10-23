@@ -67,6 +67,22 @@ test("a pick's writer drafts with an image, takes a revision, and the pick goes 
   await fails(s.client.updatePick(pick.id, { status: "published" }), 400, /by publishing it/);
 });
 
+test("requirements given at the start go into the brief, not after the first draft", async () => {
+  const [, card] = cards;
+  const pick = await s.client.pick({ cardIds: [card.id], genre: "single" });
+  const note = "面向不写代码的读者，重点讲它怎么省钱";
+  const started = await s.client.write(pick.id, { message: note });
+  assert.equal(started.pick.note, note);
+  await until(async () => (await s.client.drafts(pick.id)).length === 1, 20_000, "first draft");
+  const { items = [] } = await s.client.transcript({
+    conversationId: Number(started.conversationId),
+    format: "json",
+  });
+  const asked = items.flatMap((i) => (i.kind === "user" ? [i.text] : []));
+  assert.equal(asked.length, 1, "one brief, no follow-up message");
+  assert.ok(asked[0].includes(`READER_NOTE: ${note}`));
+});
+
 test("a quote post needs the post it quotes", async () => {
   const [, , card] = cards;
   const pick = await s.client.pick({ cardIds: [card.id], genre: "quote" });
