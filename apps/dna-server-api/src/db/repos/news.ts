@@ -1085,6 +1085,7 @@ export class NewsRepo {
           : undefined,
       ),
       feedback: { signal: lastSignal ?? undefined, labels: parse(lastLabels, []) },
+      dismissedAt: str(r.dismissed_at),
       sweepId: num(r.sweep_id),
       toolCallId: r.tool_call_id,
       createdAt: r.created_at,
@@ -1128,7 +1129,12 @@ export class NewsRepo {
   /** News cards, oldest to newest. `before` pages backwards from a card id. Old story cards are not news. */
   cards(options: { before?: number; limit?: number } = {}): Card[] {
     const limit = Math.min(options.limit ?? 50, 200);
-    const where: string[] = ["c.kind = 'news'", STORY_VISIBLE, RELEASE_VISIBLE];
+    const where: string[] = [
+      "c.kind = 'news'",
+      "c.dismissed_at IS NULL",
+      STORY_VISIBLE,
+      RELEASE_VISIBLE,
+    ];
     const params: Record<string, unknown> = { limit };
     if (options.before) {
       where.push("c.id < :before");
@@ -1136,6 +1142,40 @@ export class NewsRepo {
     }
     const sql = `SELECT c.id FROM cards c WHERE ${where.join(" AND ")} ORDER BY c.id DESC LIMIT :limit`;
     return (this.db.prepare(sql).all(bind(params)) as any[]).map((r) => this.card(r.id)!).reverse();
+  }
+
+  /** Take a candidate out of the feed. No feedback row and no weight moves: dismissing only tidies the list. */
+  dismissCard(id: number): Card | undefined {
+    this.db
+      .prepare(
+        "UPDATE cards SET dismissed_at = coalesce(dismissed_at, ?) WHERE id = ? AND kind = 'news'",
+      )
+      .run(nowIso(), id);
+    return this.card(id);
+  }
+
+  /**
+   * Dismiss every candidate still in the feed, or only those whose item was published before `before` (an item with no
+   * publish date counts from when its card was made). Cards in `keep`, the ones in the picks basket, stay. Returns the ids.
+   */
+  dismissCandidates(options: { before?: string; keep?: Set<number> } = {}): number[] {
+    const where = ["c.kind = 'news'", "c.dismissed_at IS NULL", STORY_VISIBLE, RELEASE_VISIBLE];
+    if (options.before) where.push("coalesce(i.published_at, c.created_at) < :before");
+    const ids = (
+      this.db
+        .prepare(
+          `SELECT c.id FROM cards c LEFT JOIN items i ON i.id = c.item_id WHERE ${where.join(" AND ")}`,
+        )
+        .all(bind({ before: options.before })) as any[]
+    )
+      .map((r) => r.id as number)
+      .filter((id) => !options.keep?.has(id));
+    const now = nowIso();
+    const update = this.db.prepare("UPDATE cards SET dismissed_at = ? WHERE id = ?");
+    tx(this.db, () => {
+      for (const id of ids) update.run(now, id);
+    });
+    return ids;
   }
 }
 

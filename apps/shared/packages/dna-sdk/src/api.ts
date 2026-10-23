@@ -65,6 +65,8 @@ export interface Card {
   itemIds?: number[];
   /** Historical development or coverage card, retained for detail/timelines but absent from the main feed. */
   hiddenFromFeed?: boolean;
+  /** When the reader took this candidate out of the feed. Dismissing moves no taste weights, unlike Show me less. */
+  dismissedAt?: string;
   sources?: {
     itemId: number;
     title: string;
@@ -721,6 +723,15 @@ export interface CardDetail {
 export interface FeedbackBody {
   signal?: "more" | "less";
   labels?: HfsCategory[];
+}
+
+/** Clear the candidates: every one still in the feed, or only those published more than `olderThanHours` ago. */
+export interface ClearFeedBody {
+  olderThanHours?: number;
+}
+
+export interface ClearFeedResult {
+  dismissed: number[];
 }
 
 export interface FeedbackResult {

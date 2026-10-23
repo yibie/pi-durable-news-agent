@@ -365,6 +365,35 @@ h4 {
   flex: 1;
   min-width: 0;
 }
+.clear-candidates {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  margin-right: 6px;
+}
+.clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: var(--fs-nav);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.clear-btn:hover,
+.clear-btn[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--muted);
+}
+.pick-menu button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pick-menu button.danger strong {
+  color: var(--accent);
+}
 .feed-search {
   display: flex;
   align-items: center;

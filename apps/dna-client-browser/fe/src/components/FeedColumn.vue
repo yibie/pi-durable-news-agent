@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // News and its tabs. News is always the first tab; timelines open from a card's chip, searches from the search box
-// or the agent's open_tab. A card you voted down or skipped leaves News, and so does a card in the picks basket
-// (search and timeline tabs still show both).
+// or the agent's open_tab. A card you voted down or dismissed leaves News, and so does a card in the picks basket
+// (search and timeline tabs still show them). 清理 dismisses many candidates at once.
 import { computed } from "vue";
 import { GitCommitVertical, Hash, Link, Newspaper, Search, X } from "@lucide/vue";
 import { closeTab, layout, tabKey, type FeedTab } from "../client/layout";
 import { feed, feedState, loaded } from "../client/store";
 import BottomPane from "./BottomPane.vue";
+import ClearCandidates from "./ClearCandidates.vue";
 import FeedRow from "./FeedRow.vue";
 import LoadingRows from "./LoadingRows.vue";
 import SearchBox from "./SearchBox.vue";
@@ -72,6 +73,7 @@ const active = computed(() => layout.tabs.find((t) => tabKey(t) === layout.tab))
           </button>
         </div>
       </nav>
+      <ClearCandidates v-if="!active" :cards="news" />
       <SearchBox />
     </div>
     <BottomPane v-if="!active" :count="news.length" label="News" class="feed-list">

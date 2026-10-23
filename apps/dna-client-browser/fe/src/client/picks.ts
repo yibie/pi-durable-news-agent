@@ -41,9 +41,19 @@ export async function joinRoundup(card: Card, pick: TopicPick) {
   if (p) notify(`已加入串烧「${pickName(p)}」，现在 ${p.items.length} 条`);
 }
 
-export async function skipCard(card: Card) {
-  const r = await attempt(() => api.feedback(card.id, { signal: "less" }));
-  if (r) notify("已跳过，从候选中移除，同类内容会少推一些");
+/** Take one candidate out of News. Unlike Show me less it moves no weights: it only tidies the list. */
+export async function dismissCard(card: Card) {
+  const r = await attempt(() => api.dismiss(card.id));
+  if (r) {
+    feed.apply({ type: "feed.card_updated", card: r });
+    notify("已移出候选，不影响以后推荐什么");
+  }
+}
+
+/** Clear the candidates: all of them, or those published more than `olderThanHours` ago. Picked cards stay. */
+export async function clearCandidates(olderThanHours?: number) {
+  const r = await attempt(() => api.clearFeed(olderThanHours ? { olderThanHours } : {}));
+  if (r) notify(`已移出 ${r.dismissed.length} 条候选，不影响以后推荐什么`);
 }
 
 export async function setGenre(pick: TopicPick, genre: PickGenre) {

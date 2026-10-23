@@ -111,3 +111,32 @@ test("pick frames reach the feed model: a new pick shows, a dropped one leaves",
   stop.abort();
   await reading;
 });
+
+test("dismissing and clearing candidates moves no weights, keeps picked cards, and leaves the feed", async () => {
+  const weights = async () =>
+    JSON.stringify({
+      keywords: (await s.client.keywords()).map((k) => [k.id, k.weight]),
+      sources: (await s.client.sources()).map((x) => [x.id, x.weight]),
+    });
+  const fresh = (await s.client.feed()).items;
+  const [one, kept, ...rest] = fresh;
+  const dismissed = await s.client.dismiss(one.id);
+  assert.ok(dismissed.dismissedAt);
+  assert.notEqual(dismissed.feedback?.signal, "less", "a dismissal is not Show me less");
+  assert.ok(!(await s.client.feed()).items.some((c) => c.id === one.id));
+
+  const pick = await s.client.pick({ cardIds: [kept.id], genre: "single" });
+  const afterPick = await weights();
+  await fails(s.client.dismiss(kept.id), 400, /is in pick/);
+  // Nothing in the faux feed is two days old, so the 48 hour clear finds nothing; clearing all keeps the picked card.
+  assert.deepEqual((await s.client.clearFeed({ olderThanHours: 48 })).dismissed, []);
+  const cleared = await s.client.clearFeed();
+  assert.deepEqual([...cleared.dismissed].sort(), rest.map((c) => c.id).sort());
+  assert.deepEqual(
+    (await s.client.feed()).items.map((c) => c.id),
+    [kept.id],
+  );
+  assert.equal(await weights(), afterPick, "dismissing and clearing move no weights");
+  await fails(s.client.clearFeed({ olderThanHours: 0 }), 400, /olderThanHours/);
+  await s.client.updatePick(pick.id, { status: "dropped" });
+});

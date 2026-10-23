@@ -94,7 +94,7 @@ export class FeedModel extends Emitter {
     const cards = [...this.cards.values()].sort((a, b) => a.id - b.id);
     this.state = {
       ...this.state,
-      news: cards.filter((c) => c.kind === "news" && !c.hiddenFromFeed),
+      news: cards.filter((c) => c.kind === "news" && !c.hiddenFromFeed && !c.dismissedAt),
       sweeps: [...this.sweeps.values()].sort((a, b) => a.id - b.id),
       questions: [...this.questions.values()]
         .filter((q) => q.status === "open")

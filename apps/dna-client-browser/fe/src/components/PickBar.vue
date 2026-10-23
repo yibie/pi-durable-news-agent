@@ -1,15 +1,16 @@
 <script setup lang="ts">
-// A card's writing actions: pick it with a genre, join it to a roundup in the basket, or skip it.
+// A card's writing actions: pick it with a genre, join it to a roundup in the basket, or dismiss it from the candidates
+// (dismissing only tidies the list; Show me less is the button that lowers weights).
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { CircleSlash, Layers, SquareCheck } from "@lucide/vue";
+import { Layers, ListX, SquareCheck } from "@lucide/vue";
 import { PICK_GENRES, type Card } from "@dna/sdk";
 import {
   GENRE_HINTS,
   GENRE_NAMES,
+  dismissCard,
   joinRoundup,
   pickCard,
   pickName,
-  skipCard,
 } from "../client/picks";
 import { feedState } from "../client/store";
 
@@ -52,11 +53,11 @@ const run = async (fn: () => Promise<void>) => {
     </button>
     <button
       class="pick-action"
-      aria-label="Skip this card"
-      title="跳过：不写这条，从候选中移除，同类内容会少推一些"
-      @click="skipCard(card)"
+      aria-label="Dismiss this card"
+      title="移出：从候选里拿掉这条。只是整理列表，不影响以后推荐什么；想少看同类内容，用下面的 👎"
+      @click="dismissCard(card)"
     >
-      <CircleSlash :size="13" /><span>跳过</span>
+      <ListX :size="13" /><span>移出</span>
     </button>
     <div v-if="open === 'pick'" class="pick-menu" role="menu" aria-label="Genre">
       <button

@@ -1,6 +1,7 @@
 // Picks: the reader chooses cards to write about, with a genre, and groups several cards into a roundup. Picking a
 // card counts as Show me more once (a card already voted more is not nudged again); dropping a pick or taking a card
-// out of a roundup puts the cards back into News and moves no weights.
+// out of a roundup puts the cards back into News and moves no weights. Dismissing a candidate, one card or a clear of the
+// whole list, takes it out of News and moves no weights either: Show me less is the only signal that lowers them.
 import { PICK_GENRES, PICK_STATUSES, type Card, type TopicPick } from "@dna/sdk";
 import type { PickCard } from "../db/repos/picks.ts";
 import { int, invalid, notFound } from "../errors.ts";
@@ -17,7 +18,9 @@ const asPickCard = (card: Card): PickCard => ({
 
 export function pickRoutes({
   app,
-}: RouteDeps): Handlers<"picks.list" | "picks.create" | "picks.update"> {
+}: RouteDeps): Handlers<
+  "picks.list" | "picks.create" | "picks.update" | "cards.dismiss" | "feed.clear"
+> {
   const { store } = app;
 
   /** A card the reader can pick: it exists and is not already in a pick that is still being worked on. */
@@ -43,6 +46,29 @@ export function pickRoutes({
   };
 
   return {
+    "cards.dismiss": (req, res) => {
+      const id = int(req.params.id, "id");
+      const card = store.news.card(id);
+      if (!card || card.kind !== "news") throw notFound(`No news card ${id}`);
+      const holder = store.picks.activeFor(id);
+      if (holder) throw invalid(`Card ${id} is in pick ${holder.id}; drop it from the pick first`);
+      const dismissed = store.news.dismissCard(id)!;
+      app.log.info("cards.dismiss", { cardId: id });
+      app.bus.publish({ type: "feed.card_updated", card: dismissed });
+      res.json(dismissed);
+    },
+    "feed.clear": (req, res) => {
+      const body = bodyOf(req);
+      const hours = num(body, "olderThanHours", { min: 1, max: 24 * 365 });
+      const keep = new Set(store.picks.list().flatMap((p) => p.items.map((i) => i.cardId)));
+      const before =
+        hours === undefined ? undefined : new Date(Date.now() - hours * 3_600_000).toISOString();
+      const dismissed = store.news.dismissCandidates({ before, keep });
+      for (const id of dismissed)
+        app.bus.publish({ type: "feed.card_updated", card: store.news.card(id)! });
+      app.log.info("feed.clear", { olderThanHours: hours, count: dismissed.length });
+      res.json({ dismissed });
+    },
     "picks.list": (req, res) => {
       const status =
         oneOf(req.query.status, "status", ["active", "all"] as const, true) ?? "active";

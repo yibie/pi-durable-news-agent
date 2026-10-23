@@ -8,6 +8,8 @@ import type {
   CompactionBody,
   CompactionState,
   CreatePickBody,
+  ClearFeedBody,
+  ClearFeedResult,
   FeedbackBody,
   FeedbackResult,
   Frame,
@@ -295,6 +297,12 @@ export class DnaClient {
   }
 
   // ------------------------------------------------------------ picks
+  dismiss(cardId: number) {
+    return this.call<Card>("cards.dismiss", { params: { id: cardId }, body: {} });
+  }
+  clearFeed(body: ClearFeedBody = {}) {
+    return this.call<ClearFeedResult>("feed.clear", { body });
+  }
   picks(status: "active" | "all" = "active") {
     return this.call<TopicPick[]>("picks.list", { query: { status } });
   }

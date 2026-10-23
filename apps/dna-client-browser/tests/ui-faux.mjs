@@ -1047,6 +1047,55 @@ try {
     "and back to the dark theme with normal text",
   );
 
+  await page.locator('[data-tab="news"]').click();
+  // ---------------------------------------------------------------- 移出: dismissing a card moves no weights
+  const weightsNow = async () =>
+    JSON.stringify([
+      (await call("GET", "/v1/keywords")).map((k) => [k.id, k.weight]),
+      (await call("GET", "/v1/sources")).map((x) => [x.id, x.weight]),
+    ]);
+  // The faux sweep's cards are used up by now: voting the thumbs-down card back up returns it to News.
+  await call("POST", `/v1/cards/${doomedId}/feedback`, { signal: "more" });
+  await page.locator(`.feed-list [data-card-id="${doomedId}"]`).waitFor();
+  const weightsBeforeDismiss = await weightsNow();
+  const dismissed = page.locator(".feed-list .feed-row:not(.highlight) .card").last();
+  const dismissedId = await dismissed.getAttribute("data-card-id");
+  const shownBeforeDismiss = await shownInNews();
+  await dismissed.getByRole("button", { name: "Dismiss this card" }).click();
+  await page.locator(`.feed-list [data-card-id="${dismissedId}"]`).waitFor({ state: "detached" });
+  await page.locator(".toast", { hasText: "已移出候选" }).waitFor();
+  const dismissedCard = (await call("GET", `/v1/cards/${dismissedId}`)).card;
+  check(
+    (await shownInNews()) === shownBeforeDismiss - 1 &&
+      Boolean(dismissedCard.dismissedAt) &&
+      dismissedCard.feedback.signal !== "less" &&
+      (await weightsNow()) === weightsBeforeDismiss,
+    "移出 takes a card out of News without show me less and without moving any weights",
+  );
+
+  // ---------------------------------------------------------------- 清理: clearing the candidates
+  const weightsBeforeClear = await weightsNow();
+  await page.getByRole("button", { name: "Clear candidates" }).click();
+  const clearOld = page.locator('[data-clear="old"]');
+  check(
+    (await clearOld.isDisabled()) && (await clearOld.innerText()).includes("0 条"),
+    "清理 offers the 48 hour clear, disabled when nothing is that old",
+  );
+  await page.locator('[data-clear="all"]').click();
+  await page.locator('[data-clear="all-confirm"]').click();
+  await page.locator(".toast", { hasText: "条候选" }).waitFor();
+  await page.locator(".feed-list .card").first().waitFor({ state: "detached" });
+  const inBasket = new Set(
+    (await call("GET", "/v1/picks")).flatMap((p) => p.items.map((i) => i.cardId)),
+  );
+  check(
+    (await shownInNews()) === 0 &&
+      (await call("GET", "/v1/feed")).items.every((c) => inBasket.has(c.id)) &&
+      (await weightsNow()) === weightsBeforeClear,
+    "清空 asks once more, empties News but keeps the basket, and moves no weights",
+  );
+  await cleanText("clear");
+
   // ---------------------------------------------------------------- capabilities
   const { CAPABILITY_IDS } = await import(
     join(root, "apps/shared/packages/dna-sdk/src/capabilities.ts")

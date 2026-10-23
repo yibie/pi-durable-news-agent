@@ -50,8 +50,9 @@ export const CAPABILITIES = {
   },
   "agent.compact": { summary: "Compact the context now", routes: ["agent.compact"] },
   picks: {
-    summary: "Pick cards for writing: choose a genre, group a roundup, change or drop a pick",
-    routes: ["picks.list", "picks.create", "picks.update"],
+    summary:
+      "Pick cards for writing: choose a genre, group a roundup, change or drop a pick, and dismiss or clear candidates",
+    routes: ["picks.list", "picks.create", "picks.update", "cards.dismiss", "feed.clear"],
   },
   writing: {
     summary:

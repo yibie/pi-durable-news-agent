@@ -109,6 +109,19 @@ export const ROUTES = {
     scope: "feedback",
     summary: "Answer a taste question with labels",
   },
+  "cards.dismiss": {
+    method: "POST",
+    path: "/v1/cards/:id/dismiss",
+    scope: "feedback",
+    summary: "Take a candidate out of the feed without moving any taste weights",
+  },
+  "feed.clear": {
+    method: "POST",
+    path: "/v1/feed/clear",
+    scope: "feedback",
+    summary:
+      "Clear the candidates (all, or those published more than olderThanHours ago); cards in the picks basket stay, no weights move",
+  },
   "picks.list": {
     method: "GET",
     path: "/v1/picks",
