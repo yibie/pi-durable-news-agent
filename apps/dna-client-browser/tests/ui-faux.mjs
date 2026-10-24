@@ -75,10 +75,14 @@ const api = run(
     DNA_FIXTURE_SET: "news",
     DNA_DATA_DIR: join(tmp, "data"),
     // The suite runs on the shipped defaults, even when .env points this device at its own config,
-    // and never reads this device's publish ledger or writes into its archive.
+    // and never reads this device's publish ledger or writes into its archive. `just` exports .env into the
+    // recipe, so the device's decision model (JEV_BACKEND=ollama) is blanked too: the fixture decider answers here.
     DNA_CONFIG_DIR: "",
     DNA_LEDGER_IMPORT: "",
     DNA_PUBLISHED_DIR: "",
+    JEV_BACKEND: "",
+    JEV_MODEL: "",
+    JEV_OLLAMA_URL: "",
     DNA_DEVICE_NAME: "test",
     DNA_CLIENT_TOKEN: tokens.client,
     DNA_CRON_TOKEN: tokens.cron,
@@ -598,13 +602,28 @@ try {
   const newsBeforePicks = await shownInNews();
   const first = page.locator(`.feed-list [data-card-id="${firstId}"]`);
   await first.getByRole("button", { name: "Pick for writing" }).click();
-  const menuBox = await first.locator(".pick-menu").boundingBox();
-  const feedBox = await page.locator(".feed-column").boundingBox();
+  // Every option must be the topmost thing at its own center: a menu clipped by the card (the last option lost at the
+  // card's bottom edge, or the left half lost at the column's edge) fails here.
+  const genreMenu = page.getByRole("menu", { name: "Genre" });
+  await genreMenu.waitFor();
   check(
-    menuBox.x >= feedBox.x && menuBox.x + menuBox.width <= feedBox.x + feedBox.width,
-    "the genre menu opens inside the candidates column, not cut off at its left edge",
+    await genreMenu.evaluate((menu) =>
+      [...menu.querySelectorAll("[role=menuitem]")].every((item) => {
+        const r = item.getBoundingClientRect();
+        const x = r.left + r.width / 2;
+        const y = r.top + r.height / 2;
+        return (
+          r.left >= 0 &&
+          r.right <= innerWidth &&
+          r.top >= 0 &&
+          r.bottom <= innerHeight &&
+          item.contains(document.elementFromPoint(x, y))
+        );
+      }),
+    ),
+    "every option of the genre menu is fully visible, not cut off by the card",
   );
-  await first.locator('.pick-menu [data-genre="roundup"]').click();
+  await genreMenu.locator('[data-genre="roundup"]').click();
   await page.locator(`.picks-column [data-pick-card="${firstId}"]`).waitFor();
   await first.waitFor({ state: "detached" });
   const roundup = (await call("GET", "/v1/picks")).find((p) =>
@@ -621,7 +640,7 @@ try {
   );
   const second = page.locator(`.feed-list [data-card-id="${secondId}"]`);
   await second.getByRole("button", { name: "Add to a roundup" }).click();
-  await second.locator(`.pick-menu [data-pick="${roundup.id}"]`).click();
+  await page.getByRole("menu", { name: "Roundups" }).locator(`[data-pick="${roundup.id}"]`).click();
   await page.locator(`.picks-column [data-pick-card="${secondId}"]`).waitFor();
   check(
     (await call("GET", "/v1/picks"))
@@ -649,7 +668,7 @@ try {
   const writeId = await pickable().first().getAttribute("data-card-id");
   const toWrite = page.locator(`.feed-list [data-card-id="${writeId}"]`);
   await toWrite.getByRole("button", { name: "Pick for writing" }).click();
-  await toWrite.locator('.pick-menu [data-genre="single"]').click();
+  await page.getByRole("menu", { name: "Genre" }).locator('[data-genre="single"]').click();
   await page.locator(`.picks-column [data-pick-card="${writeId}"]`).waitFor();
   const writing = (await call("GET", "/v1/picks")).find((p) =>
     p.items.some((i) => String(i.cardId) === writeId),

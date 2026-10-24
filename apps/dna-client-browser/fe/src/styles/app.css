@@ -2160,11 +2160,13 @@ table.usage th {
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
-/* A card's genre and roundup menus open rightward from the buttons, which sit at the card's left edge. Right-aligned,
-   they ran past the candidates column's left edge and were cut off. */
-.pick-bar .pick-menu {
+/* A card's genre and roundup menus live on <body> (PickBar places them beside the button), out of the card's clipping. */
+.pick-menu.floating {
+  position: fixed;
   right: auto;
-  left: 0;
+  z-index: 50;
+  max-width: min(420px, calc(100vw - 16px));
+  overflow-y: auto;
 }
 .pick-menu button {
   display: flex;
