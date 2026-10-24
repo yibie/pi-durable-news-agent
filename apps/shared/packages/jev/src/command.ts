@@ -147,14 +147,22 @@ export function renderCommand(cmd: JevCommand, vars: Vars): RenderedCommand {
   };
 }
 
-/** Render and decide in one step. */
+/** Render and decide in one step. `only` asks just those questions of the command (a cheap first screen). */
 export async function runCommand(
   cmd: JevCommand,
   vars: Vars,
   decide: Decide,
-  opts: { model?: string; signal?: AbortSignal } = {},
+  opts: { model?: string; signal?: AbortSignal; only?: string[] } = {},
 ): Promise<{ rendered: RenderedCommand; result: SystemOneResult }> {
-  const rendered = renderCommand(cmd, vars);
+  const full = renderCommand(cmd, vars);
+  const rendered = opts.only
+    ? {
+        ...full,
+        questions: Object.fromEntries(
+          Object.entries(full.questions).filter(([id]) => opts.only!.includes(id)),
+        ),
+      }
+    : full;
   const result = await decide(rendered.state, rendered.questions, {
     model: opts.model ?? rendered.model,
     signal: opts.signal,

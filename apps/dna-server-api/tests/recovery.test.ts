@@ -14,6 +14,8 @@ const ENV = {
   DNA_FIXTURE_SET: "news",
   DNA_FIXTURE_JEV_DELAY_MS: "250",
   DNA_GATE_CHUNK: "3",
+  // The fixture judge, never the device's local decision model from .env.
+  JEV_BACKEND: "",
 };
 
 const counts = (db: DatabaseSync) =>

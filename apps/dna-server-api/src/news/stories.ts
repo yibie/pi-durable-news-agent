@@ -8,6 +8,7 @@ import {
   storyAction,
   STORY_THRESHOLDS,
   type StoryAction,
+  type ScreenedVerdict,
   type StoryVerdict,
 } from "./story-policy.ts";
 
@@ -44,7 +45,7 @@ export class StoryMatcher {
     candidate: Item,
     other: Item,
     sweepId?: number,
-  ): Promise<{ action: StoryAction; verdict: StoryVerdict }> {
+  ): Promise<{ action: StoryAction; verdict: StoryVerdict | ScreenedVerdict }> {
     const { store, judge } = this.deps;
     const membership = store.news.membership(other.id);
     const members = membership
@@ -75,10 +76,21 @@ export class StoryMatcher {
       .prepare(`SELECT answers_json FROM story_decisions
       WHERE item_id=? AND other_item_id=? AND version=? AND evidence_hash=?`)
       .get(candidate.id, other.id, version, hash) as any;
-    const verdict: StoryVerdict = prior
+    const thresholds = Object.fromEntries(
+      Object.entries(STORY_THRESHOLDS).map(([key, fallback]) => [
+        key,
+        judge.policy("same-story", key, fallback),
+      ]),
+    ) as typeof STORY_THRESHOLDS;
+    const ref = { itemId: candidate.id, sweepId };
+    const verdict: StoryVerdict | ScreenedVerdict = prior
       ? JSON.parse(prior.answers_json)
       : await (async () => {
-          const result = await judge.run("same-story", state, { itemId: candidate.id, sweepId });
+          // Screen with `same` alone: at or below the no threshold the action is different whatever the rest say.
+          const screen = await judge.run("same-story", state, ref, { only: ["same"] });
+          const same = yes(screen.answers.same, "same");
+          if (same <= thresholds.no) return { same, screened: true as const };
+          const result = await judge.run("same-story", state, ref);
           return Object.fromEntries(
             ["same", "development", "covered", "addition", "sufficient"].map((k) => [
               k,
@@ -86,12 +98,6 @@ export class StoryMatcher {
             ]),
           ) as unknown as StoryVerdict;
         })();
-    const thresholds = Object.fromEntries(
-      Object.entries(STORY_THRESHOLDS).map(([key, fallback]) => [
-        key,
-        judge.policy("same-story", key, fallback),
-      ]),
-    ) as typeof STORY_THRESHOLDS;
     const action = storyAction(verdict, thresholds);
     if (!prior)
       store.db
@@ -132,7 +138,11 @@ export class StoryMatcher {
       return "new";
     const options = shortlist(item, history, judge.policy("same-story", "shortlist", 12));
     const seen = new Set<string>();
-    const matches: { other: Item; action: StoryAction; verdict: StoryVerdict }[] = [];
+    const matches: {
+      other: Item;
+      action: StoryAction;
+      verdict: StoryVerdict | ScreenedVerdict;
+    }[] = [];
     let failed = false;
     // Compare a candidate with at most one representative per story, in bounded batches.
     const candidates = options.filter((other) => {

@@ -50,10 +50,11 @@ export async function fauxApp(
     DNA_SEARCH_MODE: "fixture",
     DNA_DATA_DIR: dir,
     // Tests run on the shipped defaults, even when .env points a device at its own config,
-    // and never read the device's publish ledger or write into its archive.
+    // never read the device's publish ledger or write into its archive, and never call its local decision model.
     DNA_CONFIG_DIR: "",
     DNA_LEDGER_IMPORT: "",
     DNA_PUBLISHED_DIR: "",
+    JEV_BACKEND: "",
     ...env,
   });
   const app = await openApp(config);

@@ -50,7 +50,9 @@ test("story policy requires affirmative coverage and rejects ambiguity, missing 
 function setup() {
   const tmp = tempStore();
   const { store } = tmp;
+  // calls counts full five-question comparisons; screens counts the one-question `same` screens before them.
   let calls = 0;
+  let screens = 0;
   let verdict = duplicate;
   let fail = false;
   const states: any[] = [];
@@ -59,7 +61,8 @@ function setup() {
     store,
     dir: join(PROMPTS_DIR, "jev"),
     decide: async (state, questions, opts) => {
-      calls++;
+      if (Object.keys(questions).length === 1) screens++;
+      else calls++;
       if (fail) throw new Error("provider unavailable");
       states.push(state);
       const result = await fixture(state, questions, opts);
@@ -117,6 +120,7 @@ function setup() {
     card,
     states,
     calls: () => calls,
+    screens: () => screens,
     verdict: (v: StoryVerdict) => {
       verdict = v;
     },
@@ -303,6 +307,28 @@ test("new research reconsiders a singleton without suppressing an unresolved com
       s.calls(),
       2,
       "research changed the evidence and invalidated the uncertain verdict",
+    );
+  } finally {
+    s.cleanup();
+  }
+});
+
+test("a clearly different pair is settled by the one-question screen, never the full five", async () => {
+  const s = setup();
+  try {
+    const a = s.item("Scion introduced"),
+      b = s.item("Scion announcement"),
+      c = s.item("Scion released");
+    s.verdict({ same: 0.05, development: 0.9, covered: 0.9, addition: 0.9, sufficient: 0.9 });
+    const first = await new StoryMatcher(s.deps).compare(b, a);
+    assert.equal(first.action, "different");
+    assert.deepEqual([s.screens(), s.calls()], [1, 0], "the other four cannot change a different");
+    s.verdict(duplicate);
+    await new StoryMatcher(s.deps).compare(c, a);
+    assert.deepEqual(
+      [s.screens(), s.calls()],
+      [2, 1],
+      "a pair that may be the same is asked all five",
     );
   } finally {
     s.cleanup();

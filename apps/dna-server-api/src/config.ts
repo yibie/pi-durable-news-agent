@@ -89,7 +89,8 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     promptsDir: join(APP_DIR, "prompt_engineering"),
     provider,
     jevBackend:
-      (env.JEV_BACKEND as Config["jevBackend"]) ?? (searchMode === "fixture" ? "fixture" : "auto"),
+      ((env.JEV_BACKEND?.trim() || undefined) as Config["jevBackend"] | undefined) ??
+      (searchMode === "fixture" ? "fixture" : "auto"),
     jevModel: env.JEV_MODEL?.trim() || undefined,
     searchMode,
     firecrawlKey: env.FIRECRAWL_API_KEY?.trim() || undefined,

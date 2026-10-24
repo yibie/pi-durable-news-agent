@@ -85,11 +85,16 @@ export class Judge {
     return this.policy("hfs", "attention", DEFAULT_ATTENTION);
   }
 
-  /** Run one command by name, recording the call whether it succeeds or fails. */
-  async run(name: JevCommandName, vars: Vars, ref: JudgeRef = {}): Promise<SystemOneResult> {
+  /** Run one command by name, recording the call whether it succeeds or fails. `only` asks a subset of its questions. */
+  async run(
+    name: JevCommandName,
+    vars: Vars,
+    ref: JudgeRef = {},
+    opts: { only?: string[] } = {},
+  ): Promise<SystemOneResult> {
     const cmd = this.commands[name];
     try {
-      const { result, rendered } = await runCommand(cmd, vars, this.deps.decide);
+      const { result, rendered } = await runCommand(cmd, vars, this.deps.decide, opts);
       const record = this.ledger.record(result, { command: cmd.name, version: cmd.version });
       this.deps.store.telemetry.jev({
         command: cmd.name,
