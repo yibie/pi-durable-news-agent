@@ -419,6 +419,33 @@ export class App {
             message ? `Sent to the writer of pick ${r.pick.id}` : `Writing pick ${r.pick.id}`,
           );
         }
+        case "rules": {
+          const [verb, a] = words;
+          const name = a?.toUpperCase();
+          const which = () => {
+            if (name !== "RULES" && name !== "ARGMAP")
+              throw new Error("Which rule: RULES or ARGMAP");
+            return name;
+          };
+          if (verb === "show") {
+            const r = (await cl.writerRules()).find((x) => x.name === which())!;
+            return this.show("detail", `writer rule ${r.name}`, r.body.split("\n"));
+          }
+          if (verb === "version") {
+            const v = await cl.writerRuleVersion(id(1));
+            return this.show("detail", `${v.name} version ${v.id}`, v.body.split("\n"));
+          }
+          if (verb === "restore") {
+            const v = await cl.writerRuleVersion(id(2));
+            await cl.saveWriterRule(which(), { body: v.body, restoredFrom: v.id });
+            return this.flash(`Restored ${name} to version ${v.id}`);
+          }
+          return this.show(
+            "detail",
+            "writer rules",
+            (await cl.writerRules()).flatMap(print.ruleLines),
+          );
+        }
         case "keywords": {
           const kind = words[0] as (typeof KEYWORD_KINDS)[number] | undefined;
           if (kind && !KEYWORD_KINDS.includes(kind))

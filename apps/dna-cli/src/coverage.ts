@@ -16,6 +16,7 @@ export const CLI_COMMANDS: Record<CapabilityId, string> = {
   "taste.answer": "answer",
   picks: "picks",
   writing: "write",
+  "writer.rules": "rules",
   publish: "publish",
   "chat.send": "send",
   "chat.watch": "watch",

@@ -59,6 +59,11 @@ export const CAPABILITIES = {
       "Write a pick with its writer: start it, ask for revisions, stop it, read and edit the drafts",
     routes: ["picks.write", "picks.stop", "drafts.list", "drafts.save"],
   },
+  "writer.rules": {
+    summary:
+      "Read and edit the writer's rules (how to write, how to draw), see every saved version, restore one",
+    routes: ["rules.list", "rules.version", "rules.save"],
+  },
   publish: {
     summary:
       "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack after checking X",

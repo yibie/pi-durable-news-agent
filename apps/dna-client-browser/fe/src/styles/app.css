@@ -2568,3 +2568,130 @@ a.pick-title:hover {
   align-items: center;
   gap: 8px;
 }
+
+/* The writer's rules: the text on the left, its saved versions on the right */
+.rules-modal {
+  width: min(1180px, 96vw);
+}
+.rules-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+.rules-editor {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--s2) var(--s3);
+}
+.rules-hint,
+.rules-state {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-meta);
+}
+.rules-state {
+  margin-right: auto;
+}
+.rules-text {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+}
+.rules-dot {
+  color: var(--accent);
+  font-size: var(--fs-meta);
+}
+.rules-viewing,
+.rules-closing {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+}
+.rules-closing {
+  margin: var(--s2) var(--s3) 0;
+  border-color: var(--accent);
+}
+.rules-viewing span,
+.rules-closing span {
+  flex: 1;
+  min-width: 12em;
+}
+.rules-versions {
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  padding: var(--s2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rules-versions h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-nav);
+  margin: 0 0 6px;
+}
+.rules-version {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  text-align: left;
+  border: 1px solid transparent;
+}
+.rules-version:hover {
+  background: var(--raised);
+}
+.rules-version.on {
+  border-color: var(--accent);
+}
+.rules-version small {
+  color: var(--muted);
+  font-size: var(--fs-meta);
+}
+@media (max-width: 800px) {
+  .rules-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .rules-versions {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    max-height: 30vh;
+  }
+}
+/* The reader's own edit, told to the writer with the next message: one line, the changes folded under it */
+.edit-notice {
+  align-self: center;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: var(--fs-meta);
+}
+.edit-notice summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.edit-notice pre {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--sans);
+  background: var(--raised);
+  border: 1px solid var(--line);
+}
+.writer-rules {
+  margin-left: auto;
+  flex: none;
+}

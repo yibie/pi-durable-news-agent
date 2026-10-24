@@ -1,6 +1,7 @@
 // dna: every capability of the Durable News Agent from a terminal or a script, plus device operations.
 //   dna [--device <id>] [--json] <command> [args]
 // Run `dna help` for the command list.
+import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { join } from "node:path";
 import {
@@ -15,6 +16,7 @@ import {
   type HfsCategory,
   type PickGenre,
   type TopicPick,
+  type WriterRuleName,
 } from "@dna/sdk";
 import {
   createLogger,
@@ -317,6 +319,44 @@ const COMMANDS: Record<string, Command> = {
           ? `Sent to the writer of pick ${r.pick.id}`
           : `The writer of pick ${r.pick.id} is on conversation ${r.conversationId}`,
       };
+    },
+  },
+  rules: {
+    usage:
+      "rules | rules show <RULES|ARGMAP> | rules version <version id> | rules save <RULES|ARGMAP> <file> | rules restore <RULES|ARGMAP> <version id>",
+    summary:
+      "The writer's rules (RULES: how to write, ARGMAP: how to draw): list with versions, show, save from a file, restore a version",
+    async run() {
+      const [verb = "list", a, b] = args;
+      const rule = (name?: string): WriterRuleName => {
+        const n = name?.toUpperCase();
+        if (n !== "RULES" && n !== "ARGMAP") throw new Usage("which rule: RULES or ARGMAP");
+        return n;
+      };
+      if (verb === "list") {
+        const rules = await client().writerRules();
+        return { data: rules, text: rules.flatMap(print.ruleLines).join("\n") };
+      }
+      if (verb === "show") {
+        const r = (await client().writerRules()).find((x) => x.name === rule(a))!;
+        return { data: r, text: r.body };
+      }
+      if (verb === "version") {
+        const v = await client().writerRuleVersion(num(a, "version id"));
+        return { data: v, text: v.body };
+      }
+      if (verb === "save") {
+        if (!b) throw new Usage("rules save <RULES|ARGMAP> <file>");
+        const r = await client().saveWriterRule(rule(a), { body: readFileSync(b, "utf8") });
+        return { data: r, text: print.ruleLines(r).join("\n") };
+      }
+      if (verb === "restore") {
+        const name = rule(a);
+        const v = await client().writerRuleVersion(num(b, "version id"));
+        const r = await client().saveWriterRule(name, { body: v.body, restoredFrom: v.id });
+        return { data: r, text: print.ruleLines(r).join("\n") };
+      }
+      throw new Usage(COMMANDS.rules.usage);
     },
   },
   publish: {

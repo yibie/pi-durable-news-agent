@@ -1,12 +1,13 @@
 // Writing: each pick gets its own writer conversation. picks.write starts it with the pick's sources (once) or sends
 // it the reader's message; picks.stop interrupts it. drafts.list shows every revision, drafts.save keeps the reader's
-// own edit as a new revision with the newest image.
+// own edit as a new revision with the newest image; the writer hears about that edit with the reader's next message.
 import { join } from "node:path";
 import { configure, type ConversationId } from "@earendil-works/pi-durable";
 import { loadPrompt } from "@dna/durable-agent";
 import type { TopicPick } from "@dna/sdk";
 import { int, invalid, notFound } from "../errors.ts";
 import { saveDraft } from "../writing/drafts.ts";
+import { editNotice, READER_SAYS } from "../writing/edit-notice.ts";
 import { bodyOf, str, type Handlers, type RouteDeps } from "./types.ts";
 
 const GENRE_NAMES: Record<TopicPick["genre"], string> = {
@@ -83,17 +84,25 @@ export function writingRoutes({
             configure(tx, Number(pick.conversationId) as ConversationId, app.agents.writerAgent()),
           ctx,
         );
+        // A draft the reader edited since the writer last worked goes with the message, so the writer revises it
+        // instead of its own older text.
+        const notice = editNotice(store, pick.id);
         const writer = await conversation(pick);
         await writer.submit(
           {
             type: "input",
-            content: message,
+            content: notice ? `${notice.text}\n\n${READER_SAYS}\n${message}` : message,
             requestId: `write:${pick.id}:${Date.now()}`,
             whenBusy: "followUp",
           },
           ctx,
         );
-        app.log.info("writing.message", { pickId: pick.id, chars: message.length });
+        if (notice) store.picks.setWriterSeen(pick.id, notice.revision);
+        app.log.info("writing.message", {
+          pickId: pick.id,
+          chars: message.length,
+          editNotice: notice?.revision,
+        });
       }
       app.bus.publish({ type: "pick", pick });
       res.json({ pick, conversationId: pick.conversationId });

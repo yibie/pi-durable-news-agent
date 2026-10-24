@@ -8,6 +8,7 @@ import { DraftsRepo } from "./repos/drafts.ts";
 import { LedgerRepo } from "./repos/ledger.ts";
 import { NewsRepo } from "./repos/news.ts";
 import { PicksRepo } from "./repos/picks.ts";
+import { RulesRepo } from "./repos/rules.ts";
 import { SettingsRepo } from "./repos/settings.ts";
 import { SourcesRepo, type SourceSeed } from "./repos/sources.ts";
 import { SweepsRepo } from "./repos/sweeps.ts";
@@ -23,6 +24,7 @@ export interface Store {
   picks: PicksRepo;
   drafts: DraftsRepo;
   ledger: LedgerRepo;
+  rules: RulesRepo;
   sweeps: SweepsRepo;
   telemetry: TelemetryRepo;
   close(): void;
@@ -42,6 +44,7 @@ export function openStore(dataDir: string, configDir: string): Store {
     picks: new PicksRepo(db),
     drafts: new DraftsRepo(db),
     ledger: new LedgerRepo(db),
+    rules: new RulesRepo(db),
     sweeps: new SweepsRepo(db),
     telemetry: new TelemetryRepo(db),
     close() {

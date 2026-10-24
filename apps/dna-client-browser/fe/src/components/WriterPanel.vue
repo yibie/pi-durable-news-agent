@@ -2,7 +2,7 @@
 // The open pick's writer in the agent column: what it did (its messages and tool calls) and a box to ask for
 // changes. The first message is the pick's writing brief, shown as a chip. Back returns the column to the news desk.
 import { computed, nextTick, ref, watch } from "vue";
-import { ArrowLeft, Brain, PenLine, Send, Square } from "@lucide/vue";
+import { ArrowLeft, Brain, FilePen, PenLine, ScrollText, Send, Square } from "@lucide/vue";
 import { GENRE_NAMES, pickName } from "../client/picks";
 import { clean, markdown } from "../client/text";
 import {
@@ -13,6 +13,7 @@ import {
   stopWriting,
   writerView,
 } from "../client/writing";
+import { ui } from "../client/store";
 import ToolCallRow from "./ToolCallRow.vue";
 
 const text = ref("");
@@ -31,6 +32,12 @@ const working = computed(
     ),
 );
 const isBrief = (t: string) => /^# Purpose\s+Write pick \d+/.test(t);
+/** A message the server sent with a notice of the reader's own edit in front (see writing/edit-notice.ts). */
+function edited(t: string) {
+  const m = t.match(/^【读者手改了稿子】\n([\s\S]*?)\n\n【读者这次的话】\n([\s\S]*)$/);
+  if (!m) return undefined;
+  return { notice: m[1], revision: m[1].match(/现在最新的是第 (\d+) 版/)?.[1], message: m[2] };
+}
 
 watch(
   () => items.value.length,
@@ -92,6 +99,14 @@ function onKey(e: KeyboardEvent) {
         }}</span
       >
       <span v-if="working" class="writer-busy">写手在干活</span>
+      <button
+        class="icon-button writer-rules"
+        aria-label="Edit the rules"
+        title="写作规则：写手照着写的规则。改了保存，写手下一轮回复起照新规则写"
+        @click="ui.rules = true"
+      >
+        <ScrollText :size="15" />
+      </button>
     </div>
     <div ref="list" class="pane transcript-pane">
       <div class="transcript" data-testid="writer-chat">
@@ -119,12 +134,24 @@ function onKey(e: KeyboardEvent) {
         </div>
         <template v-for="item in items" :key="`${item.kind}:${item.id}`">
           <template v-if="item.kind === 'user'">
-            <div v-if="isBrief(item.text)" class="chip-line">
-              <span class="chip"><PenLine :size="14" />开始写选题 {{ openPick.id }}</span>
-            </div>
-            <p v-if="isBrief(item.text) && openPick.note" class="writer-note">
-              你的要求：{{ clean(openPick.note) }}
-            </p>
+            <template v-if="isBrief(item.text)">
+              <div class="chip-line">
+                <span class="chip"><PenLine :size="14" />开始写选题 {{ openPick.id }}</span>
+              </div>
+              <p v-if="openPick.note" class="writer-note">你的要求：{{ clean(openPick.note) }}</p>
+            </template>
+            <template v-else-if="edited(item.text)">
+              <details class="edit-notice" data-testid="edit-notice">
+                <summary>
+                  <FilePen :size="14" />已告诉写手：你手改过稿子，最新是第
+                  {{ edited(item.text)!.revision }} 版，要在这一版上改
+                </summary>
+                <pre>{{ clean(edited(item.text)!.notice) }}</pre>
+              </details>
+              <div class="msg user" data-role="user">
+                <div class="bubble">{{ clean(edited(item.text)!.message) }}</div>
+              </div>
+            </template>
             <div v-else class="msg user" data-role="user">
               <div class="bubble">{{ clean(item.text) }}</div>
             </div>

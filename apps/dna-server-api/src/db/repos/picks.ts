@@ -132,6 +132,18 @@ export class PicksRepo {
     return this.get(id);
   }
 
+  /** The newest reader edit (draft revision) the pick's writer has been told about. */
+  writerSeen(id: number): number {
+    const r = this.db.prepare("SELECT writer_seen_revision FROM picks WHERE id = ?").get(id) as
+      | { writer_seen_revision: number | null }
+      | undefined;
+    return r?.writer_seen_revision ?? 0;
+  }
+
+  setWriterSeen(id: number, revision: number): void {
+    this.db.prepare("UPDATE picks SET writer_seen_revision = ? WHERE id = ?").run(revision, id);
+  }
+
   /** The pick a writer conversation belongs to. */
   byConversation(conversationId: string): TopicPick | undefined {
     const r = this.db.prepare("SELECT * FROM picks WHERE conversation_id = ?").get(conversationId);

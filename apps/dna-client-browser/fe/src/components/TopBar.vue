@@ -9,6 +9,7 @@ import {
   PanelLeft,
   PanelRight,
   Server,
+  ScrollText,
   SlidersHorizontal,
   WifiOff,
   Zap,
@@ -123,6 +124,15 @@ const spend = computed(() => agentState.value?.spend);
         @click="go('/executions')"
       >
         <Activity :size="16" /><span>执行记录</span>
+      </button>
+      <button
+        class="bar-button"
+        data-cap="writer.rules"
+        aria-label="Writing rules"
+        title="写作规则：写手照着写的规则（怎么写正文、怎么出图）。改了保存，写手下一轮回复起照新规则写"
+        @click="ui.rules = true"
+      >
+        <ScrollText :size="16" /><span>写作规则</span>
       </button>
       <button
         class="bar-button"

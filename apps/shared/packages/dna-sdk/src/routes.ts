@@ -165,6 +165,26 @@ export const ROUTES = {
     scope: "chat",
     summary: "Save the reader's own edit of the post as a new revision with the newest image",
   },
+  "rules.list": {
+    method: "GET",
+    path: "/v1/writer-rules",
+    scope: "read",
+    summary:
+      "The writer's rules (how to write, how to draw) as it reads them, with every saved version",
+  },
+  "rules.version": {
+    method: "GET",
+    path: "/v1/writer-rules/versions/:id",
+    scope: "read",
+    summary: "The text of one saved version of a writer rule",
+  },
+  "rules.save": {
+    method: "POST",
+    path: "/v1/writer-rules/:id",
+    scope: "settings",
+    summary:
+      "Save a writer rule (RULES or ARGMAP): the writer reads it from its next turn, the old text stays a version",
+  },
   "picks.publish": {
     method: "POST",
     path: "/v1/picks/:id/publish",

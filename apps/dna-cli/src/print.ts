@@ -20,6 +20,7 @@ import {
   type ToolInfo,
   type TopicPick,
   type Draft,
+  type WriterRule,
   type LedgerEntry,
   type PublishState,
   type ToolCallDetail,
@@ -202,6 +203,14 @@ export const draftText = (d: Draft): string =>
     `revision ${d.revision} by ${d.author}  ${d.layout ?? "no image"}  weighted ${d.lint.weighted}${d.lint.markdown.length ? `  ${d.lint.markdown.length} markdown lines` : ""}${d.warnings.length ? `  ${d.warnings.length} image problems` : ""}`,
     d.body,
   ].join("\n");
+/** A writer rule: which file the writer reads and how many saved versions it has, then each version. */
+export const ruleLines = (r: WriterRule): string[] => [
+  `${pad(r.name, 7)} ${r.custom ? "edited " : "default"}  ${r.body.length} chars  ${r.versions.length} versions  ${r.file}`,
+  ...r.versions.map(
+    (v) =>
+      `      version ${pad(v.id, 5)} ${v.createdAt.slice(0, 16).replace("T", " ")}  ${pad(v.source, 8)} ${v.chars} chars${v.restoredFrom ? `  from version ${v.restoredFrom}` : ""}`,
+  ),
+];
 export const ledgerLine = (e: LedgerEntry): string =>
   `${e.at.slice(0, 16).replace("T", " ")}  ${pad(e.status, 8)} ${e.draftKey}${e.backend ? `  ${e.backend}` : ""}${e.note ? `  ${cleanText(e.note).slice(0, 120)}` : ""}`;
 export const publishText = (s: PublishState): string =>

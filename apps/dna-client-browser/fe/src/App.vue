@@ -5,6 +5,7 @@ import CardDetailDialog from "./components/CardDetailDialog.vue";
 import ExecutionsView from "./components/ExecutionsView.vue";
 import FeedColumn from "./components/FeedColumn.vue";
 import PicksColumn from "./components/PicksColumn.vue";
+import RulesModal from "./components/RulesModal.vue";
 import SettingsModal from "./components/SettingsModal.vue";
 import TopBar from "./components/TopBar.vue";
 import { layout, PICKS_MIN } from "./client/layout";
@@ -84,6 +85,7 @@ function resizeMove(e: PointerEvent, which: Resizable) {
     </main>
     <ExecutionsView v-if="route.view === 'executions'" />
     <SettingsModal v-if="ui.settings" />
+    <RulesModal v-if="ui.rules" />
     <CardDetailDialog v-if="ui.card !== undefined" :id="ui.card" />
     <div v-if="toast" class="toast" :class="toast.kind" role="status">{{ toast.text }}</div>
   </div>

@@ -17,6 +17,7 @@ import { writingRoutes } from "./routes/writing.ts";
 import { publishingRoutes } from "./routes/publishing.ts";
 import { tasteRoutes } from "./routes/taste.ts";
 import type { Handlers } from "./routes/types.ts";
+import { ruleRoutes } from "./routes/rules.ts";
 import { scheduleRoutes } from "./routes/schedule.ts";
 import { workflowRoutes } from "./routes/workflows.ts";
 import type { App } from "./runtime.ts";
@@ -33,6 +34,7 @@ export function createHttpApp(app: App) {
     ...tasteRoutes(deps),
     ...pickRoutes(deps),
     ...writingRoutes(deps),
+    ...ruleRoutes(deps),
     ...publishingRoutes(deps),
     ...keywordRoutes(deps),
     ...sourceRoutes(deps),

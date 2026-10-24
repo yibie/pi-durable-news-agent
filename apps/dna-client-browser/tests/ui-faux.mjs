@@ -107,6 +107,14 @@ const call = async (method, path, body, tok = tokens.client) => {
   });
   return res.json();
 };
+/** Wait up to 20 seconds for an API condition. */
+const until = async (ok) => {
+  for (let i = 0; i < 200; i++) {
+    if (await ok()) return;
+    await sleep(100);
+  }
+  throw new Error("timed out waiting for the API");
+};
 const started = await call("POST", "/v1/workflows/news-sweep", { requestId: "ui:1" }, tokens.cron);
 for (let i = 0; i < 300; i++) {
   const s = await call("GET", `/v1/sweeps/${started.sweep.id}`);
@@ -732,6 +740,72 @@ try {
   await page.screenshot({ path: join(shots, "writing.png") });
   await collectCaps();
   await cleanText("writing");
+  // The reader's own edit goes to the writer with the next message, shown as one folded line above it.
+  await page.locator(".draft-body").fill(drafted.replace(/^[^\n]*/, "读者自己改的开头。"));
+  await page.getByRole("button", { name: "Save the edit" }).click();
+  await until(async () => (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 2);
+  await page.getByLabel("Message the writer").fill("再短一点");
+  await page.getByLabel("Message the writer").press("Enter");
+  await page.locator('[data-testid="edit-notice"]').waitFor();
+  await until(async () => (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3);
+  const notice = page.locator('[data-testid="edit-notice"]');
+  check(
+    (await notice.locator("summary").innerText()).includes("第 2 版") &&
+      (await page.locator('[data-testid="writer-chat"] .msg.user .bubble').last().innerText()) ===
+        "再短一点" &&
+      (await notice.locator("pre").isHidden()),
+    "the reader's own edit goes to the writer with the next message, as one folded line",
+  );
+  await notice.locator("summary").click();
+  check(
+    (await notice.locator("pre").innerText()).includes("+ 读者自己改的开头。"),
+    "unfolding the line shows what the reader changed",
+  );
+
+  // ---------------------------------------------------------------- writing rules: edit, versions, restore
+  await page.getByRole("button", { name: "Writing rules", exact: true }).click();
+  const rulesDialog = page.getByRole("dialog", { name: "Writing rules editor" });
+  const ruleText = rulesDialog.getByLabel("Rule text");
+  await ruleText.waitFor();
+  const original = await ruleText.inputValue();
+  check(
+    original.length > 0 &&
+      (await rulesDialog.locator(".rules-version").count()) === 1 &&
+      (await rulesDialog.locator('[data-rule="ARGMAP"]').count()) === 1,
+    "the writing rules open with both rules and the text before any edit as the first version",
+  );
+  await ruleText.fill(`${original}\n- 浏览器测试加的一条。`);
+  await ruleText.press("ControlOrMeta+s");
+  await rulesDialog.locator(".rules-version").nth(1).waitFor();
+  const savedRules = await call("GET", "/v1/writer-rules");
+  check(
+    savedRules[0].body.includes("浏览器测试加的一条") &&
+      savedRules[0].versions.length === 2 &&
+      savedRules[0].custom,
+    "saving a rule keeps the old text as a version and the writer reads the new one",
+  );
+  await rulesDialog.locator(".rules-version").nth(1).click();
+  await rulesDialog.locator(".rules-viewing").waitFor();
+  check(
+    (await ruleText.getAttribute("readonly")) !== null &&
+      !(await ruleText.inputValue()).includes("浏览器测试加的一条"),
+    "an old version opens read only",
+  );
+  await rulesDialog.getByRole("button", { name: "恢复这一版" }).click();
+  await rulesDialog.locator(".rules-version").nth(2).waitFor();
+  const restoredRules = (await call("GET", "/v1/writer-rules"))[0];
+  check(
+    restoredRules.body.trimEnd() === original.trimEnd() &&
+      restoredRules.versions[0].source === "restore",
+    "restoring an old version saves it again as the newest version",
+  );
+  await ruleText.fill(`${original}\n没保存的一条`);
+  await page.keyboard.press("Escape");
+  await rulesDialog.locator(".rules-closing").waitFor();
+  check(await rulesDialog.isVisible(), "closing with an unsaved edit asks first");
+  await rulesDialog.getByRole("button", { name: "放弃修改并关闭" }).click();
+  await rulesDialog.waitFor({ state: "detached" });
+
   await page.locator(".draft-body").fill(`${drafted}\n**加粗**`);
   await page.getByRole("button", { name: "Save the edit" }).click();
   await page.locator(".draft-problems").waitFor();
@@ -748,7 +822,7 @@ try {
   await page.getByRole("button", { name: "Mark ready" }).click();
   await page.locator('.pick-stage[data-stage="ready"]').waitFor();
   check(
-    (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3 &&
+    (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 5 &&
       (await stageTab("ready").getAttribute("aria-selected")) === "true",
     "the reader's edits are kept as revisions, the clean draft goes to 待发布 and the stage tab follows it",
   );
@@ -757,20 +831,20 @@ try {
   const revisionMenu = page.getByRole("menu", { name: "Draft revision" });
   await revisionMenu.waitFor();
   check(
-    (await revisionMenu.locator("[role=menuitemradio]").count()) === 3 &&
+    (await revisionMenu.locator("[role=menuitemradio]").count()) === 5 &&
       (await allOptionsVisible(revisionMenu)),
     "the revision chooser is an in-page menu listing every revision, fully visible",
   );
-  await revisionMenu.locator('[data-value="2"]').click();
+  await revisionMenu.locator('[data-value="4"]').click();
   await page.waitForFunction(() =>
     document.querySelector(".draft-body").value.includes("**加粗**"),
   );
   check(
-    (await revisionButton.innerText()).trim() === "第 2 版",
+    (await revisionButton.innerText()).trim() === "第 4 版",
     "picking an older revision from the chooser shows that revision",
   );
   await revisionButton.click();
-  await revisionMenu.locator('[data-value="3"]').click();
+  await revisionMenu.locator('[data-value="5"]').click();
   await page.waitForFunction(
     () => !document.querySelector(".draft-body").value.includes("**加粗**"),
   );

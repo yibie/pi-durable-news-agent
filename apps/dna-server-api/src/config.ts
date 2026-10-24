@@ -14,6 +14,9 @@ export interface Config {
   dataDir: string;
   rootDir: string;
   configDir: string;
+  /** Where the writer's rules edited from the workbench are saved: <configDir>/writer on a device with its own config,
+   * else <dataDir>/writer, so an edit never rewrites the shipped defaults in config/writer. */
+  rulesDir: string;
   promptsDir: string;
   provider: "openrouter" | "deepseek" | "faux";
   jevBackend: "auto" | "fixture" | "mock" | "ollama" | "openrouter" | "typesafe";
@@ -86,6 +89,7 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     configDir: env.DNA_CONFIG_DIR?.trim()
       ? resolve(rootDir, env.DNA_CONFIG_DIR.trim())
       : join(APP_DIR, "config"),
+    rulesDir: "", // set below, from configDir and dataDir
     promptsDir: join(APP_DIR, "prompt_engineering"),
     provider,
     jevBackend:
@@ -119,6 +123,10 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     publishedDir: env.DNA_PUBLISHED_DIR?.trim() || undefined,
   };
   config.jevPolicy = jevPolicyFor(config.configDir, config.jevBackend);
+  config.rulesDir =
+    config.configDir === join(APP_DIR, "config")
+      ? join(config.dataDir, "writer")
+      : join(config.configDir, "writer");
   config.deviceName =
     env.DNA_DEVICE_LABEL?.trim() ||
     (() => {

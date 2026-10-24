@@ -124,6 +124,7 @@ export function start(): () => void {
 /** Open dialogs and drawers. */
 export const ui = reactive({
   settings: false,
+  rules: false,
   models: false,
   compaction: false,
   card: undefined as number | undefined,

@@ -40,6 +40,10 @@ import type {
   WriteResult,
   Draft,
   SaveDraftBody,
+  SaveWriterRuleBody,
+  WriterRule,
+  WriterRuleName,
+  WriterRuleVersionText,
   PublishBody,
   PublishState,
   LedgerEntry,
@@ -323,6 +327,15 @@ export class DnaClient {
   }
   saveDraft(id: number, body: SaveDraftBody) {
     return this.call<Draft>("drafts.save", { params: { id }, body });
+  }
+  writerRules() {
+    return this.call<WriterRule[]>("rules.list");
+  }
+  writerRuleVersion(id: number) {
+    return this.call<WriterRuleVersionText>("rules.version", { params: { id } });
+  }
+  saveWriterRule(name: WriterRuleName, body: SaveWriterRuleBody) {
+    return this.call<WriterRule>("rules.save", { params: { id: name }, body });
   }
   publish(id: number, body: PublishBody = {}) {
     return this.call<PublishState>("picks.publish", { params: { id }, body });

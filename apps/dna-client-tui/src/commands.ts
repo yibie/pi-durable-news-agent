@@ -142,6 +142,17 @@ export function buildCommands(state: CompletionState): Command[] {
       getArgumentCompletions: (arg) => lastWord(arg, (i) => (i === 0 ? ["drafts", "stop"] : [])),
     },
     {
+      name: "rules",
+      cap: "writer.rules",
+      description:
+        "the writer's rules: list with versions, show one, show an old version, restore it",
+      argumentHint: "[show RULES|ARGMAP | version <id> | restore RULES|ARGMAP <id>]",
+      getArgumentCompletions: (arg) =>
+        lastWord(arg, (i) =>
+          i === 0 ? ["show", "version", "restore"] : i === 1 ? ["RULES", "ARGMAP"] : [],
+        ),
+    },
+    {
       name: "publish",
       cap: "publish",
       description: "post a ready pick to X or rehearse it, the spacing, the ledger, ack",

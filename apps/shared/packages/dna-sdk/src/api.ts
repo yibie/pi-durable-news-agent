@@ -243,6 +243,42 @@ export interface SaveDraftBody {
   note?: string;
 }
 
+export const WRITER_RULE_NAMES = ["RULES", "ARGMAP"] as const;
+/** RULES: how the writer writes the post; ARGMAP: how it draws the image. */
+export type WriterRuleName = (typeof WRITER_RULE_NAMES)[number];
+
+/** A saved text of a writer rule. initial: before the first edit; edit: saved from the workbench; restore: an old
+ * version saved again; outside: the file changed outside the workbench and was kept before the next save. */
+export interface WriterRuleVersion {
+  id: number;
+  name: WriterRuleName;
+  source: "initial" | "edit" | "restore" | "outside";
+  restoredFrom?: number;
+  chars: number;
+  createdAt: string;
+}
+
+/** A writer rule as the writer reads it on its next turn, with every saved version, newest first. */
+export interface WriterRule {
+  name: WriterRuleName;
+  body: string;
+  /** Where a save goes. */
+  file: string;
+  /** True when the writer reads this device's own copy; false while it still reads the shipped default. */
+  custom: boolean;
+  versions: WriterRuleVersion[];
+}
+
+export interface WriterRuleVersionText extends WriterRuleVersion {
+  body: string;
+}
+
+/** Save a writer rule; restoredFrom when the text is an old version saved again. */
+export interface SaveWriterRuleBody {
+  body: string;
+  restoredFrom?: number;
+}
+
 export const LEDGER_STATUSES = ["pending", "ok", "unknown", "failed", "ack"] as const;
 /** pending: about to click Post; ok: posted; unknown: may have posted, a person checks X; failed: did not post;
  * ack: a person said a pending or unknown one did not post. */
