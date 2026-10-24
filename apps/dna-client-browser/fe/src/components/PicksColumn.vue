@@ -19,6 +19,7 @@ import { feedState, now } from "../client/store";
 import { clean } from "../client/text";
 import { beijingTime } from "../client/time";
 import { closeWriting, loadSpacing, openPick, openWriting, spacing } from "../client/writing";
+import ChoiceMenu from "./ChoiceMenu.vue";
 import PickDetail from "./PickDetail.vue";
 
 const STAGES: Record<PickStage, { name: string; hint: string; empty: string }> = {
@@ -43,6 +44,11 @@ const STAGES: Record<PickStage, { name: string; hint: string; empty: string }> =
     empty: "还没有经工作台发出的帖子。",
   },
 };
+const GENRE_CHOICES = PICK_GENRES.map((g) => ({
+  value: g,
+  label: GENRE_NAMES[g],
+  hint: GENRE_HINTS[g],
+}));
 const count = (s: PickStage) => feedState.value.picks.filter((p) => p.status === s).length;
 const shown = computed(() => feedState.value.picks.filter((p) => p.status === layout.picksTab));
 
@@ -104,15 +110,14 @@ watch(
       <p v-if="!shown.length" class="picks-empty">{{ STAGES[layout.picksTab].empty }}</p>
       <article v-for="p in shown" :key="p.id" class="pick" :class="p.genre" :data-pick-id="p.id">
         <header class="pick-head">
-          <select
+          <ChoiceMenu
             class="pick-genre"
             :value="p.genre"
-            aria-label="Pick genre"
-            :title="`体裁：${GENRE_HINTS[p.genre]}`"
-            @change="setGenre(p, ($event.target as HTMLSelectElement).value as PickGenre)"
-          >
-            <option v-for="g in PICK_GENRES" :key="g" :value="g">{{ GENRE_NAMES[g] }}</option>
-          </select>
+            :options="GENRE_CHOICES"
+            label="Pick genre"
+            :title="`体裁：${GENRE_HINTS[p.genre]}。点开可以改`"
+            @change="(g: PickGenre) => setGenre(p, g)"
+          />
           <small v-if="p.genre === 'roundup'" class="pick-count">{{ p.items.length }} 条</small>
           <span class="grow" />
           <button

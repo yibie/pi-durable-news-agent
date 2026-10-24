@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // One pick in the basket: its sources, and its draft as it will go out: the image, then the text, which the reader
-// can edit in place (saved as a new revision). Older revisions stay one select away. 进入待发布 asks the server,
+// can edit in place (saved as a new revision). Older revisions stay one menu away. 进入待发布 asks the server,
 // which refuses a draft with Markdown, a missing link block or an image with problems. A published pick can be moved
 // back to 待发布, to be edited and posted again.
 import { computed, ref, watch } from "vue";
@@ -17,6 +17,7 @@ import {
   shownDraft,
   shownRevision,
 } from "../client/writing";
+import ChoiceMenu from "./ChoiceMenu.vue";
 import PublishPanel from "./PublishPanel.vue";
 
 const STAGES = {
@@ -26,6 +27,13 @@ const STAGES = {
   published: "已发布",
   dropped: "已放回",
 };
+const revisions = computed(() =>
+  drafts.value.map((d) => ({
+    value: d.revision,
+    label: `第 ${d.revision} 版`,
+    hint: `${d.author === "writer" ? "写手" : "我手改"}${d.note ? `：${clean(d.note)}` : ""}`,
+  })),
+);
 const body = ref("");
 watch(
   () => shownDraft.value?.id,
@@ -80,17 +88,14 @@ async function save() {
 
     <template v-if="shownDraft">
       <div class="draft-meta">
-        <select
+        <ChoiceMenu
+          class="draft-revision"
           :value="shownDraft.revision"
-          aria-label="Draft revision"
+          :options="revisions"
+          label="Draft revision"
           title="历史版本：每次写手保存或你手改都会留一版"
-          @change="shownRevision = Number(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-for="d in drafts" :key="d.id" :value="d.revision">
-            第 {{ d.revision }} 版（{{ d.author === "writer" ? "写手" : "我"
-            }}{{ d.note ? `，${clean(d.note)}` : "" }}）
-          </option>
-        </select>
+          @change="(r: number) => (shownRevision = r)"
+        />
         <small>{{ shownDraft.layout ?? "无配图" }}，{{ shownDraft.lint.chars }} 字</small>
       </div>
       <a

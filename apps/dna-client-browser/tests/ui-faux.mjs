@@ -604,11 +604,9 @@ try {
   await first.getByRole("button", { name: "Pick for writing" }).click();
   // Every option must be the topmost thing at its own center: a menu clipped by the card (the last option lost at the
   // card's bottom edge, or the left half lost at the column's edge) fails here.
-  const genreMenu = page.getByRole("menu", { name: "Genre" });
-  await genreMenu.waitFor();
-  check(
-    await genreMenu.evaluate((menu) =>
-      [...menu.querySelectorAll("[role=menuitem]")].every((item) => {
+  const allOptionsVisible = (menu) =>
+    menu.evaluate((el) =>
+      [...el.querySelectorAll("[role^=menuitem]")].every((item) => {
         const r = item.getBoundingClientRect();
         const x = r.left + r.width / 2;
         const y = r.top + r.height / 2;
@@ -620,7 +618,11 @@ try {
           item.contains(document.elementFromPoint(x, y))
         );
       }),
-    ),
+    );
+  const genreMenu = page.getByRole("menu", { name: "Genre" });
+  await genreMenu.waitFor();
+  check(
+    await allOptionsVisible(genreMenu),
     "every option of the genre menu is fully visible, not cut off by the card",
   );
   await genreMenu.locator('[data-genre="roundup"]').click();
@@ -648,6 +650,28 @@ try {
       .items.map((i) => String(i.cardId))
       .join(",") === `${firstId},${secondId}`,
     "a second card joins the roundup in the basket",
+  );
+  // The basket's genre chooser is drawn in the page (no native <select> popup): every option visible, a check on the
+  // current one, and a change the server refuses (a two-card roundup can't become 单篇) leaves it on the saved genre.
+  const roundupRow = page.locator(`.picks-column [data-pick-id="${roundup.id}"]`);
+  await roundupRow.getByRole("button", { name: "Pick genre" }).click();
+  const genreChooser = page.getByRole("menu", { name: "Pick genre" });
+  await genreChooser.waitFor();
+  check(
+    (await page.locator(".picks-column select").count()) === 0 &&
+      (await allOptionsVisible(genreChooser)) &&
+      (await genreChooser.locator('[aria-checked="true"]').getAttribute("data-value")) ===
+        "roundup",
+    "the basket's genre chooser is an in-page menu, fully visible, with a check on the current genre",
+  );
+  await genreChooser.locator('[data-value="single"]').click();
+  await genreChooser.waitFor({ state: "detached" });
+  await page.waitForTimeout(300);
+  check(
+    (await roundupRow.getByRole("button", { name: "Pick genre" }).innerText()).trim() ===
+      "主题串烧" &&
+      (await call("GET", "/v1/picks")).find((p) => p.id === roundup.id).genre === "roundup",
+    "a genre change the server refuses leaves the chooser on the saved genre",
   );
   await page.screenshot({ path: join(shots, "picks.png") });
   await collectCaps();
@@ -727,6 +751,28 @@ try {
     (await call("GET", `/v1/picks/${writing.id}/drafts`)).length === 3 &&
       (await stageTab("ready").getAttribute("aria-selected")) === "true",
     "the reader's edits are kept as revisions, the clean draft goes to 待发布 and the stage tab follows it",
+  );
+  const revisionButton = page.getByRole("button", { name: "Draft revision" });
+  await revisionButton.click();
+  const revisionMenu = page.getByRole("menu", { name: "Draft revision" });
+  await revisionMenu.waitFor();
+  check(
+    (await revisionMenu.locator("[role=menuitemradio]").count()) === 3 &&
+      (await allOptionsVisible(revisionMenu)),
+    "the revision chooser is an in-page menu listing every revision, fully visible",
+  );
+  await revisionMenu.locator('[data-value="2"]').click();
+  await page.waitForFunction(() =>
+    document.querySelector(".draft-body").value.includes("**加粗**"),
+  );
+  check(
+    (await revisionButton.innerText()).trim() === "第 2 版",
+    "picking an older revision from the chooser shows that revision",
+  );
+  await revisionButton.click();
+  await revisionMenu.locator('[data-value="3"]').click();
+  await page.waitForFunction(
+    () => !document.querySelector(".draft-body").value.includes("**加粗**"),
   );
   await page.getByRole("button", { name: "Rehearse" }).click();
   await page.locator(".publish-line", { hasText: "上次排练" }).waitFor();

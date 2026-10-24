@@ -2184,6 +2184,54 @@ table.usage th {
   color: var(--muted);
   font-size: var(--fs-meta);
 }
+/* ChoiceMenu: an in-page chooser in place of a native <select> (the system popup looked out of place). */
+.choice {
+  display: inline-flex;
+  min-width: 0;
+}
+.choice-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: var(--fs-ui);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--line);
+}
+.choice-button:hover,
+.choice-button[aria-expanded="true"] {
+  border-color: var(--muted);
+}
+.choice-button svg {
+  flex: none;
+  color: var(--muted);
+}
+.choice-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-menu.choice-menu button {
+  flex-direction: row;
+  gap: 8px;
+}
+.pick-menu.choice-menu button[aria-checked="true"] {
+  background: var(--panel);
+}
+.choice-check {
+  flex: none;
+  width: 14px;
+  padding-top: 2px;
+  color: var(--accent);
+}
+.choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .picks-column {
   background: var(--panel);
 }
@@ -2399,10 +2447,12 @@ a.pick-title:hover {
   color: var(--muted);
   font-size: var(--fs-meta);
 }
-.draft-meta select {
-  font-size: var(--fs-ui);
+.draft-meta .choice {
   min-width: 0;
   flex: 1;
+}
+.draft-meta .choice-button {
+  width: 100%;
 }
 .draft-image-link {
   display: block;
