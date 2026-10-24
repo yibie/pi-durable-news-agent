@@ -287,26 +287,26 @@ const SENT = `() => { const a = document.querySelector('[data-testid=toast] a[hr
 async function sentUrl(dt: Devtools): Promise<string> {
   for (const p of await dt.pages()) {
     if (!p.url.includes("x.com")) continue;
-    const m = await dt.probe(p.id, SENT, /url=(\S+)/).catch(() => undefined);
+    const m = await dt.probe(p.id, SENT, /url=([^\s"]+)/).catch(() => undefined);
     if (m && m[0] !== "none") return m[0]!;
   }
   return "";
 }
 
 /** The newest post on the signed-in account's profile whose text starts like `text`, or "". */
-async function ownPost(dt: Devtools, text: string): Promise<string> {
+export async function ownPost(dt: Devtools, text: string): Promise<string> {
   const page = (await dt.pages()).find((p) => p.url.includes("x.com"));
   if (!page) return "";
   const handle = await dt.probe(
     page.id,
     "() => { const a = document.querySelector('a[data-testid=AppTabBar_Profile_Link]'); return 'handle=' + (a ? a.getAttribute('href').replace(/^\\//, '') : 'none'); }",
-    /handle=(\S+)/,
+    /handle=([^\s"]+)/,
   );
   if (!handle || handle[0] === "none") return "";
   await dt.tool("navigate_page", { pageId: page.id, url: `https://x.com/${handle[0]}` });
   const start = JSON.stringify(text.replace(/\s+/g, "").slice(0, 24));
   const find = `() => { const want = ${start}; const norm = (s) => (s || '').replace(/\\s+/g, ''); for (const art of document.querySelectorAll('article')) { if (/Pinned|已置顶/.test(art.querySelector('[data-testid=socialContext]')?.innerText || '')) continue; if (!norm(art.querySelector('[data-testid=tweetText]')?.innerText).startsWith(want)) continue; const a = art.querySelector('time')?.closest('a'); if (a) return 'url=' + a.href; } return 'url=none'; }`;
-  const m = await waitFor(dt, page.id, find, /url=(https\S+)/, 20_000);
+  const m = await waitFor(dt, page.id, find, /url=(https[^\s"]+)/, 20_000);
   return m?.[0] ?? "";
 }
 
@@ -328,9 +328,11 @@ export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
     if (!page) throw new Error("no page to reply from");
     await dt.tool("select_page", { pageId: page.id });
     await dt.tool("navigate_page", { pageId: page.id, url: `https://x.com/i/status/${id}` });
-    const openReply = `() => { const art = [...document.querySelectorAll('article')].find((a) => a.querySelector('a[href*="/status/${id}"]')); const b = art && art.querySelector('[data-testid=reply]'); if (!b) return 'state=missing'; b.click(); return 'state=clicked'; }`;
-    if (!(await waitFor(dt, page.id, openReply, /state=(clicked)/, 25_000)))
-      return { status: "failed", detail: "the post or its reply button did not show" };
+    // The post's opening words, to check the reply box shows this post above it.
+    const openReply = `() => { const art = [...document.querySelectorAll('article')].find((a) => a.querySelector('a[href*="/status/${id}"]')); const b = art && art.querySelector('[data-testid=reply]'); if (!b) return 'state=missing'; const t = (art.querySelector('[data-testid=tweetText]')?.innerText || '').replace(/\\s+/g, '').slice(0, 20); b.click(); return 'state=clicked;start=' + encodeURIComponent(t); }`;
+    const opened = await waitFor(dt, page.id, openReply, /state=(clicked);start=([^\s"]*)/, 25_000);
+    if (!opened) return { status: "failed", detail: "the post or its reply button did not show" };
+    const start = decodeURIComponent(opened[1] ?? "");
     await sleep(3_000);
     const pageId = (await dt.pages()).find((p) => p.url.includes("/compose/post"))?.id ?? page.id;
     if (!(await waitFor(dt, pageId, focus, /state=(focused)/, 20_000)))
@@ -344,14 +346,15 @@ export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
     const state = await readComposer(dt, pageId);
     const reply = await dt.probe(
       pageId,
-      "() => { const box = document.querySelector('[data-testid=tweetTextarea_0]'); const d = box && box.closest('[role=dialog]'); return 'reply=' + (d && /Replying to|回复/.test(d.innerText) ? 'yes' : 'no'); }",
+      // X shows the replied-to post above the box (a reply to your own post has no "Replying to" line).
+      `() => { const box = document.querySelector('[data-testid=tweetTextarea_0]'); const d = box && box.closest('[role=dialog]'); return 'reply=' + (d && d.innerText.replace(/\\s+/g, '').includes(${JSON.stringify(start)}) ? 'yes' : 'no'); }`,
       /reply=(\w+)/,
     );
     const problems = [
       state.len < input.text.length - 50
         ? `text ${state.len} of ${input.text.length} characters`
         : "",
-      reply?.[0] !== "yes" ? "the box does not say it replies to the post" : "",
+      reply?.[0] !== "yes" ? "the reply box does not show the post it replies to" : "",
       state.btn !== "enabled" ? `the Reply button is ${state.btn}` : "",
     ].filter(Boolean);
     const summary = `len ${state.len}, reply ${reply?.[0] ?? "?"}, button ${state.btn}`;
