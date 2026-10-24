@@ -386,11 +386,17 @@ export class App {
           }
           if (action === "ledger")
             return this.show("detail", "ledger", (await cl.ledger(50)).map(print.ledgerLine));
-          if (action === "ack") {
+          if (action === "ack" || action === "ack-reply") {
             const note = words.slice(2).join(" ").trim();
-            if (!note) throw new Error("/publish ack <pick> <what you checked on X>");
-            await cl.ack(id(1), { note });
-            return this.flash(`Acked pick ${words[1]}`);
+            if (!note) throw new Error(`/publish ${action} <pick> <what you checked on X>`);
+            await cl.ack(id(1), { note, reply: action === "ack-reply" });
+            return this.flash(
+              `Acked pick ${words[1]}${action === "ack-reply" ? "'s first reply" : ""}`,
+            );
+          }
+          if (action === "reply") {
+            await cl.replyAgain(id(1), words[2] ? { postUrl: words[2] } : {});
+            return this.flash(`Posting pick ${words[1]}'s first reply`);
           }
           const rehearsal = words[1] === "rehearsal";
           await cl.publish(id(0), { rehearsal });

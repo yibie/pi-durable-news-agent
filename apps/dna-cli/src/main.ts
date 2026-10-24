@@ -361,9 +361,9 @@ const COMMANDS: Record<string, Command> = {
   },
   publish: {
     usage:
-      "publish <pick id> [--rehearsal] [--override=<reason>] | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked>",
+      "publish <pick id> [--rehearsal] [--override=<reason>] | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked> | publish reply <pick id> [post url] | publish ack-reply <pick id> <what you checked>",
     summary:
-      "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack a publish that did not post",
+      "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack a publish that did not post, post its first reply again",
     async run() {
       const [action, a] = args;
       if (action === "state") {
@@ -377,11 +377,19 @@ const COMMANDS: Record<string, Command> = {
           text: list.map(print.ledgerLine).join("\n") || "The ledger is empty.",
         };
       }
-      if (action === "ack") {
+      if (action === "ack" || action === "ack-reply") {
         const note = args.slice(2).join(" ").trim();
-        if (!note) throw new Usage("publish ack <pick id> <what you checked on X>");
-        const e = await client().ack(num(a, "pick id"), { note });
+        if (!note) throw new Usage(`publish ${action} <pick id> <what you checked on X>`);
+        const e = await client().ack(num(a, "pick id"), { note, reply: action === "ack-reply" });
         return { data: e, text: print.ledgerLine(e) };
+      }
+      if (action === "reply") {
+        const postUrl = args[2]?.trim();
+        const s = await client().replyAgain(num(a, "pick id"), postUrl ? { postUrl } : {});
+        return {
+          data: s,
+          text: `Posting pick ${a}'s first reply; follow it with: dna publish state ${a}`,
+        };
       }
       const rehearsal = flags.rehearsal;
       const override = flags.override?.trim() || undefined;

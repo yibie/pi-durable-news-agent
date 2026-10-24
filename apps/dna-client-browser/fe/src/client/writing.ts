@@ -38,6 +38,10 @@ export const draftProblems = computed(() => {
   if (!d) return [];
   return [
     ...d.lint.markdown.map((h) => `第 ${h.line} 行有 Markdown：${h.text}`),
+    ...d.lint.links.map((l) => `正文里有链接（会被降权，放进首条回复）：${l}`),
+    ...(/原文[:：]/.test(d.reply ?? "") && /https?:\/\//.test(d.reply ?? "")
+      ? []
+      : ["首条回复要有「原文：」和原文链接"]),
     ...(d.lint.overLimit ? [`加权长度 ${d.lint.weighted} 超过 X 的上限`] : []),
     ...d.warnings.map((w) => `配图：${w}`),
   ];
@@ -175,8 +179,8 @@ export async function stopWriting(p: TopicPick) {
   if (await attempt(() => api.stopWriter(p.id))) notify("已让写手停下");
 }
 
-export async function saveEdit(p: TopicPick, body: string) {
-  const d = await attempt(() => api.saveDraft(p.id, { body, note: "读者手改" }));
+export async function saveEdit(p: TopicPick, body: string, reply: string) {
+  const d = await attempt(() => api.saveDraft(p.id, { body, reply, note: "读者手改" }));
   if (d) notify(`已存为第 ${d.revision} 版`);
   return d;
 }
@@ -204,6 +208,20 @@ export async function publishNow(p: TopicPick, override?: string) {
   const st = await attempt(() => api.publish(p.id, override ? { override } : {}));
   if (st && publishState.value.running?.pickId === p.id)
     notify("开始发布：在 X 上填稿、上传配图，然后点发布");
+}
+
+/** Post the first reply (the 原文 links) under a published pick's post again; postUrl when its link was not found. */
+export async function replyAgain(p: TopicPick, postUrl?: string) {
+  const st = await attempt(() => api.replyAgain(p.id, postUrl ? { postUrl } : {}));
+  if (st) notify("开始补发首条回复：打开帖子，在下面回复原文链接");
+}
+
+export async function ackReply(p: TopicPick, note: string) {
+  const e = await attempt(() => api.ack(p.id, { note, reply: true }));
+  if (e) {
+    publishState.value = { ...publishState.value, reply: e, replyDue: true };
+    notify("已记下：首条回复没有发出去，可以补发");
+  }
 }
 
 export async function ackPublish(p: TopicPick, note: string) {

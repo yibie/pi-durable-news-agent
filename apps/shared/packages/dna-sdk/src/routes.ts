@@ -192,6 +192,13 @@ export const ROUTES = {
     summary:
       "Post a ready pick to X (30 minutes after the last post unless override gives a reason), or rehearse it",
   },
+  "picks.reply": {
+    method: "POST",
+    path: "/v1/picks/:id/reply",
+    scope: "chat",
+    summary:
+      "Post a published pick's first reply (the 原文 links under the post) again, when it did not go out after the post",
+  },
   "publish.state": {
     method: "GET",
     path: "/v1/publish",

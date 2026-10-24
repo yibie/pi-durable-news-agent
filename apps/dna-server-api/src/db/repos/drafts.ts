@@ -79,6 +79,7 @@ export class DraftsRepo {
     quoteUrl?: string;
     author: Draft["author"];
     note?: string;
+    reply?: string;
     toolCallId?: string;
   }): Draft {
     return tx(this.db, () => {
@@ -94,8 +95,8 @@ export class DraftsRepo {
       const id = Number(
         this.db
           .prepare(
-            `INSERT INTO drafts (pick_id, revision, body, image_id, quote_url, author, note, tool_call_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO drafts (pick_id, revision, body, image_id, quote_url, author, note, reply, tool_call_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             input.pickId,
@@ -105,6 +106,7 @@ export class DraftsRepo {
             input.quoteUrl ?? null,
             input.author,
             input.note ?? null,
+            input.reply ?? null,
             input.toolCallId ?? null,
             nowIso(),
           ).lastInsertRowid,
@@ -143,6 +145,7 @@ export class DraftsRepo {
       body: r.body,
       imageId: r.image_id ?? undefined,
       quoteUrl: str(r.quote_url),
+      reply: str(r.reply),
       layout: render?.layout,
       warnings: render?.warnings ?? [],
       author: r.author,

@@ -1,7 +1,9 @@
 // A menu drawn on <body> beside the button that opened it. Cards and the basket clip their overflow, so a menu drawn
 // inside them loses options at the edge. Below the button when it fits, else above; if neither fits, the roomier side
 // with a scrollbar. Horizontally it starts at the button and is pulled back inside the window. Clicking elsewhere,
-// Escape, resizing and scrolling close it (a fixed menu would float away from its button when the list scrolls).
+// Escape, resizing and a scroll that moves the button close it (a fixed menu would float away from its button). A
+// scroll that leaves the button where it was (another pane, the browser keeping the view steady while a line above
+// changes) keeps it open.
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 // One option of a ChoiceMenu.
@@ -19,10 +21,13 @@ export function useFloatingMenu<K extends string>() {
   const root = ref<HTMLElement>();
   const menu = ref<HTMLElement>();
   const place = ref<Record<string, string>>({});
+  let anchor: { el: HTMLElement; top: number; left: number } | undefined;
 
   async function toggle(which: K, e: MouseEvent) {
     if (open.value === which) return (open.value = undefined);
-    const button = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const el0 = e.currentTarget as HTMLElement;
+    const button = el0.getBoundingClientRect();
+    anchor = { el: el0, top: button.top, left: button.left };
     open.value = which;
     // At least as wide as its button (a full-width chooser gets a full-width menu), never under the menu's own minimum.
     const minWidth = `max(240px, ${button.width}px)`;
@@ -59,7 +64,9 @@ export function useFloatingMenu<K extends string>() {
     if (open.value && e.key === "Escape") close();
   }
   function onScroll(e: Event) {
-    if (open.value && !menu.value?.contains(e.target as Node)) close();
+    if (!open.value || menu.value?.contains(e.target as Node)) return;
+    const r = anchor?.el.getBoundingClientRect();
+    if (!r || Math.abs(r.top - anchor!.top) > 2 || Math.abs(r.left - anchor!.left) > 2) close();
   }
   onMounted(() => {
     window.addEventListener("pointerdown", onPointer);

@@ -1,7 +1,8 @@
 // The publish ledger: append-only lines, the newest line per draft key is its state. Ported from selfPromotion's
 // publish.py: pending and unknown block a second publish of the same pick until a person acks; the spacing rule counts
 // the latest post activity, which is ok, unknown (it may have posted), or pending while it is still that draft's final
-// state (a pending later settled as failed did not post and frees the window).
+// state (a pending later settled as failed did not post and frees the window). A post's first reply has its own key
+// (pick:<id>:reply) and does not count toward spacing.
 import { existsSync, readFileSync } from "node:fs";
 import type { LedgerEntry, LedgerStatus } from "@dna/sdk";
 import { bool, type Db, nowIso, num, str } from "../db.ts";
@@ -23,6 +24,9 @@ const toEntry = (r: any): LedgerEntry => ({
 });
 
 export const pickKey = (pickId: number) => `pick:${pickId}`;
+/** The first reply under the pick's post: its own line, not a post, so the spacing rule leaves it out. */
+export const replyKey = (pickId: number) => `pick:${pickId}:reply`;
+const isReply = (key: string) => key.endsWith(":reply");
 
 export class LedgerRepo {
   constructor(private readonly db: Db) {}
@@ -94,7 +98,7 @@ export class LedgerRepo {
     const final = new Map(all.map((e) => [e.draftKey, e.status]));
     let latest: LedgerEntry | undefined;
     for (const e of all) {
-      if (!ACTIVITY.includes(e.status)) continue;
+      if (!ACTIVITY.includes(e.status) || isReply(e.draftKey)) continue;
       if (e.status === "pending" && final.get(e.draftKey) !== "pending") continue;
       if (!latest || Date.parse(e.at) > Date.parse(latest.at)) latest = e;
     }

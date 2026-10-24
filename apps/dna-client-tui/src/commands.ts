@@ -155,10 +155,14 @@ export function buildCommands(state: CompletionState): Command[] {
     {
       name: "publish",
       cap: "publish",
-      description: "post a ready pick to X or rehearse it, the spacing, the ledger, ack",
-      argumentHint: "<pick> [rehearsal] | state [pick] | ledger | ack <pick> <note>",
+      description:
+        "post a ready pick to X or rehearse it, the spacing, the ledger, ack, its first reply again",
+      argumentHint:
+        "<pick> [rehearsal] | state [pick] | ledger | ack <pick> <note> | reply <pick> [post url] | ack-reply <pick> <note>",
       getArgumentCompletions: (arg) =>
-        lastWord(arg, (i) => (i === 0 ? ["state", "ledger", "ack"] : i === 1 ? ["rehearsal"] : [])),
+        lastWord(arg, (i) =>
+          i === 0 ? ["state", "ledger", "ack", "reply", "ack-reply"] : i === 1 ? ["rehearsal"] : [],
+        ),
     },
     {
       name: "keywords",

@@ -237,7 +237,8 @@ const writer: FauxRule = (turn) => {
   const revisions = called(turn, "save_draft").length;
   if (!revisions)
     return call("save_draft", {
-      body: `这次发布让 agent 的运行可以在进程崩溃后接着跑。\n\n我的判断：长任务最先受益。\n\n原文：${url}\n#Agent #工程`,
+      body: "这次发布让 agent 的运行可以在进程崩溃后接着跑。\n\n我的判断：长任务最先受益。\n\n原文链接在评论区。\n#Agent #工程",
+      reply: `原文：${url}`,
       image_id: imageId || undefined,
       note: /newest draft/.test(pick) ? "按读者意见改" : "初稿",
     });

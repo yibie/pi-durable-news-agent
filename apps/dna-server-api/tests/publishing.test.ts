@@ -85,6 +85,21 @@ test("rehearse, then publish with a reason inside the spacing; the pick is publi
     ["ok", "pending"],
   );
   assert.match(mine[1]!.note ?? "", /测试插队/);
+  await until(
+    async () => (await s.client.publishState(pick.id)).reply?.status === "ok",
+    10_000,
+    "first reply",
+  );
+  const after = await s.client.publishState(pick.id);
+  assert.deepEqual(
+    (await s.client.ledger()).filter((e) => e.draftKey === "pick:1:reply").map((e) => e.status),
+    ["ok", "pending"],
+    "the first reply goes out right after the post, on its own ledger key",
+  );
+  assert.equal(after.last?.draftKey, "pick:1", "the first reply does not count toward spacing");
+  assert.match(after.postUrl ?? "", /status\/\d+/);
+  assert.equal(after.replyDue, undefined);
+  await fails(s.client.replyAgain(pick.id), 400, /already went out/);
   const files = readdirSync(archive);
   assert.ok(
     files.some((f) => f.endsWith("-pick-1.md")) && files.some((f) => f.endsWith("-pick-1.png")),
@@ -97,7 +112,8 @@ test("rehearse, then publish with a reason inside the spacing; the pick is publi
       ),
       "utf8",
     ),
-    /published: true/,
+    /published: true[\s\S]*原文链接在评论区[\s\S]*首条回复：\n原文：https?:\/\//,
+    "the archive keeps the 原文 links, so selfPromotion's scout still sees them",
   );
   await fails(s.client.publish(pick.id, { override: "again" }), 400, /published/);
 });
@@ -107,6 +123,7 @@ test("an unknown publish blocks the pick until a person acks it", async () => {
   assert.equal(pick.id, 2);
   await fails(s.client.publish(pick.id, { override: "x" }), 400, /may have posted/);
   await fails(s.client.ack(1, { note: "nothing" }), 400, /nothing to ack/);
+  await fails(s.client.replyAgain(pick.id), 400, /has not gone out/);
   const ack = await s.client.ack(pick.id, { note: "看过主页，没发出去" });
   assert.equal(ack.status, "ack");
   await s.client.publish(pick.id, { override: "测试" });

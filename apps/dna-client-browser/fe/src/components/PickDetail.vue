@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // One pick in the basket: its sources, and its draft as it will go out: the image, then the text, which the reader
-// can edit in place (saved as a new revision). Older revisions stay one menu away. 进入待发布 asks the server,
-// which refuses a draft with Markdown, a missing link block or an image with problems. A published pick can be moved
+// can edit in place (saved as a new revision), and the first reply posted under it (the 原文 links: X ranks a post
+// with an outside link lower, so they stay out of the post). Older revisions stay one menu away. 进入待发布 asks the
+// server, which refuses a draft with Markdown, a link in the post, a reply without its links or an image with problems. A published pick can be moved
 // back to 待发布, to be edited and posted again.
 import { computed, ref, watch } from "vue";
 import { CircleAlert, PenLine, Save, Send, Undo2 } from "@lucide/vue";
@@ -35,13 +36,20 @@ const revisions = computed(() =>
   })),
 );
 const body = ref("");
+const reply = ref("");
 watch(
   () => shownDraft.value?.id,
-  () => (body.value = shownDraft.value?.body ?? ""),
+  () => {
+    body.value = shownDraft.value?.body ?? "";
+    reply.value = shownDraft.value?.reply ?? "";
+  },
   { immediate: true },
 );
 const edited = computed(
-  () => !!shownDraft.value && body.value.trim() !== shownDraft.value.body.trim(),
+  () =>
+    !!shownDraft.value &&
+    (body.value.trim() !== shownDraft.value.body.trim() ||
+      reply.value.trim() !== (shownDraft.value.reply ?? "").trim()),
 );
 const newest = computed(
   () => !shownDraft.value || shownDraft.value.revision === drafts.value[0]?.revision,
@@ -52,7 +60,7 @@ async function save() {
   const p = openPick.value;
   if (!p || saving.value) return;
   saving.value = true;
-  await saveEdit(p, body.value);
+  await saveEdit(p, body.value, reply.value);
   saving.value = false;
 }
 </script>
@@ -123,13 +131,25 @@ async function save() {
         :readonly="!newest"
         :title="newest ? '直接改正文，改完点「保存修改」存成新的一版' : '这是旧版本，只能看'"
       />
+      <label class="draft-reply-label" for="draft-reply"
+        >首条回复：原文链接放这里，帖子发出后紧跟着发在它下面（正文里带链接会被降权）</label
+      >
+      <textarea
+        id="draft-reply"
+        v-model="reply"
+        class="draft-reply"
+        aria-label="First reply"
+        :readonly="!newest"
+        rows="3"
+        placeholder="原文：每条原文链接一行"
+      />
       <div class="draft-actions">
         <button
           v-if="newest"
           class="button secondary small"
           :disabled="!edited || saving"
           aria-label="Save the edit"
-          title="把你改过的正文存成新的一版，配图不变"
+          title="把你改过的正文和首条回复存成新的一版，配图不变"
           @click="save"
         >
           <Save :size="13" />保存修改

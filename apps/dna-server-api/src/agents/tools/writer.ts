@@ -50,6 +50,7 @@ export function readPick(deps: Deps) {
             ? [
                 `newest draft: revision ${draft.revision} by ${draft.author}, layout ${draft.layout ?? "none"}, image ${draft.imageId ?? "none"}${draft.quoteUrl ? `, quotes ${draft.quoteUrl}` : ""}`,
                 draft.body,
+                `first reply:\n${draft.reply ?? "(none)"}`,
               ].join("\n")
             : "no draft yet",
         ].join("\n"),
@@ -175,9 +176,13 @@ export function saveDraftTool(deps: Deps) {
     returns:
       "Text: the saved revision and the text's weighted length, or the problems that stopped it from being saved.",
     description:
-      "Save the post as a new draft revision: the whole text (body, the 原文 link block, the tags) and the image_id of its final render. A quote post also needs quote_url, the post on X it quotes. The text is checked first: no Markdown, under X's length limit, the 原文 block present.",
+      "Save the post as a new draft revision: body is the post text (ending with the sentence 原文链接在评论区, then the tags; no links anywhere in it), reply is the first reply posted under it (the 原文 link block), and image_id is its final render. A quote post also needs quote_url, the post on X it quotes. Both texts are checked first: no Markdown, no links in the body, the 原文 links in the reply, under X's length limit.",
     parameters: Type.Object({
       body: Type.String({ minLength: 1 }),
+      reply: Type.String({
+        minLength: 1,
+        description: "The first reply: 原文：then each source's url on its own line.",
+      }),
       image_id: Type.Optional(Type.Integer()),
       quote_url: Type.Optional(Type.String()),
       note: Type.Optional(
@@ -200,10 +205,12 @@ export function saveDraftTool(deps: Deps) {
       const problems = draftProblems(pick, args.body, {
         imageId: args.image_id,
         quoteUrl: args.quote_url,
+        reply: args.reply,
       });
       if (problems.length) return toolError("The draft was not saved:", problems);
       const draft = saveDraft(deps, pick, {
         body: args.body,
+        reply: args.reply,
         imageId: args.image_id,
         quoteUrl: args.quote_url,
         author: "writer",

@@ -8,7 +8,7 @@ import type { Deps } from "../deps.ts";
 import type { Store } from "../db/store.ts";
 import type { ArgmapRender } from "../db/repos/drafts.ts";
 import { PLACEHOLDER_PNG } from "../news/images.ts";
-import { lintPost, lintProblems } from "./lint.ts";
+import { linksIn, lintPost, lintProblems } from "./lint.ts";
 
 const QUOTE_URL = /^https:\/\/(x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+/;
 
@@ -60,11 +60,17 @@ export async function drawArgmap(
 export function draftProblems(
   pick: TopicPick,
   body: string,
-  opts: { imageId?: number; quoteUrl?: string },
+  opts: { imageId?: number; quoteUrl?: string; reply?: string },
 ): string[] {
   const problems = lintProblems(lintPost(body));
   if (!body.trim()) problems.push("正文是空的");
-  if (!/原文[:：]/.test(body)) problems.push("文末缺「原文：」链接段");
+  if (!/评论区/.test(body)) problems.push("正文末尾缺一句「原文链接在评论区」");
+  const reply = opts.reply?.trim() ?? "";
+  if (!/原文[:：]/.test(reply) || !linksIn(reply).length)
+    problems.push("首条回复要有「原文：」和原文链接（链接不放正文，放首条回复）");
+  problems.push(
+    ...lintPost(reply).markdown.map((h) => `首条回复第 ${h.line} 行有 Markdown：${h.text}`),
+  );
   if (pick.genre === "roundup" && pick.items.length < 3)
     problems.push(`主题串烧至少要 3 条素材，这个选题只有 ${pick.items.length} 条`);
   if (pick.genre === "quote" && !(opts.quoteUrl && QUOTE_URL.test(opts.quoteUrl)))
@@ -84,10 +90,16 @@ export function saveDraft(
     quoteUrl?: string;
     author: Draft["author"];
     note?: string;
+    reply?: string;
     toolCallId?: string;
   },
 ): Draft {
-  const draft = deps.store.drafts.add({ pickId: pick.id, ...input, body: input.body.trim() });
+  const draft = deps.store.drafts.add({
+    pickId: pick.id,
+    ...input,
+    body: input.body.trim(),
+    reply: input.reply?.trim() || undefined,
+  });
   const moved =
     pick.status === "selected"
       ? deps.store.picks.update(pick.id, { status: "drafting" })
@@ -108,7 +120,11 @@ export function readyProblems(store: Store, pick: TopicPick): string[] {
   const draft = store.drafts.latest(pick.id);
   if (!draft) return ["还没有稿子"];
   return [
-    ...draftProblems(pick, draft.body, { imageId: draft.imageId, quoteUrl: draft.quoteUrl }),
+    ...draftProblems(pick, draft.body, {
+      imageId: draft.imageId,
+      quoteUrl: draft.quoteUrl,
+      reply: draft.reply,
+    }),
     ...draft.warnings.map((w) => `配图：${w}`),
   ];
 }

@@ -45,6 +45,7 @@ import type {
   WriterRuleName,
   WriterRuleVersionText,
   PublishBody,
+  ReplyBody,
   PublishState,
   LedgerEntry,
   AckBody,
@@ -339,6 +340,9 @@ export class DnaClient {
   }
   publish(id: number, body: PublishBody = {}) {
     return this.call<PublishState>("picks.publish", { params: { id }, body });
+  }
+  replyAgain(id: number, body: ReplyBody = {}) {
+    return this.call<PublishState>("picks.reply", { params: { id }, body });
   }
   publishState(pickId?: number) {
     return this.call<PublishState>("publish.state", { query: { pickId } });

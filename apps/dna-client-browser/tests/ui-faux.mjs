@@ -733,9 +733,11 @@ try {
   );
   const drafted = await page.locator(".draft-body").inputValue();
   check(
-    drafted.includes("原文：") &&
+    drafted.includes("原文链接在评论区") &&
+      !/https?:\/\//.test(drafted) &&
+      (await page.getByLabel("First reply").inputValue()).startsWith("原文：http") &&
       (await page.locator('.pick-stage[data-stage="drafting"]').count()) === 1,
-    "the writer drafts the pick: an image and text with its link block, and the pick is in 写作中",
+    "the writer drafts the pick: an image, text with no links, the 原文 links in the first reply, in 写作中",
   );
   await page.screenshot({ path: join(shots, "writing.png") });
   await collectCaps();
@@ -864,6 +866,15 @@ try {
       .map((e) => e.status)
       .join(",") === "ok,pending",
     "publishing writes pending then ok to the ledger and the pick is published",
+  );
+  await page.locator('[data-testid="reply-state"]', { hasText: "已发" }).waitFor();
+  check(
+    (await call("GET", "/v1/ledger"))
+      .filter((e) => e.draftKey === `pick:${writing.id}:reply`)
+      .map((e) => e.status)
+      .join(",") === "ok,pending" &&
+      (await page.getByRole("link", { name: "看帖子" }).count()) === 1,
+    "right after the post its first reply (the 原文 links) goes out under it, and the panel says so",
   );
   await collectCaps();
   await cleanText("publishing");

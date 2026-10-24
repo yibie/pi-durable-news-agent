@@ -2485,7 +2485,8 @@ a.pick-title:hover {
   gap: 6px;
   align-items: flex-start;
 }
-.draft-body {
+.draft-body,
+.draft-reply {
   min-height: 260px;
   resize: vertical;
   font-family: var(--sans);
@@ -2496,7 +2497,8 @@ a.pick-title:hover {
   color: var(--text);
   border: 1px solid var(--line);
 }
-.draft-body[readonly] {
+.draft-body[readonly],
+.draft-reply[readonly] {
   opacity: 0.75;
 }
 .writer-bar {
@@ -2694,4 +2696,12 @@ a.pick-title:hover {
 .writer-rules {
   margin-left: auto;
   flex: none;
+}
+/* The first reply under the post: the 原文 links, a smaller box under the post's text */
+.draft-reply-label {
+  color: var(--muted);
+  font-size: var(--fs-meta);
+}
+.draft-reply {
+  min-height: 0;
 }

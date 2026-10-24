@@ -1,6 +1,7 @@
 // Checks a post's text must pass before it is saved as ready or published. X renders no Markdown, so any Markdown
 // syntax shows up as literal symbols: it is refused, not silently stripped (stripping it made the archived text
-// differ from what went out). X counts CJK characters twice; a blue-check post holds 25,000 weighted characters.
+// differ from what went out). X counts CJK characters twice; a blue-check post holds 25,000 weighted characters. X also
+// ranks a post with an outside link lower, so links in the post are refused: they go in its first reply.
 import type { PostLint } from "@dna/sdk";
 
 export const WEIGHT_LIMIT = 25_000;
@@ -50,10 +51,16 @@ export function weightedLength(text: string): number {
   return w;
 }
 
+const LINK = /\bhttps?:\/\/[^\s<>）)」]+|\bwww\.[^\s<>）)」]+/gi;
+
+/** Links in the text, each once. */
+export const linksIn = (text: string) => [...new Set(text.match(LINK) ?? [])];
+
 export function lintPost(text: string): PostLint {
   const weighted = weightedLength(text);
   return {
     markdown: markdownHits(text),
+    links: linksIn(text),
     weighted,
     chars: [...text].length,
     overLimit: weighted > WEIGHT_LIMIT,
@@ -64,6 +71,7 @@ export function lintPost(text: string): PostLint {
 export function lintProblems(lint: PostLint): string[] {
   return [
     ...lint.markdown.map((h) => `第 ${h.line} 行有 Markdown（X 会原样显示）：${h.text}`),
+    ...lint.links.map((l) => `正文里有链接（带站外链接的帖子会被降权，放进首条回复）：${l}`),
     ...(lint.overLimit
       ? [`加权长度 ${lint.weighted} 超过上限 ${WEIGHT_LIMIT}（中文按 2 计）`]
       : []),

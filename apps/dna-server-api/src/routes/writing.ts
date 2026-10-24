@@ -122,10 +122,12 @@ export function writingRoutes({
       const pick = pickOf(req.params.id);
       const body = bodyOf(req);
       const text = str(body, "body", { max: 60_000 });
+      const reply = str(body, "reply", { max: 10_000, optional: true });
       const note = str(body, "note", { max: 500, optional: true });
       const latest = store.drafts.latest(pick.id);
       const draft = saveDraft(app, pick, {
         body: text,
+        reply: reply ?? latest?.reply,
         imageId: latest?.imageId,
         quoteUrl: latest?.quoteUrl,
         author: "reader",

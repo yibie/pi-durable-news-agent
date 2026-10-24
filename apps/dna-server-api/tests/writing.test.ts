@@ -50,7 +50,9 @@ test("a pick's writer drafts with an image, takes a revision, and the pick goes 
   assert.equal(first.layout, "flow");
   assert.ok(first.imageId);
   assert.deepEqual(first.lint.markdown, []);
-  assert.match(first.body, /原文：/);
+  assert.match(first.body, /原文链接在评论区/);
+  assert.deepEqual(first.lint.links, [], "no link in the post itself");
+  assert.match(first.reply ?? "", /^原文：https?:\/\//, "the links go in the first reply");
 
   const again = await s.client.write(pick.id);
   assert.equal(again.conversationId, started.conversationId, "writing starts once");
@@ -92,7 +94,8 @@ test("a quote post needs the post it quotes", async () => {
   const [, , card] = cards;
   const pick = await s.client.pick({ cardIds: [card.id], genre: "quote" });
   await s.client.saveDraft(pick.id, {
-    body: "我的判断：这条值得看。\n\n原文：https://example.com",
+    body: "我的判断：这条值得看。\n\n原文链接在评论区。",
+    reply: "原文：https://example.com",
   });
   await fails(s.client.updatePick(pick.id, { status: "ready" }), 400, /被引推文/);
 });
@@ -185,4 +188,21 @@ test("the writer's rules are edited from the workbench, kept as versions, and re
   );
   await fails(s.client.saveWriterRule("NOPE" as never, { body: "x" }), 404, /RULES or ARGMAP/);
   assert.ok(!existsSync(join(config.rulesDir, "ARGMAP.md")), "an untouched rule stays default");
+});
+
+test("a link in the post blocks 待发布: the links belong in the first reply", async () => {
+  const pick = await s.client.pick({ cardIds: [(await freeCard()).id], genre: "single" });
+  await s.client.write(pick.id);
+  await until(async () => (await s.client.drafts(pick.id)).length === 1, 20_000, "first draft");
+  const [first] = await s.client.drafts(pick.id);
+  const linked = await s.client.saveDraft(pick.id, {
+    body: `${first.body}\nhttps://example.com/a`,
+  });
+  assert.deepEqual(linked.lint.links, ["https://example.com/a"]);
+  assert.equal(linked.reply, first.reply, "an edit without a reply keeps the reply");
+  await fails(s.client.updatePick(pick.id, { status: "ready" }), 400, /正文里有链接/);
+  await s.client.saveDraft(pick.id, { body: first.body, reply: "参考资料见上" });
+  await fails(s.client.updatePick(pick.id, { status: "ready" }), 400, /首条回复/);
+  await s.client.saveDraft(pick.id, { body: first.body, reply: first.reply });
+  assert.equal((await s.client.updatePick(pick.id, { status: "ready" })).status, "ready");
 });

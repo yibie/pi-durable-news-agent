@@ -21,8 +21,7 @@ import {
 } from "@dna/durable-agent";
 import { createLogger, type Logger } from "@dna/sdk/node";
 import { createAgents, type Agents } from "./agents/index.ts";
-import { fakePoster, Publisher } from "./publishing/publisher.ts";
-import { postToX } from "./publishing/x.ts";
+import { fakeX, liveX, Publisher } from "./publishing/publisher.ts";
 import { fauxRules } from "./agents/faux-script.ts";
 import type { Config } from "./config.ts";
 import { openStore } from "./db/store.ts";
@@ -137,7 +136,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
   };
   const agents = createAgents(deps);
   const offline = config.provider === "faux" || config.searchMode === "fixture";
-  const publisher = new Publisher(deps, offline ? fakePoster : postToX);
+  const publisher = new Publisher(deps, offline ? fakeX : liveX);
   publisher.start();
 
   const compaction: CompactionSetting = store.settings.get("compaction", {

@@ -1,6 +1,7 @@
 // The reader's own edits, told to the pick's writer with the reader's next message: which revision is now the newest
 // and what changed from the writer's last draft, so a revision starts from the reader's text instead of undoing it.
 // Nothing is sent when the edit is saved: the writer only needs it when it is asked to work again.
+import type { Draft } from "@dna/sdk";
 import type { Store } from "../db/store.ts";
 
 export const EDIT_NOTICE = "【读者手改了稿子】";
@@ -37,6 +38,9 @@ export function lineDiff(a: string, b: string): string[] {
   return out;
 }
 
+/** The post and its first reply as one text, so an edit to either shows in the diff. */
+const whole = (d: Draft) => (d.reply ? `${d.body}\n\n【首条回复】\n${d.reply}` : d.body);
+
 /** The notice to put before the reader's message when the newest draft is the reader's own edit and the writer has not
  * been told about it yet. Record `revision` as told (store.picks.setWriterSeen) once the message is sent. */
 export function editNotice(
@@ -54,7 +58,7 @@ export function editNotice(
     lines.push(
       `你最后交的是第 ${mine.revision} 版，读者之后自己改了，现在最新的是第 ${latest.revision} 版。改动如下（- 是你写的，+ 是读者改成的）：`,
     );
-    const diff = lineDiff(mine.body, latest.body);
+    const diff = lineDiff(whole(mine), whole(latest));
     let text = diff.join("\n");
     if (!diff.length) text = "（只改了空行或空格）";
     else if (text.length > MAX_DIFF)

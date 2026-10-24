@@ -204,6 +204,8 @@ export interface TopicPick {
 /** A post's text checks: Markdown lines (X shows them literally) and X's weighted length (CJK counts 2). */
 export interface PostLint {
   markdown: { line: number; text: string }[];
+  /** Links in the text: X ranks a post with an outside link lower, so a post's links go in its first reply. */
+  links: string[];
   weighted: number;
   chars: number;
   overLimit: boolean;
@@ -218,6 +220,8 @@ export interface Draft {
   imageId?: number;
   /** A quote post: the post on X it quotes. */
   quoteUrl?: string;
+  /** The first reply, posted under the post right after it: the 原文 links, kept out of the post itself. */
+  reply?: string;
   layout?: string;
   /** The renderer's self-check findings for the image (overlap, overflow, too tall). */
   warnings: string[];
@@ -240,6 +244,8 @@ export interface WriteResult {
 /** The reader's own edit: a new revision with the newest image. */
 export interface SaveDraftBody {
   body: string;
+  /** The first reply; left out, the newest draft's reply is kept. */
+  reply?: string;
   note?: string;
 }
 
@@ -311,6 +317,12 @@ export interface PublishState {
   running?: { pickId: number; rehearsal: boolean; phase: string };
   /** The pick's last rehearsal: would it post, and was the composer left empty afterwards. */
   rehearsal?: { at: string; wouldPost: boolean; clean: boolean; detail: string };
+  /** The pick's first reply (the 原文 links under the post): its newest ledger line. */
+  reply?: LedgerEntry;
+  /** The pick's post went out but its first reply has not: post it with picks.reply. */
+  replyDue?: boolean;
+  /** The pick's post on X, when its link was found. */
+  postUrl?: string;
 }
 
 export interface PublishBody {
@@ -323,6 +335,13 @@ export interface PublishBody {
 export interface AckBody {
   /** What the person checked on X, for the ledger. */
   note: string;
+  /** Ack the first reply instead of the post. */
+  reply?: boolean;
+}
+
+/** Post the first reply again under a published pick's post; postUrl when the post's link was not found. */
+export interface ReplyBody {
+  postUrl?: string;
 }
 
 export interface CreatePickBody {

@@ -1,12 +1,15 @@
 // Publishing: the reader posts a ready pick (or rehearses it: everything but the click), sees where publishing stands
 // (the 30 minute spacing, the pick's ledger line, a running publish), reads the ledger, and acks a pending or unknown
-// publish after checking X.
+// publish after checking X. picks.reply posts a published pick's first reply (the 原文 links) again when it did not
+// go out right after the post.
 import { int, optInt } from "../errors.ts";
 import { bodyOf, bool, num, str, type Handlers, type RouteDeps } from "./types.ts";
 
 export function publishingRoutes({
   app,
-}: RouteDeps): Handlers<"picks.publish" | "publish.state" | "ledger.list" | "picks.ack"> {
+}: RouteDeps): Handlers<
+  "picks.publish" | "picks.reply" | "publish.state" | "ledger.list" | "picks.ack"
+> {
   return {
     "picks.publish": (req, res) => {
       const body = bodyOf(req);
@@ -16,6 +19,10 @@ export function publishingRoutes({
       });
       res.status(202).json(state);
     },
+    "picks.reply": (req, res) => {
+      const postUrl = str(bodyOf(req), "postUrl", { max: 300, optional: true });
+      res.status(202).json(app.publisher.reply(int(req.params.id, "id"), postUrl));
+    },
     "publish.state": (req, res) => {
       res.json(app.publisher.state(optInt(req.query.pickId, "pickId")));
     },
@@ -24,8 +31,9 @@ export function publishingRoutes({
       res.json(app.store.ledger.list(Math.min(Math.max(limit, 1), 500)));
     },
     "picks.ack": (req, res) => {
-      const note = str(bodyOf(req), "note", { max: 500 });
-      res.json(app.publisher.ack(int(req.params.id, "id"), note));
+      const body = bodyOf(req);
+      const note = str(body, "note", { max: 500 });
+      res.json(app.publisher.ack(int(req.params.id, "id"), note, bool(body, "reply") ?? false));
     },
   };
 }

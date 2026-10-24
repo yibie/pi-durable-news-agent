@@ -2,7 +2,8 @@
 // quote-post-cdp.mjs: open the composer (a quote opens it from the post's retweet menu, the only way X attaches the
 // quoted card), type the text in checked chunks, attach the image, check the composer, then click Post. A rehearsal
 // stops before the click and empties the composer. After the click, a closed composer is ok; one still open is
-// unknown, because X may have posted anyway.
+// unknown, because X may have posted anyway. A posted post's link comes from X's "post sent" notice, else from the
+// newest matching post on the account's profile; the first reply (the 原文 links) is posted under it from its page.
 import { Devtools, sleep } from "./devtools.ts";
 import { CDP_URL } from "./chrome.ts";
 
@@ -20,8 +21,19 @@ export interface PostInput {
   phase: (name: string) => void;
 }
 
+/** The first reply: posted under a post, from the post's own page. */
+export interface ReplyInput {
+  /** The post replied to: https://x.com/<account>/status/<id>, or x.com/i/status/<id>. */
+  postUrl: string;
+  text: string;
+  rehearsal: boolean;
+  filesystemRoot: string;
+  beforeClick: () => void;
+  phase: (name: string) => void;
+}
+
 export type PostOutcome =
-  | { status: "ok" | "unknown"; detail: string }
+  | { status: "ok" | "unknown"; detail: string; url?: string }
   | { status: "failed"; detail: string }
   | { status: "rehearsed"; detail: string; clean: boolean };
 
@@ -243,12 +255,138 @@ export async function postToX(input: PostInput): Promise<PostOutcome> {
       "() => { const b = document.querySelector('[data-testid=tweetButton]'); if (!b) return 'state=missing'; b.click(); return 'state=clicked'; }",
       /state=(\w+)/,
     );
-    await sleep(9_000);
+    // X says "post sent" with a link to the new post for a few seconds: catch it while the post settles.
     input.phase("settle");
+    let url = "";
+    for (let i = 0; i < 10 && !url; i++) {
+      await sleep(1_000);
+      url = await sentUrl(dt);
+    }
     const open = (await dt.pages()).some((p) => p.url.includes("/compose/post"));
-    return open
-      ? { status: "unknown", detail: `clicked Post, the composer is still open (${summary})` }
-      : { status: "ok", detail: `posted (${summary})` };
+    if (open)
+      return { status: "unknown", detail: `clicked Post, the composer is still open (${summary})` };
+    url ||= await ownPost(dt, input.text).catch(() => "");
+    return {
+      status: "ok",
+      detail: `posted (${summary})${url ? `: ${url}` : ", its link was not found"}`,
+      ...(url ? { url } : {}),
+    };
+  } catch (error) {
+    const detail = String((error as Error).message ?? error).slice(0, 300);
+    return clicked
+      ? { status: "unknown", detail: `after the click: ${detail}` }
+      : { status: "failed", detail };
+  } finally {
+    dt.close();
+  }
+}
+
+const SENT = `() => { const a = document.querySelector('[data-testid=toast] a[href*="/status/"]'); return 'url=' + (a ? a.href : 'none'); }`;
+
+/** The new post's link from X's "post sent" notice on any X page, or "". */
+async function sentUrl(dt: Devtools): Promise<string> {
+  for (const p of await dt.pages()) {
+    if (!p.url.includes("x.com")) continue;
+    const m = await dt.probe(p.id, SENT, /url=(\S+)/).catch(() => undefined);
+    if (m && m[0] !== "none") return m[0]!;
+  }
+  return "";
+}
+
+/** The newest post on the signed-in account's profile whose text starts like `text`, or "". */
+async function ownPost(dt: Devtools, text: string): Promise<string> {
+  const page = (await dt.pages()).find((p) => p.url.includes("x.com"));
+  if (!page) return "";
+  const handle = await dt.probe(
+    page.id,
+    "() => { const a = document.querySelector('a[data-testid=AppTabBar_Profile_Link]'); return 'handle=' + (a ? a.getAttribute('href').replace(/^\\//, '') : 'none'); }",
+    /handle=(\S+)/,
+  );
+  if (!handle || handle[0] === "none") return "";
+  await dt.tool("navigate_page", { pageId: page.id, url: `https://x.com/${handle[0]}` });
+  const start = JSON.stringify(text.replace(/\s+/g, "").slice(0, 24));
+  const find = `() => { const want = ${start}; const norm = (s) => (s || '').replace(/\\s+/g, ''); for (const art of document.querySelectorAll('article')) { if (/Pinned|已置顶/.test(art.querySelector('[data-testid=socialContext]')?.innerText || '')) continue; if (!norm(art.querySelector('[data-testid=tweetText]')?.innerText).startsWith(want)) continue; const a = art.querySelector('time')?.closest('a'); if (a) return 'url=' + a.href; } return 'url=none'; }`;
+  const m = await waitFor(dt, page.id, find, /url=(https\S+)/, 20_000);
+  return m?.[0] ?? "";
+}
+
+/** Reply under a post from its page: open the reply box, type, check it is a reply with the whole text, click. A
+ * rehearsal stops before the click and empties the box, like a post's. */
+export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
+  const id = input.postUrl.match(/status\/(\d+)/)?.[1];
+  if (!id) return { status: "failed", detail: `not a post url: ${input.postUrl}` };
+  const dt = new Devtools({ browserUrl: CDP_URL, filesystemRoot: input.filesystemRoot });
+  let clicked = false;
+  try {
+    await dt.start();
+    input.phase("open");
+    for (const p of await dt.pages())
+      if (p.url.includes("/compose/post"))
+        await dt.tool("close_page", { pageId: p.id }).catch(() => undefined);
+    const pages = await dt.pages();
+    const page = pages.find((p) => p.url.includes("x.com")) ?? pages[0];
+    if (!page) throw new Error("no page to reply from");
+    await dt.tool("select_page", { pageId: page.id });
+    await dt.tool("navigate_page", { pageId: page.id, url: `https://x.com/i/status/${id}` });
+    const openReply = `() => { const art = [...document.querySelectorAll('article')].find((a) => a.querySelector('a[href*="/status/${id}"]')); const b = art && art.querySelector('[data-testid=reply]'); if (!b) return 'state=missing'; b.click(); return 'state=clicked'; }`;
+    if (!(await waitFor(dt, page.id, openReply, /state=(clicked)/, 25_000)))
+      return { status: "failed", detail: "the post or its reply button did not show" };
+    await sleep(3_000);
+    const pageId = (await dt.pages()).find((p) => p.url.includes("/compose/post"))?.id ?? page.id;
+    if (!(await waitFor(dt, pageId, focus, /state=(focused)/, 20_000)))
+      return { status: "failed", detail: "the reply box did not open" };
+    await dt.tool("press_key", { pageId, key: "Meta+KeyA" });
+    await dt.tool("press_key", { pageId, key: "Backspace" });
+    await dt.probe(pageId, focus, /state=(\w+)/);
+    input.phase("type");
+    await typeText(dt, pageId, input.text);
+    input.phase("check");
+    const state = await readComposer(dt, pageId);
+    const reply = await dt.probe(
+      pageId,
+      "() => { const box = document.querySelector('[data-testid=tweetTextarea_0]'); const d = box && box.closest('[role=dialog]'); return 'reply=' + (d && /Replying to|回复/.test(d.innerText) ? 'yes' : 'no'); }",
+      /reply=(\w+)/,
+    );
+    const problems = [
+      state.len < input.text.length - 50
+        ? `text ${state.len} of ${input.text.length} characters`
+        : "",
+      reply?.[0] !== "yes" ? "the box does not say it replies to the post" : "",
+      state.btn !== "enabled" ? `the Reply button is ${state.btn}` : "",
+    ].filter(Boolean);
+    const summary = `len ${state.len}, reply ${reply?.[0] ?? "?"}, button ${state.btn}`;
+    if (input.rehearsal) {
+      input.phase("discard");
+      const clean = await discard(dt, pageId);
+      return {
+        status: "rehearsed",
+        clean,
+        detail: problems.length
+          ? `would not reply: ${problems.join("; ")} (${summary})`
+          : `ready to reply (${summary})`,
+      };
+    }
+    if (problems.length) return { status: "failed", detail: `not replied: ${problems.join("; ")}` };
+    input.phase("click");
+    input.beforeClick();
+    clicked = true;
+    await dt.probe(
+      pageId,
+      "() => { const b = document.querySelector('[data-testid=tweetButton]'); if (!b) return 'state=missing'; b.click(); return 'state=clicked'; }",
+      /state=(\w+)/,
+    );
+    await sleep(8_000);
+    input.phase("settle");
+    const open = await dt
+      .probe(
+        pageId,
+        "() => 'box=' + (document.querySelector('[data-testid=tweetTextarea_0]') && document.querySelector('[role=dialog] [data-testid=tweetTextarea_0]') ? 'open' : 'closed')",
+        /box=(\w+)/,
+      )
+      .catch(() => undefined);
+    return open?.[0] === "open"
+      ? { status: "unknown", detail: `clicked Reply, the reply box is still open (${summary})` }
+      : { status: "ok", detail: `replied (${summary})` };
   } catch (error) {
     const detail = String((error as Error).message ?? error).slice(0, 300);
     return clicked

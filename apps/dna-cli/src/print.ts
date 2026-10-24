@@ -218,6 +218,9 @@ export const publishText = (s: PublishState): string =>
     s.earliestAt ? `next post at ${s.earliestAt}` : "a post may go now",
     ...(s.last ? [`last activity: ${ledgerLine(s.last)}`] : []),
     ...(s.pick ? [`this pick: ${ledgerLine(s.pick)}`] : []),
+    ...(s.postUrl ? [`its post: ${s.postUrl}`] : []),
+    ...(s.reply ? [`its first reply: ${ledgerLine(s.reply)}`] : []),
+    ...(s.replyDue ? ["its first reply has not gone out: dna publish reply <pick id>"] : []),
     ...(s.running
       ? [
           `running: pick ${s.running.pickId} ${s.running.rehearsal ? "rehearsal" : "publish"}, ${s.running.phase}`,

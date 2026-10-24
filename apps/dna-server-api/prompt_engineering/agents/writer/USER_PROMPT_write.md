@@ -15,7 +15,7 @@ READER_NOTE: {{note}}
 2. Decide whether the pick can be written under the writing rules for GENRE. If not, stop and tell the reader why.
    READER_NOTE is what the reader asked for in this post (none means nothing). Follow it, unless it would break the sources' facts or the writing rules: then keep to those and say which part you did not follow.
 3. Call recent_layouts, choose the layout from the argmap rules, write the argmap JSON and call render_argmap until it reports no problems.
-4. Write the post text and call save_draft with it and the image_id of the final render.
+4. Write the post text and its first reply (the 原文 links), and call save_draft with both and the image_id of the final render.
 
 ## Definition Of Done
 
