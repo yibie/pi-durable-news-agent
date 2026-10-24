@@ -17,6 +17,8 @@ export type JevProvider = "mock" | "ollama" | "openrouter" | "typesafe";
 
 /** Ollama (0.35+) serves local decision models such as nimble on the same wire format, with no key. */
 const OLLAMA_URL = "http://127.0.0.1:11434/v1/systemone";
+/** Where the ollama backend calls: JEV_OLLAMA_URL, else the Ollama app on its default port. */
+export const ollamaEndpoint = (): string => process.env.JEV_OLLAMA_URL?.trim() || OLLAMA_URL;
 
 const ENDPOINTS = {
   openrouter: "https://openrouter.ai/api/alpha/decisions",
@@ -163,7 +165,7 @@ export class JevClient {
     this.pricing ??= DEFAULT_PRICING[this.provider];
     if (this.provider === "mock") return;
     if (this.provider === "ollama") {
-      this.endpoint = opts.baseUrl ?? (process.env.JEV_OLLAMA_URL?.trim() || OLLAMA_URL);
+      this.endpoint = opts.baseUrl ?? ollamaEndpoint();
       return;
     }
     this.apiKey = (opts.apiKey ?? process.env[KEY_ENV[this.provider]])?.trim();

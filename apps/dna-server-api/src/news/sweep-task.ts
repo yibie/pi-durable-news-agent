@@ -4,6 +4,7 @@
 import type { Context } from "@earendil-works/chord";
 import { defineTask, type RunningTask, type TaskRuntime } from "@earendil-works/pi-durable";
 import { runParallel } from "@dna/durable-agent";
+import { ollamaEndpoint } from "@dna/jev";
 import type { Deps } from "../deps.ts";
 import type { Item } from "../db/repos/news.ts";
 import { fetchSource } from "./sources/index.ts";
@@ -11,6 +12,7 @@ import { rankScore, weightsOf } from "./rank.ts";
 import { planQueries } from "./taste.ts";
 import { StoryMatcher } from "./stories.ts";
 import { packageRelease } from "./releases.ts";
+import { ensureLocalDecider } from "./local-decider.ts";
 
 export interface SweepInput {
   sweepId: number;
@@ -105,6 +107,13 @@ export function createSweepTask(deps: Deps) {
       kind: "dna.sweep-progress",
       data: { sweepId: task.input.sweepId, phase, text },
     });
+
+  // Each phase that asks the decision model first makes sure a local one answers (local-decider.ts); if it cannot,
+  // the phase fails and retries rather than failing every item it holds.
+  const decider = () =>
+    config.jevBackend === "ollama"
+      ? ensureLocalDecider(ollamaEndpoint(), { log })
+      : Promise.resolve();
 
   const publish = (sweepId: number) => {
     const sweep = store.sweeps.get(sweepId);
@@ -287,6 +296,7 @@ export function createSweepTask(deps: Deps) {
         await guarded(task, runtime, ctx, work, async () => {
           const sweepId = task.input.sweepId;
           if (work.cursor === 0) store.sweeps.phase(sweepId, "gate", "running");
+          await decider();
           const relevanceMin = judge.policy("relevance", "relevance_min", 0.5);
           const worthMin = judge.policy("worth-attention", "worth_min", 0.5);
           const chunk = store.news.items(work.itemIds.slice(work.cursor, work.cursor + GATE_CHUNK));
@@ -371,6 +381,7 @@ export function createSweepTask(deps: Deps) {
         await guarded(task, runtime, ctx, work, async () => {
           const sweepId = task.input.sweepId;
           store.sweeps.phase(sweepId, "dedupe", "running");
+          await decider();
           const kept = store.news
             .itemsForSweep(sweepId, ["candidate"])
             .filter((i) => i.relevance !== undefined);
@@ -406,6 +417,7 @@ export function createSweepTask(deps: Deps) {
         await guarded(task, runtime, ctx, work, async () => {
           const sweepId = task.input.sweepId;
           store.sweeps.phase(sweepId, "rank", "running");
+          await decider();
           const kept = store.news
             .itemsForSweep(sweepId, ["candidate"])
             .filter((i) => i.relevance !== undefined);

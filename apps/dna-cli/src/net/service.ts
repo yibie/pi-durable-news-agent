@@ -1,8 +1,6 @@
 // The local service: this Mac runs the API and the browser hub as launchd agents (dev.dna.api, dev.dna.hub) that start
 // at login and come back when they exit, from the same plist templates a mini uses. The hub listens on 127.0.0.1
-// only and serves the built app. The tick stays the crontab line (`just cron install`). With JEV_BACKEND=ollama the
-// local decision model's Ollama server is a third agent (dev.dna.ollama, on JEV_OLLAMA_URL's port, running
-// JEV_OLLAMA_BIN), started first; a code change does not restart it.
+// only and serves the built app. The tick stays the crontab line (`just cron install`).
 //   install    build the app, write both plists, (re)load them, wait until both answer
 //   restart    rebuild the app and restart both (after a code change)
 //   uninstall  unload both and remove the plists
@@ -35,41 +33,8 @@ const PATH = [
 ].join(":");
 const base = { NODE: process.execPath, HOME: homedir(), PATH };
 
-type Service = {
-  label: string;
-  port: number;
-  health: string;
-  template: string;
-  values: Record<string, string>;
-  /** Restarted by `restart` (a code change); Ollama is not, so its model stays loaded. */
-  code?: boolean;
-};
-
-const OLLAMA_LABEL = "dev.dna.ollama";
-const ollama = (): Service[] => {
-  if (process.env.JEV_BACKEND !== "ollama") return [];
-  const url = new URL(process.env.JEV_OLLAMA_URL?.trim() || "http://127.0.0.1:11434/v1/systemone");
-  return [
-    {
-      label: OLLAMA_LABEL,
-      port: Number(url.port || 11434),
-      health: `${url.origin}/api/version`,
-      template: join(root, "apps/dna-server-api/deploy/dna-ollama.plist"),
-      values: {
-        ...base,
-        LABEL: OLLAMA_LABEL,
-        OLLAMA_BIN: process.env.JEV_OLLAMA_BIN?.trim() || "/usr/local/bin/ollama",
-        OLLAMA_HOST: url.host,
-        LOG: join(root, "logs/ollama.out"),
-      },
-    },
-  ];
-};
-
-const services: Service[] = [
-  ...ollama(),
+const services = [
   {
-    code: true,
     label: LABEL,
     port: apiPort,
     health: `http://127.0.0.1:${apiPort}/healthz`,
@@ -82,7 +47,6 @@ const services: Service[] = [
     },
   },
   {
-    code: true,
     label: HUB_LABEL,
     port: hubPort,
     health: `http://127.0.0.1:${hubPort}/hub/healthz`,
@@ -180,8 +144,7 @@ async function restart(): Promise<boolean> {
   if (!services.every((s) => loaded(s.label)))
     throw new Error("The service is not installed. Run: just net service install");
   build();
-  for (const s of services)
-    if (s.code) run("launchctl", ["kickstart", "-k", `gui/${uid}/${s.label}`]);
+  for (const s of services) run("launchctl", ["kickstart", "-k", `gui/${uid}/${s.label}`]);
   return waitUp();
 }
 
