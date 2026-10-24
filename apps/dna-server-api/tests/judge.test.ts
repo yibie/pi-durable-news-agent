@@ -59,3 +59,23 @@ test("the judge scores, ranks, records every call, and records failures", async 
     cleanup();
   }
 });
+
+test("a backend's policy overrides command.json, and the rest falls through", () => {
+  const { store, cleanup } = tempStore();
+  try {
+    const dir = join(PROMPTS_DIR, "jev");
+    const plain = new Judge({ decide: fixtureDecide(), store, dir });
+    const local = new Judge({
+      decide: fixtureDecide(),
+      store,
+      dir,
+      policy: { relevance: { relevance_min: 0.35 }, "worth-attention": { worth_min: 0.95 } },
+    });
+    assert.equal(plain.policy("relevance", "relevance_min", 0.5), 0.45);
+    assert.equal(local.policy("relevance", "relevance_min", 0.5), 0.35);
+    assert.equal(local.policy("worth-attention", "worth_min", 0.5), 0.95);
+    assert.equal(local.policy("same-story", "same", 0.5), plain.policy("same-story", "same", 0.5));
+  } finally {
+    cleanup();
+  }
+});

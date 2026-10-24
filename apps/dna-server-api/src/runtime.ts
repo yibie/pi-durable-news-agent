@@ -66,7 +66,9 @@ export interface App extends Deps {
 function decideFor(config: Config): Decide {
   if (config.jevBackend === "fixture") return fixtureDecide();
   const client =
-    config.jevBackend === "auto" ? new JevClient() : new JevClient({ provider: config.jevBackend });
+    config.jevBackend === "auto"
+      ? new JevClient()
+      : new JevClient({ provider: config.jevBackend, model: config.jevModel });
   return (state, questions, opts) => client.systemOne(state, questions, opts);
 }
 
@@ -85,6 +87,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
   });
   const judge = new Judge({
     decide: decideFor(config),
+    policy: config.jevPolicy,
     store,
     log,
     dir: join(config.promptsDir, "jev"),

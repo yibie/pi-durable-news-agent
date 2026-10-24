@@ -1,0 +1,6 @@
+{
+  "ollama": {
+    "relevance": { "relevance_min": 0.35 },
+    "worth-attention": { "worth_min": 0.95 }
+  }
+}

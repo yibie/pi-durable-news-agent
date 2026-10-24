@@ -94,3 +94,21 @@ test("a score legend that does not match the criteria is a contract error", asyn
   stub(t, async () => ok(bad));
   await assert.rejects(live().systemOne({ text: "x" }, questions), /legend/);
 });
+
+test("ollama needs no key, answers with its local model whatever the command pins, and costs nothing", async (t) => {
+  const fetch = stub(t, async () => ok({ ...valid, model: "nimble:9b" }));
+  const client = new JevClient({
+    provider: "ollama",
+    model: "nimble:9b",
+    baseUrl: "http://127.0.0.1:11435/v1/systemone",
+    retryDelayMs: 0,
+  });
+  const result = await client.systemOne({ text: "x" }, questions, {
+    model: "~typesafe/jev-latest",
+  });
+  const [url, init] = fetch.mock.calls[0]!.arguments as [string, RequestInit];
+  assert.equal(url, "http://127.0.0.1:11435/v1/systemone");
+  assert.equal((init.headers as Record<string, string>).Authorization, undefined);
+  assert.equal(JSON.parse(String(init.body)).model, "nimble:9b");
+  assert.deepEqual(result.meta.cost, { amount: 0, source: "estimated" });
+});

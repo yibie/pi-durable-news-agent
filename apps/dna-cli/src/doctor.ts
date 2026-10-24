@@ -33,6 +33,27 @@ export async function doctor(
       detail: present ? "present" : (OPTIONAL[key] ?? "missing"),
     });
   }
+  // A local decision model instead of jev: Ollama answers and holds the model.
+  const setting = (key: string) =>
+    env.match(new RegExp(`^${key}=(\\S+)`, "m"))?.[1] ?? process.env[key];
+  if (setting("JEV_BACKEND") === "ollama") {
+    const origin = new URL(setting("JEV_OLLAMA_URL") ?? "http://127.0.0.1:11434/v1/systemone")
+      .origin;
+    const model = setting("JEV_MODEL") ?? "nimble:9b";
+    let detail = `no answer from ${origin}`;
+    let ok = false;
+    try {
+      const tags = (await (
+        await fetch(`${origin}/api/tags`, { signal: AbortSignal.timeout(3000) })
+      ).json()) as {
+        models?: { name: string }[];
+      };
+      const names = (tags.models ?? []).map((m) => m.name.replace(/:latest$/, ""));
+      ok = names.includes(model.replace(/:latest$/, ""));
+      detail = ok ? `${model} on ${origin}` : `${origin} answers but has no ${model}`;
+    } catch {}
+    checks.push({ name: "local decision model (Ollama)", ok, detail });
+  }
   checks.push(...(await probe(client.baseUrl, tokens)));
   let cronLine: string | undefined;
   try {

@@ -51,7 +51,19 @@ export class Judge {
   readonly commands: Record<string, JevCommand>;
   readonly ledger: JevLedger;
 
-  constructor(private readonly deps: { decide: Decide; store: Store; log?: Logger; dir: string }) {
+  /**
+   * `policy` overrides command.json policy values by command name: thresholds fitted for a local decision model, whose
+   * probabilities are calibrated differently from jev's (see <configDir>/jev-policy.json).
+   */
+  constructor(
+    private readonly deps: {
+      decide: Decide;
+      store: Store;
+      log?: Logger;
+      dir: string;
+      policy?: Record<string, Record<string, unknown>>;
+    },
+  ) {
     this.commands = Object.fromEntries(
       listCommands(deps.dir).map((name) => [name, loadCommand(name, deps.dir)]),
     );
@@ -62,7 +74,11 @@ export class Judge {
   }
 
   policy<T>(name: JevCommandName, key: string, fallback: T): T {
-    return (this.commands[name].policy[key] as T) ?? fallback;
+    return (
+      (this.deps.policy?.[name]?.[key] as T | undefined) ??
+      (this.commands[name].policy[key] as T) ??
+      fallback
+    );
   }
 
   get attentionWeights(): AttentionWeights {

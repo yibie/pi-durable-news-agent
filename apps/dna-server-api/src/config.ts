@@ -1,4 +1,5 @@
 // Server configuration from the root .env and flags. Every default here is documented in .env.example.
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { loadNetwork, repoRoot } from "@dna/sdk/node";
@@ -15,7 +16,11 @@ export interface Config {
   configDir: string;
   promptsDir: string;
   provider: "openrouter" | "deepseek" | "faux";
-  jevBackend: "auto" | "fixture" | "mock" | "openrouter" | "typesafe";
+  jevBackend: "auto" | "fixture" | "mock" | "ollama" | "openrouter" | "typesafe";
+  /** The decision model a local backend (ollama) answers with, e.g. nimble:9b. */
+  jevModel?: string;
+  /** Policy overrides for the active jev backend, by command: <configDir>/jev-policy.json, keyed by backend. */
+  jevPolicy?: Record<string, Record<string, unknown>>;
   /** auto | web | fallback | firecrawl | fixture; SearchService warns on anything else and searches the web. */
   searchMode: string;
   firecrawlKey?: string;
@@ -85,6 +90,7 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     provider,
     jevBackend:
       (env.JEV_BACKEND as Config["jevBackend"]) ?? (searchMode === "fixture" ? "fixture" : "auto"),
+    jevModel: env.JEV_MODEL?.trim() || undefined,
     searchMode,
     firecrawlKey: env.FIRECRAWL_API_KEY?.trim() || undefined,
     sweepCredits: int(env.DNA_FIRECRAWL_SWEEP_CREDITS, 5),
@@ -111,6 +117,7 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     ledgerImport: env.DNA_LEDGER_IMPORT?.trim() || undefined,
     publishedDir: env.DNA_PUBLISHED_DIR?.trim() || undefined,
   };
+  config.jevPolicy = jevPolicyFor(config.configDir, config.jevBackend);
   config.deviceName =
     env.DNA_DEVICE_LABEL?.trim() ||
     (() => {
@@ -122,6 +129,17 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     })() ||
     config.device;
   return config;
+}
+
+/** <configDir>/jev-policy.json holds thresholds per jev backend ({"ollama": {"relevance": {"relevance_min": 0.35}}}). */
+function jevPolicyFor(configDir: string, backend: string) {
+  const file = join(configDir, "jev-policy.json");
+  if (!existsSync(file)) return undefined;
+  const all = JSON.parse(readFileSync(file, "utf8")) as Record<
+    string,
+    Record<string, Record<string, unknown>>
+  >;
+  return all[backend];
 }
 
 export function assertTokens(config: Config): void {

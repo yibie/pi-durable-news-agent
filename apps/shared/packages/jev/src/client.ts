@@ -13,7 +13,10 @@ import {
   type SystemOneResponse,
 } from "./types.ts";
 
-export type JevProvider = "mock" | "openrouter" | "typesafe";
+export type JevProvider = "mock" | "ollama" | "openrouter" | "typesafe";
+
+/** Ollama (0.35+) serves local decision models such as nimble on the same wire format, with no key. */
+const OLLAMA_URL = "http://127.0.0.1:11434/v1/systemone";
 
 const ENDPOINTS = {
   openrouter: "https://openrouter.ai/api/alpha/decisions",
@@ -21,6 +24,7 @@ const ENDPOINTS = {
 } as const;
 
 const DEFAULT_MODELS = {
+  ollama: "nimble:9b",
   openrouter: "~typesafe/jev-latest",
   typesafe: "jev-latest",
 } as const;
@@ -36,12 +40,15 @@ const KEY_ENV = {
 
 /** Catalog price for ~typesafe/jev-latest on OpenRouter (pi-ai 1.1.0): $0.042 per 1M input tokens, output free. */
 const DEFAULT_PRICING: Partial<Record<JevProvider, JevPricing>> = {
+  ollama: { inputPerMillion: 0, outputPerMillion: 0 },
   openrouter: { inputPerMillion: 0.042, outputPerMillion: 0 },
   typesafe: { inputPerMillion: 0.042, outputPerMillion: 0 },
 };
 
 const RETRY_STATUSES = new Set([429, 502, 503, 529]);
 const REQUEST_TIMEOUT_MS = 30_000;
+/** A local model loads on its first call and answers one request at a time: give it longer. */
+const OLLAMA_TIMEOUT_MS = 180_000;
 const MAX_ATTEMPTS = 3;
 
 /** Caller-supplied USD prices; no assumed provider/model rates. */
@@ -59,7 +66,7 @@ export interface JevClientOptions {
   provider?: JevProvider;
   /** Requires opts.provider to explicitly name a live provider. */
   apiKey?: string;
-  /** Full endpoint URL (not an origin). Redirects are refused. */
+  /** Full endpoint URL (not an origin). Redirects are refused. Ollama defaults to JEV_OLLAMA_URL or 127.0.0.1:11434. */
   baseUrl?: string;
   /** Pin a versioned model ID instead of the moving alias. */
   model?: string;
@@ -129,7 +136,8 @@ export class JevClient {
     }
     this.provider = selectProvider(opts.provider);
     this.model = opts.model;
-    this.timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
+    this.timeoutMs =
+      opts.timeoutMs ?? (this.provider === "ollama" ? OLLAMA_TIMEOUT_MS : REQUEST_TIMEOUT_MS);
     this.retryDelayMs = opts.retryDelayMs ?? 500;
     if (
       !Number.isInteger(this.timeoutMs) ||
@@ -154,6 +162,10 @@ export class JevClient {
     }
     this.pricing ??= DEFAULT_PRICING[this.provider];
     if (this.provider === "mock") return;
+    if (this.provider === "ollama") {
+      this.endpoint = opts.baseUrl ?? (process.env.JEV_OLLAMA_URL?.trim() || OLLAMA_URL);
+      return;
+    }
     this.apiKey = (opts.apiKey ?? process.env[KEY_ENV[this.provider]])?.trim();
     this.endpoint = opts.baseUrl ?? ENDPOINTS[this.provider];
     if (!this.apiKey) {
@@ -185,12 +197,16 @@ export class JevClient {
     opts: { model?: string; signal?: AbortSignal } = {},
   ): Promise<SystemOneResult> {
     opts.signal?.throwIfAborted();
-    const requestedModel = modelFor(
-      this.provider,
-      opts.model ??
-        this.model ??
-        (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]),
-    );
+    // Commands pin jev by name; a local backend answers with the model it was configured with instead.
+    const requestedModel =
+      this.provider === "ollama"
+        ? (this.model ?? DEFAULT_MODELS.ollama)
+        : modelFor(
+            this.provider,
+            opts.model ??
+              this.model ??
+              (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]),
+          );
     const body: SystemOneRequest = { model: requestedModel, state, questions };
     validateRequest(body);
     let requestText: string;
@@ -231,7 +247,9 @@ export class JevClient {
         signal.throwIfAborted();
         const res = await fetch(this.endpoint!, {
           method: "POST",
-          headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+          headers: this.apiKey
+            ? { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" }
+            : { "Content-Type": "application/json" },
           body: requestText,
           signal,
           redirect: "error",
@@ -254,8 +272,8 @@ export class JevClient {
               ? (await res.text().catch(() => "")).replace(/\s+/g, " ").trim().slice(0, 300)
               : (await res.body?.cancel(), "");
           const hint =
-            res.status === 401
-              ? ` Check the ${KEY_ENV[this.provider]} key.`
+            res.status === 401 && this.provider !== "ollama"
+              ? ` Check the ${KEY_ENV[this.provider as keyof typeof KEY_ENV]} key.`
               : res.status === 402
                 ? " Check account credits."
                 : "";
@@ -290,9 +308,16 @@ function selectProvider(explicit?: JevProvider): JevProvider {
   const isolated = process.env.NODE_TEST_CONTEXT && process.env.JEV_LIVE !== "1";
   const selected = explicit ?? (isolated ? "mock" : process.env.JEV_BACKEND?.trim() || undefined);
   if (selected !== undefined) {
-    if (selected === "mock" || selected === "typesafe" || selected === "openrouter")
+    if (
+      selected === "mock" ||
+      selected === "typesafe" ||
+      selected === "openrouter" ||
+      selected === "ollama"
+    )
       return selected;
-    throw new Error(`Unknown JEV backend "${selected}"; use mock, openrouter, or typesafe.`);
+    throw new Error(
+      `Unknown JEV backend "${selected}"; use mock, ollama, openrouter, or typesafe.`,
+    );
   }
   if (process.env.TYPESAFE_API_KEY?.trim()) return "typesafe";
   if (process.env.OPENROUTER_API_KEY?.trim()) return "openrouter";
