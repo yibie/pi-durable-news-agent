@@ -117,3 +117,19 @@ test("an unknown publish blocks the pick until a person acks it", async () => {
   );
   assert.ok(existsSync(archive));
 });
+
+test("a published pick moved back to 待发布 can be posted again; the ledger keeps both posts", async () => {
+  await fails(s.client.updatePick(1, { status: "drafting" }), 400, /only go back to 待发布/);
+  const reopened = await s.client.updatePick(1, { status: "ready" });
+  assert.equal(reopened.status, "ready");
+  assert.ok(reopened.reopenedAt);
+  await s.client.publish(1, { override: "重发测试" });
+  await until(
+    async () => (await s.client.picks()).find((p) => p.id === 1)?.status === "published",
+    10_000,
+    "published again",
+  );
+  const oks = (await s.client.ledger()).filter((e) => e.draftKey === "pick:1" && e.status === "ok");
+  assert.equal(oks.length, 2);
+  await fails(s.client.publish(1, { override: "a third time" }), 400, /only a pick in 待发布/);
+});

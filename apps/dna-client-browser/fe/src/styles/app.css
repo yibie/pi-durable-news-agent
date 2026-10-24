@@ -2151,6 +2151,7 @@ table.usage th {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
+  max-width: calc(100vw - 32px);
   z-index: 20;
   min-width: 240px;
   display: flex;
@@ -2158,6 +2159,12 @@ table.usage th {
   background: var(--raised);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
+}
+/* A card's genre and roundup menus open rightward from the buttons, which sit at the card's left edge. Right-aligned,
+   they ran past the candidates column's left edge and were cut off. */
+.pick-bar .pick-menu {
+  right: auto;
+  left: 0;
 }
 .pick-menu button {
   display: flex;

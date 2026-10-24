@@ -114,11 +114,15 @@ export function pickRoutes({
         throw invalid(`Card ${removeCardId} is not in pick ${id}`);
       if (status === "published")
         throw invalid("A pick is marked published by publishing it, not by hand");
+      if (current.status === "published" && status !== undefined && status !== "ready")
+        throw invalid("A published pick can only go back to 待发布 (ready)");
       if (status === "ready") {
         const problems = readyProblems(store, current);
         if (problems.length) throw invalid(`Pick ${id} is not ready: ${problems.join("; ")}`);
       }
-      let pick: TopicPick | undefined = current;
+      // Back from 已发布: the pick may be posted again, so the publisher's already-published check lets it through.
+      const reopening = current.status === "published" && status === "ready";
+      let pick: TopicPick | undefined = reopening ? store.picks.reopen(id) : current;
       if (addCardId) {
         const card = pickable(addCardId, id);
         pick = store.picks.addItem(id, asPickCard(card));

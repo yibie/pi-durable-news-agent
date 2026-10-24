@@ -598,6 +598,12 @@ try {
   const newsBeforePicks = await shownInNews();
   const first = page.locator(`.feed-list [data-card-id="${firstId}"]`);
   await first.getByRole("button", { name: "Pick for writing" }).click();
+  const menuBox = await first.locator(".pick-menu").boundingBox();
+  const feedBox = await page.locator(".feed-column").boundingBox();
+  check(
+    menuBox.x >= feedBox.x && menuBox.x + menuBox.width <= feedBox.x + feedBox.width,
+    "the genre menu opens inside the candidates column, not cut off at its left edge",
+  );
   await first.locator('.pick-menu [data-genre="roundup"]').click();
   await page.locator(`.picks-column [data-pick-card="${firstId}"]`).waitFor();
   await first.waitFor({ state: "detached" });
@@ -741,6 +747,23 @@ try {
   );
   await page.screenshot({ path: join(shots, "stage-tabs.png") });
   await cleanText("stage tabs");
+  await page
+    .locator(`.picks-list [data-pick-id="${writing.id}"]`)
+    .getByRole("button", { name: "Open the draft" })
+    .click();
+  await page.getByRole("button", { name: "Back to ready" }).click();
+  await page.locator('.pick-stage[data-stage="ready"]').waitFor();
+  await page.locator(".publish-line", { hasText: "已经发过一次" }).waitFor();
+  const back = (await call("GET", "/v1/picks")).find((p) => p.id === writing.id);
+  check(
+    back.status === "ready" &&
+      Boolean(back.reopenedAt) &&
+      (await stageTab("ready").getAttribute("aria-selected")) === "true",
+    "移回待发布 moves a published pick back to 待发布 and warns that posting again adds a second post",
+  );
+  await cleanText("reopen");
+  await stageTab("ready").click();
+  await page.locator('[data-testid="chat"]').waitFor();
 
   // ---------------------------------------------------------------- tool row into executions
   await page.waitForFunction(() =>

@@ -81,6 +81,15 @@ export class PicksRepo {
     return this.get(id);
   }
 
+  /** A published pick back to 待发布: the publisher will post it again (the ledger keeps the first post). */
+  reopen(id: number): TopicPick | undefined {
+    const now = nowIso();
+    this.db
+      .prepare("UPDATE picks SET status = 'ready', reopened_at = ?, updated_at = ? WHERE id = ?")
+      .run(now, now, id);
+    return this.get(id);
+  }
+
   addItem(id: number, card: PickCard): TopicPick | undefined {
     return tx(this.db, () => {
       const next = this.db
@@ -147,6 +156,7 @@ export class PicksRepo {
       items,
       conversationId: str(r.conversation_id),
       draftRevision: draft.n ?? undefined,
+      reopenedAt: str(r.reopened_at),
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     };

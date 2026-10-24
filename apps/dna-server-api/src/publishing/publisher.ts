@@ -99,8 +99,10 @@ export class Publisher {
     const draft = store.drafts.latest(pickId)!;
     if (!rehearsal) {
       const mine = store.ledger.state(pickKey(pickId));
-      if (mine?.status === "ok")
-        throw invalid(`Pick ${pickId} was already published at ${mine.at}`);
+      if (mine?.status === "ok" && !(pick.reopenedAt && pick.reopenedAt > mine.at))
+        throw invalid(
+          `Pick ${pickId} was already published at ${mine.at}; move it back to 待发布 to post it again`,
+        );
       if (mine && BLOCKING.includes(mine.status))
         throw invalid(
           `Pick ${pickId}'s last publish is ${mine.status} (${mine.at}): it may have posted. Check X, then ack it if it did not`,

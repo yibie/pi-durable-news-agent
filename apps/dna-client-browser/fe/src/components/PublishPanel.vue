@@ -38,6 +38,10 @@ const blocked = computed(() =>
     ? st.value.pick
     : undefined,
 );
+/** A pick moved back from 已发布: when its first post went out. */
+const postedBefore = computed(() =>
+  props.pick.reopenedAt && st.value.pick?.status === "ok" ? st.value.pick.at : undefined,
+);
 const confirming = ref(false);
 const reason = ref("");
 const checked = ref("");
@@ -80,6 +84,10 @@ async function go() {
         上次排练（{{ time(st.rehearsal.at) }}）：{{
           st.rehearsal.wouldPost ? "能发出去" : "发不出去"
         }}，编辑框{{ st.rehearsal.clean ? "已清空" : "没清干净，去 X 上看一眼" }}
+      </p>
+      <p v-if="postedBefore" class="publish-line bad">
+        这条 {{ time(postedBefore) }} 已经发过一次，再发会在 X 上多出一条；原帖还在的话，先去 X
+        上删掉
       </p>
       <div v-if="blocked" class="publish-blocked">
         <p>
@@ -125,7 +133,7 @@ async function go() {
         </button>
       </div>
       <div v-if="confirming && !blocked && pick.status === 'ready'" class="publish-confirm">
-        <p>确定把这条发到 X？发出去就撤不回了。</p>
+        <p>确定把这条发到 X？发出去就撤不回了。{{ postedBefore ? "它之前已经发过一次。" : "" }}</p>
         <input
           v-if="waitUntil"
           v-model="reason"

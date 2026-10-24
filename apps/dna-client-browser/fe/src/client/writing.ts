@@ -183,7 +183,14 @@ export async function saveEdit(p: TopicPick, body: string) {
 
 export async function setStage(p: TopicPick, status: "drafting" | "ready") {
   const r = applied(await attempt(() => api.updatePick(p.id, { status })));
-  if (r) notify(status === "ready" ? "已进入待发布" : "已退回写作中");
+  if (r)
+    notify(
+      p.status === "published"
+        ? "已移回待发布：可以改稿，再发会在 X 上多出一条"
+        : status === "ready"
+          ? "已进入待发布"
+          : "已退回写作中",
+    );
 }
 
 // The publish frames carry the state; a start notice only shows if the run has not already finished.

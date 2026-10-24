@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // One pick in the basket: its sources, and its draft as it will go out: the image, then the text, which the reader
 // can edit in place (saved as a new revision). Older revisions stay one select away. 进入待发布 asks the server,
-// which refuses a draft with Markdown, a missing link block or an image with problems.
+// which refuses a draft with Markdown, a missing link block or an image with problems. A published pick can be moved
+// back to 待发布, to be edited and posted again.
 import { computed, ref, watch } from "vue";
 import { CircleAlert, PenLine, Save, Send, Undo2 } from "@lucide/vue";
 import { layout, toggle } from "../client/layout";
@@ -139,7 +140,16 @@ async function save() {
           <Undo2 :size="13" />退回写作中
         </button>
         <button
-          v-else-if="openPick.status !== 'published'"
+          v-else-if="openPick.status === 'published'"
+          class="button secondary small"
+          aria-label="Back to ready"
+          title="移回待发布：可以再改稿、再发一次。再发会在 X 上多出一条，原帖还在的话先去 X 上删掉"
+          @click="setStage(openPick, 'ready')"
+        >
+          <Undo2 :size="13" />移回待发布
+        </button>
+        <button
+          v-else
           class="button small"
           :disabled="edited || !newest"
           aria-label="Mark ready"

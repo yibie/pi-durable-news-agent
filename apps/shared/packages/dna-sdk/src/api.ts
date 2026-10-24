@@ -195,6 +195,8 @@ export interface TopicPick {
   conversationId?: string;
   /** The newest draft's revision; absent before the first draft. */
   draftRevision?: number;
+  /** When a published pick was moved back to 待发布 (ready); it may then be posted again. */
+  reopenedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
