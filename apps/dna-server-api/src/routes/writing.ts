@@ -76,6 +76,13 @@ export function writingRoutes({
           note: !!message,
         });
       } else if (message) {
+        // The writer runs with the configured model and rules as of now: a writer started before DNA_WRITER_MODEL
+        // changed switches on the reader's next message.
+        await harness.harness.commit(
+          (tx) =>
+            configure(tx, Number(pick.conversationId) as ConversationId, app.agents.writerAgent()),
+          ctx,
+        );
         const writer = await conversation(pick);
         await writer.submit(
           {
