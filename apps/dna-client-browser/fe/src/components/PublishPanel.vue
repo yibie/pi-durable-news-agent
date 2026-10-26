@@ -9,7 +9,7 @@
 import { computed, ref } from "vue";
 import { CalendarClock, CircleAlert, FlaskConical, ListPlus, Send } from "@lucide/vue";
 import type { TopicPick } from "@dna/sdk";
-import { feedState, now } from "../client/store";
+import { now } from "../client/store";
 import { clean } from "../client/text";
 import { beijingDateTime, beijingDay, beijingTime as time } from "../client/time";
 import {
@@ -80,12 +80,6 @@ const confirming = ref(false);
 const reason = ref("");
 const checked = ref("");
 
-/** Another pick waits in line: 排队 then means after it, even when a post may go now. */
-const othersQueued = computed(() =>
-  feedState.value.picks.some(
-    (p) => p.id !== props.pick.id && p.status === "ready" && p.scheduledAt && !p.scheduleHold,
-  ),
-);
 const DAY_NAMES = ["今天", "明天", "后天"];
 const dayChoices = computed(() =>
   Array.from({ length: 7 }, (_, i) => {
@@ -287,7 +281,7 @@ async function go() {
             <CalendarClock :size="13" />改时间
           </button>
           <button
-            v-if="pick.scheduleHold"
+            v-if="pick.scheduleHold && waitUntil"
             class="button secondary small"
             aria-label="Queue again"
             title="重新排队：排到下一个空位"
@@ -328,14 +322,10 @@ async function go() {
         </button>
         <template v-if="!confirming">
           <button
-            v-if="waitUntil || othersQueued"
-            :class="waitUntil ? 'button small' : 'button secondary small'"
+            v-if="waitUntil"
+            class="button small"
             aria-label="Queue"
-            :title="
-              waitUntil
-                ? `排队：${time(waitUntil)} 之后的空位，和前一条隔 30 到 60 分钟，到点自动发`
-                : '排队：排在已经排着的帖子后面，隔 30 到 60 分钟，到点自动发'
-            "
+            :title="`排队：${time(waitUntil)} 之后的空位，和前一条隔 30 到 60 分钟，到点自动发`"
             @click="schedulePublish(pick)"
           >
             <ListPlus :size="13" />排队

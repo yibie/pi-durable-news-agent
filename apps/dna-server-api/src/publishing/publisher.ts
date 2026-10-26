@@ -230,6 +230,11 @@ export class Publisher {
       if (from < now - MINUTE) throw invalid(`${at} has passed`);
     }
     const slot = this.slot(pickId, mode, Math.max(from, now));
+    // Nothing to wait for: the line would post it within seconds, past the 发布 confirm. Publishing is for now.
+    if (mode === "queue" && slot - now < MINUTE)
+      throw invalid(
+        `Pick ${pickId} may go now: nothing to wait for in line. Publish it, or choose a time`,
+      );
     const scheduled = store.picks.setSchedule(pickId, new Date(slot).toISOString(), mode)!;
     this.deps.log.info("publish.scheduled", { pickId, mode, at: scheduled.scheduledAt });
     this.deps.bus.publish({ type: "pick", pick: scheduled });

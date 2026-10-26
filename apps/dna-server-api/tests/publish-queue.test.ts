@@ -188,6 +188,7 @@ test("a due pick the checks refuse is held with why; scheduling it again clears 
       quoteUrl: "https://x.com/a/status/1",
       author: "reader",
     });
+    s.posted("recent");
     const again = s.publisher.schedule(pick.id, undefined, now);
     assert.equal(again.pick.scheduleHold, undefined);
   } finally {
@@ -215,10 +216,12 @@ test("a pick moved out of 待发布 leaves the line; publishing by hand takes it
   }
 });
 
-test("taking a pick out of the line keeps it in 待发布", () => {
+test("with nothing to wait for the queue refuses (publish instead); out of the line it stays in 待发布", () => {
   const s = setup();
   try {
     const pick = s.ready();
+    refused(() => s.publisher.schedule(pick.id), /may go now/);
+    s.posted("recent");
     s.publisher.schedule(pick.id);
     const out = s.publisher.unschedule(pick.id);
     assert.equal(out.status, "ready");
