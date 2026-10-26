@@ -21,6 +21,7 @@ import {
 } from "@dna/durable-agent";
 import { createLogger, type Logger } from "@dna/sdk/node";
 import { createAgents, type Agents } from "./agents/index.ts";
+import { macNotify } from "./publishing/notify.ts";
 import { fakeX, liveX, Publisher } from "./publishing/publisher.ts";
 import { fauxRules } from "./agents/faux-script.ts";
 import type { Config } from "./config.ts";
@@ -136,7 +137,11 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
   };
   const agents = createAgents(deps);
   const offline = config.provider === "faux" || config.searchMode === "fixture";
-  const publisher = new Publisher(deps, offline ? fakeX : liveX);
+  const publisher = new Publisher(
+    deps,
+    offline ? fakeX : liveX,
+    offline ? {} : { notify: macNotify },
+  );
   publisher.start();
 
   const compaction: CompactionSetting = store.settings.get("compaction", {
@@ -223,6 +228,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     },
     async close() {
       clearInterval(stallTimer);
+      publisher.stop();
       stopProjector();
       await harness.close();
       store.close();

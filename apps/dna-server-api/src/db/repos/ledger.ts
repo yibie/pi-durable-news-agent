@@ -105,6 +105,18 @@ export class LedgerRepo {
     return latest;
   }
 
+  /** Posts that went out on a Beijing day (YYYY-MM-DD), first replies left out: the queue's daily cap counts these. */
+  postsOn(day: string): number {
+    const day0 = Date.parse(`${day}T00:00:00+08:00`);
+    const rows = this.db
+      .prepare("SELECT draft_key, at FROM publish_ledger WHERE status = 'ok'")
+      .all() as { draft_key: string; at: string }[];
+    return rows.filter((r) => {
+      const t = Date.parse(r.at);
+      return !isReply(r.draft_key) && t >= day0 && t < day0 + 86_400_000;
+    }).length;
+  }
+
   /**
    * Import the old jsonl ledger (selfPromotion's publish-ledger.jsonl): every line once, by draft, status and time,
    * so a restart re-reads the file and only adds what is new. Returns how many lines were added.

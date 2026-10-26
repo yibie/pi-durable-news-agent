@@ -3,12 +3,15 @@
 // it without posting), and 发布 behind a confirm. Inside the 30 minutes a reason is required and goes into the ledger.
 // A publish whose result is unknown blocks the pick until the reader checks X and says it did not post. Once the post
 // is out, its first reply (the 原文 links) follows under it; one that did not go out can be posted again from here.
+// A ready pick can wait in line instead: 排队 takes the next free slot (30 to 60 minutes after the post or slot before
+// it), 定时发布 a day and time of the reader's (Beijing time). The server posts it then; a due pick it could not post
+// is held here with why.
 import { computed, ref } from "vue";
-import { CircleAlert, FlaskConical, Send } from "@lucide/vue";
+import { CalendarClock, CircleAlert, FlaskConical, ListPlus, Send } from "@lucide/vue";
 import type { TopicPick } from "@dna/sdk";
-import { now } from "../client/store";
+import { feedState, now } from "../client/store";
 import { clean } from "../client/text";
-import { beijingTime as time } from "../client/time";
+import { beijingDateTime, beijingDay, beijingTime as time } from "../client/time";
 import {
   ackPublish,
   ackReply,
@@ -16,7 +19,10 @@ import {
   publishState,
   rehearse,
   replyAgain,
+  schedulePublish,
+  unschedulePublish,
 } from "../client/writing";
+import ChoiceMenu from "./ChoiceMenu.vue";
 
 const props = defineProps<{ pick: TopicPick }>();
 
@@ -73,6 +79,45 @@ const replyChecked = ref("");
 const confirming = ref(false);
 const reason = ref("");
 const checked = ref("");
+
+/** Another pick waits in line: 排队 then means after it, even when a post may go now. */
+const othersQueued = computed(() =>
+  feedState.value.picks.some(
+    (p) => p.id !== props.pick.id && p.status === "ready" && p.scheduledAt && !p.scheduleHold,
+  ),
+);
+const DAY_NAMES = ["今天", "明天", "后天"];
+const dayChoices = computed(() =>
+  Array.from({ length: 7 }, (_, i) => {
+    const d = beijingDay(i, now.value);
+    return {
+      value: d,
+      label: DAY_NAMES[i] ?? `${Number(d.slice(5, 7))}月${Number(d.slice(8))}日`,
+      hint: d,
+    };
+  }),
+);
+const timing = ref(false);
+const day = ref(beijingDay(0));
+const clock = ref("");
+const atIso = computed(() => {
+  const m = clock.value.trim().match(/^([01]?\d|2[0-3])[:：]([0-5]\d)$/);
+  return m ? `${day.value}T${m[1]!.padStart(2, "0")}:${m[2]}:00+08:00` : undefined;
+});
+const atPassed = computed(() => !!atIso.value && Date.parse(atIso.value) < now.value);
+
+/** Open the day and time row, starting an hour after the earliest a post may go. */
+function openTiming() {
+  const soon = Math.max(now.value, waitUntil.value ? Date.parse(waitUntil.value) : 0) + 3_600_000;
+  day.value = beijingDay(0, soon);
+  clock.value = time(new Date(soon).toISOString());
+  timing.value = true;
+}
+
+async function setTime() {
+  if (!atIso.value || atPassed.value) return;
+  if (await schedulePublish(props.pick, atIso.value)) timing.value = false;
+}
 
 async function go() {
   await publishNow(props.pick, waitUntil.value ? reason.value.trim() : undefined);
@@ -205,6 +250,63 @@ async function go() {
           确认未发出
         </button>
       </div>
+      <div
+        v-else-if="pick.status === 'ready' && pick.scheduledAt"
+        class="publish-scheduled"
+        :class="{ bad: !!pick.scheduleHold }"
+        data-testid="publish-scheduled"
+      >
+        <p v-if="pick.scheduleHold">
+          <CircleAlert :size="13" />排在
+          {{ beijingDateTime(pick.scheduledAt, now) }} 的这条没发出去：{{
+            clean(pick.scheduleHold)
+          }}
+        </p>
+        <p v-else>
+          <CalendarClock :size="13" />{{ pick.scheduleMode === "time" ? "定时" : "排队" }}：{{
+            beijingDateTime(pick.scheduledAt, now)
+          }}
+          自动发（北京时间）。到点会再查一遍间隔和稿子，发没发出去，桌面都会弹通知。
+        </p>
+        <div class="publish-actions">
+          <button
+            class="button secondary small"
+            aria-label="Unschedule"
+            title="取消排期：这条留在待发布，不会自动发"
+            @click="unschedulePublish(pick)"
+          >
+            取消排期
+          </button>
+          <span class="grow" />
+          <button
+            class="button secondary small"
+            aria-label="Change the time"
+            title="改成别的时间（北京时间）"
+            @click="openTiming"
+          >
+            <CalendarClock :size="13" />改时间
+          </button>
+          <button
+            v-if="pick.scheduleHold"
+            class="button secondary small"
+            aria-label="Queue again"
+            title="重新排队：排到下一个空位"
+            @click="schedulePublish(pick)"
+          >
+            <ListPlus :size="13" />重新排队
+          </button>
+          <button
+            v-if="!confirming"
+            class="button secondary small"
+            :disabled="busy"
+            aria-label="Publish"
+            title="不等了，现在就发（会取消排期）"
+            @click="confirming = true"
+          >
+            <Send :size="13" />现在发
+          </button>
+        </div>
+      </div>
       <div v-else-if="pick.status === 'ready'" class="publish-actions">
         <button
           class="button secondary small"
@@ -217,16 +319,80 @@ async function go() {
         </button>
         <span class="grow" />
         <button
-          v-if="!confirming"
-          class="button small"
-          :disabled="busy"
-          aria-label="Publish"
-          title="发布到 X"
-          @click="confirming = true"
+          class="button secondary small"
+          aria-label="Schedule a time"
+          title="定时发布：自己挑哪天几点发（北京时间），到点自动发"
+          @click="openTiming"
         >
-          <Send :size="13" />发布
+          <CalendarClock :size="13" />定时发布
+        </button>
+        <template v-if="!confirming">
+          <button
+            v-if="waitUntil || othersQueued"
+            :class="waitUntil ? 'button small' : 'button secondary small'"
+            aria-label="Queue"
+            :title="
+              waitUntil
+                ? `排队：${time(waitUntil)} 之后的空位，和前一条隔 30 到 60 分钟，到点自动发`
+                : '排队：排在已经排着的帖子后面，隔 30 到 60 分钟，到点自动发'
+            "
+            @click="schedulePublish(pick)"
+          >
+            <ListPlus :size="13" />排队
+          </button>
+          <button
+            :class="waitUntil ? 'button secondary small' : 'button small'"
+            :disabled="busy"
+            aria-label="Publish"
+            :title="waitUntil ? '插队：不到 30 分钟也现在发，要写理由' : '现在发布到 X'"
+            @click="confirming = true"
+          >
+            <Send :size="13" />{{ waitUntil ? "插队发布" : "发布" }}
+          </button>
+        </template>
+      </div>
+      <div
+        v-if="timing && pick.status === 'ready' && !blocked"
+        class="publish-timing"
+        data-testid="publish-timing"
+      >
+        <ChoiceMenu
+          :value="day"
+          :options="dayChoices"
+          label="Publish day"
+          title="哪一天发（北京时间）"
+          @change="(d: string) => (day = d)"
+        />
+        <input
+          v-model="clock"
+          class="publish-clock"
+          aria-label="Publish time"
+          placeholder="14:30"
+          inputmode="numeric"
+          maxlength="5"
+          @keydown.enter="setTime"
+        />
+        <span class="publish-hint">北京时间</span>
+        <span class="grow" />
+        <button class="button secondary small" aria-label="Cancel the time" @click="timing = false">
+          取消
+        </button>
+        <button
+          class="button small"
+          :disabled="!atIso || atPassed"
+          aria-label="Set the time"
+          :title="
+            atPassed
+              ? '这个时间已经过了'
+              : '到这个时间自动发；和别的帖子隔不到 30 分钟的话，会往后挪'
+          "
+          @click="setTime"
+        >
+          定在这个时间
         </button>
       </div>
+      <p v-if="timing && clock.trim() && !atIso" class="publish-line bad">时间写成 14:30 这样</p>
+      <p v-else-if="timing && atPassed" class="publish-line bad">这个时间已经过了</p>
       <div v-if="confirming && !blocked && pick.status === 'ready'" class="publish-confirm">
         <p>确定把这条发到 X？发出去就撤不回了。{{ postedBefore ? "它之前已经发过一次。" : "" }}</p>
         <input

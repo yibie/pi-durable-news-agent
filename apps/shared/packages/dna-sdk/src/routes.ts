@@ -199,6 +199,19 @@ export const ROUTES = {
     summary:
       "Post a published pick's first reply (the 原文 links under the post) again, when it did not go out after the post",
   },
+  "picks.schedule": {
+    method: "POST",
+    path: "/v1/picks/:id/schedule",
+    scope: "chat",
+    summary:
+      "Put a ready pick in line to publish: the next free slot (30 to 60 minutes after the one before, at most 15 a day), or at a given time; the server posts it then",
+  },
+  "picks.unschedule": {
+    method: "POST",
+    path: "/v1/picks/:id/unschedule",
+    scope: "chat",
+    summary: "Take a pick out of the publish line (it stays in 待发布)",
+  },
   "publish.state": {
     method: "GET",
     path: "/v1/publish",

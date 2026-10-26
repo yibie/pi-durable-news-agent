@@ -1,6 +1,6 @@
 // Picks: cards the reader chose to write about, each with a genre and a stage. Items keep the card's url and title as
 // they were when picked. A card sits in at most one pick that is not dropped; dropping a pick releases its cards.
-import type { TopicPick, PickGenre, PickItem, PickStatus } from "@dna/sdk";
+import type { TopicPick, PickGenre, PickItem, PickStatus, ScheduleMode } from "@dna/sdk";
 import { type Db, nowIso, str, tx } from "../db.ts";
 
 /** What a pick records about a card. */
@@ -144,6 +144,45 @@ export class PicksRepo {
     this.db.prepare("UPDATE picks SET writer_seen_revision = ? WHERE id = ?").run(revision, id);
   }
 
+  /** Put the pick in the publish line at this time (a new time clears an old hold). */
+  setSchedule(id: number, at: string, mode: ScheduleMode): TopicPick | undefined {
+    this.db
+      .prepare(
+        "UPDATE picks SET publish_at = ?, publish_mode = ?, publish_hold = NULL, updated_at = ? WHERE id = ?",
+      )
+      .run(at, mode, nowIso(), id);
+    return this.get(id);
+  }
+
+  /** Out of the publish line; false when it was not in it. */
+  clearSchedule(id: number): boolean {
+    return (
+      this.db
+        .prepare(
+          `UPDATE picks SET publish_at = NULL, publish_mode = NULL, publish_hold = NULL, updated_at = ?
+           WHERE id = ? AND (publish_at IS NOT NULL OR publish_hold IS NOT NULL)`,
+        )
+        .run(nowIso(), id).changes > 0
+    );
+  }
+
+  /** A due pick that could not be posted: it keeps its place, marked with why, until the reader acts. */
+  holdSchedule(id: number, reason: string): TopicPick | undefined {
+    this.db
+      .prepare("UPDATE picks SET publish_hold = ?, updated_at = ? WHERE id = ?")
+      .run(reason, nowIso(), id);
+    return this.get(id);
+  }
+
+  /** Picks in the publish line, soonest first (held ones included). */
+  scheduled(): TopicPick[] {
+    return (
+      this.db
+        .prepare("SELECT * FROM picks WHERE publish_at IS NOT NULL ORDER BY publish_at, id")
+        .all() as any[]
+    ).map((r) => this.toPick(r));
+  }
+
   /** The pick a writer conversation belongs to. */
   byConversation(conversationId: string): TopicPick | undefined {
     const r = this.db.prepare("SELECT * FROM picks WHERE conversation_id = ?").get(conversationId);
@@ -169,6 +208,9 @@ export class PicksRepo {
       conversationId: str(r.conversation_id),
       draftRevision: draft.n ?? undefined,
       reopenedAt: str(r.reopened_at),
+      scheduledAt: str(r.publish_at),
+      scheduleMode: str(r.publish_mode) as TopicPick["scheduleMode"],
+      scheduleHold: str(r.publish_hold),
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     };

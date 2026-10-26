@@ -192,8 +192,24 @@ export const leadsLine = (leads: { site: string }[] | undefined) =>
 export const questionLine = (q: TasteQuestion) =>
   `#${pad(q.id, 4)} ${q.status}  ${cleanText(q.question)}${q.cardId ? `  (card ${q.cardId})` : ""}`;
 /** A pick and its cards, one line each: id, genre, stage and title, then card id, title and url. */
+/** A time as Beijing wall time, e.g. 2026-10-26 14:30. */
+export const beijing = (iso: string) =>
+  new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Shanghai",
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(iso));
+/** "2026-10-26 14:30" (Beijing) or any ISO time, as ISO. */
+export const fromBeijing = (text: string) =>
+  /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(text.trim())
+    ? `${text.trim().replace(" ", "T")}:00+08:00`
+    : text.trim();
+const scheduleNote = (p: TopicPick) =>
+  p.scheduledAt
+    ? `  ${p.scheduleHold ? "held" : "goes"} ${beijing(p.scheduledAt)} Beijing (${p.scheduleMode})${p.scheduleHold ? `: ${cleanText(p.scheduleHold)}` : ""}`
+    : "";
 export const pickLines = (p: TopicPick): string[] => [
-  `#${pad(p.id, 4)} ${pad(p.genre, 8)} ${p.status}${p.title ? `  ${cleanText(p.title)}` : ""}`,
+  `#${pad(p.id, 4)} ${pad(p.genre, 8)} ${p.status}${p.title ? `  ${cleanText(p.title)}` : ""}${scheduleNote(p)}`,
   ...p.items.map(
     (i) => `      card ${pad(i.cardId, 5)} ${cleanText(i.title)}${i.url ? `  ${i.url}` : ""}`,
   ),
@@ -216,6 +232,9 @@ export const ledgerLine = (e: LedgerEntry): string =>
 export const publishText = (s: PublishState): string =>
   [
     s.earliestAt ? `next post at ${s.earliestAt}` : "a post may go now",
+    ...(s.today
+      ? [`today (Beijing): ${s.today.posts} posts, the queue stops at ${s.today.cap}`]
+      : []),
     ...(s.last ? [`last activity: ${ledgerLine(s.last)}`] : []),
     ...(s.pick ? [`this pick: ${ledgerLine(s.pick)}`] : []),
     ...(s.postUrl ? [`its post: ${s.postUrl}`] : []),

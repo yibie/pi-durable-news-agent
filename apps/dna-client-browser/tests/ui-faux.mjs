@@ -912,6 +912,70 @@ try {
     "移回待发布 moves a published pick back to 待发布 and warns that posting again adds a second post",
   );
   await cleanText("reopen");
+
+  // ---------------------------------------------------------------- the publish line (排队 and 定时发布)
+  const beijingClock = (iso) =>
+    new Date(iso).toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Shanghai",
+    });
+  const pickNow = async () => (await call("GET", "/v1/picks")).find((p) => p.id === writing.id);
+  await page.getByRole("button", { name: "Queue", exact: true }).click();
+  await page.locator('[data-testid="publish-scheduled"]').waitFor();
+  const queued = await pickNow();
+  check(
+    queued.scheduleMode === "queue" &&
+      Date.parse(queued.scheduledAt) >= Date.now() + 29 * 60_000 &&
+      (await page.locator('[data-testid="publish-scheduled"]').textContent()).includes(
+        `${beijingClock(queued.scheduledAt)} 自动发`,
+      ),
+    "inside the 30 minutes, 排队 puts the pick in line after the last post and says when it goes",
+  );
+  await page.getByRole("button", { name: "Change the time" }).click();
+  await page.locator('[data-testid="publish-timing"]').waitFor();
+  await page.getByRole("button", { name: "Publish day" }).click();
+  await page.getByRole("menu", { name: "Publish day" }).locator("[data-value]").nth(1).click();
+  await page.getByLabel("Publish time").fill("25:00");
+  check(
+    (await page.getByRole("button", { name: "Set the time" }).isDisabled()) &&
+      (await page.locator(".publish-line.bad", { hasText: "14:30" }).count()) === 1,
+    "定时发布 refuses a time that is not HH:MM",
+  );
+  await page.getByLabel("Publish time").fill("09:30");
+  await page.getByRole("button", { name: "Set the time" }).click();
+  await page.waitForFunction(() => !document.querySelector('[data-testid="publish-timing"]'));
+  const timed = await pickNow();
+  check(
+    timed.scheduleMode === "time" &&
+      beijingClock(timed.scheduledAt) === "09:30" &&
+      (await page.locator('[data-testid="publish-scheduled"]').textContent()).includes(
+        "明天 09:30",
+      ),
+    "定时发布 sets tomorrow 09:30 Beijing time and the panel shows it",
+  );
+  await cleanText("publish line");
+  await stageTab("ready").click();
+  const goesAt = page.locator(
+    `.picks-list [data-pick-id="${writing.id}"] [data-testid="pick-when"]`,
+  );
+  await goesAt.waitFor();
+  check(
+    (await goesAt.textContent()).includes("明天 09:30") &&
+      (await page.locator(".picks-spacing").textContent()).includes("排着 1 条"),
+    "待发布 lists the pick with when it goes, and the header counts the line",
+  );
+  await page
+    .locator(`.picks-list [data-pick-id="${writing.id}"]`)
+    .getByRole("button", { name: "Open the draft" })
+    .click();
+  await page.getByRole("button", { name: "Unschedule" }).click();
+  await page.waitForFunction(() => !document.querySelector('[data-testid="publish-scheduled"]'));
+  check(
+    (await pickNow()).scheduledAt === undefined && (await pickNow()).status === "ready",
+    "取消排期 takes the pick out of the line and leaves it in 待发布",
+  );
+  await page.screenshot({ path: join(shots, "publish-line.png") });
   await stageTab("ready").click();
   await page.locator('[data-testid="chat"]').waitFor();
 

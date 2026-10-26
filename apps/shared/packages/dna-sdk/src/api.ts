@@ -197,9 +197,18 @@ export interface TopicPick {
   draftRevision?: number;
   /** When a published pick was moved back to 待发布 (ready); it may then be posted again. */
   reopenedAt?: string;
+  /** A ready pick waiting to be published: the server posts it at this time (keeping the 30 minute spacing). */
+  scheduledAt?: string;
+  /** How the time was chosen: queue (the next free slot) or time (the reader's own time). */
+  scheduleMode?: ScheduleMode;
+  /** Why a due pick was not posted; it waits for the reader (schedule it again, or publish it by hand). */
+  scheduleHold?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export const SCHEDULE_MODES = ["queue", "time"] as const;
+export type ScheduleMode = (typeof SCHEDULE_MODES)[number];
 
 /** A post's text checks: Markdown lines (X shows them literally) and X's weighted length (CJK counts 2). */
 export interface PostLint {
@@ -323,6 +332,19 @@ export interface PublishState {
   replyDue?: boolean;
   /** The pick's post on X, when its link was found. */
   postUrl?: string;
+  /** Posts that went out today (Beijing time), and how many the queue posts in a day at most. */
+  today?: { posts: number; cap: number };
+}
+
+/** Put a ready pick in line: no at takes the next free slot; at (ISO) is the reader's own time. */
+export interface ScheduleBody {
+  at?: string;
+}
+
+export interface ScheduleResult {
+  pick: TopicPick;
+  /** The time asked for, when the pick had to go later (too close to another post). */
+  requested?: string;
 }
 
 export interface PublishBody {

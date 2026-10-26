@@ -361,9 +361,9 @@ const COMMANDS: Record<string, Command> = {
   },
   publish: {
     usage:
-      "publish <pick id> [--rehearsal] [--override=<reason>] | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked> | publish reply <pick id> [post url] | publish ack-reply <pick id> <what you checked>",
+      "publish <pick id> [--rehearsal] [--override=<reason>] | publish queue <pick id> | publish at <pick id> <YYYY-MM-DD HH:MM Beijing> | publish unqueue <pick id> | publish state [pick id] | publish ledger | publish ack <pick id> <what you checked> | publish reply <pick id> [post url] | publish ack-reply <pick id> <what you checked>",
     summary:
-      "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack a publish that did not post, post its first reply again",
+      "Post a ready pick to X now, in line, or at a time, or rehearse it; see the spacing and the ledger, ack a publish that did not post, post its first reply again",
     async run() {
       const [action, a] = args;
       if (action === "state") {
@@ -382,6 +382,23 @@ const COMMANDS: Record<string, Command> = {
         if (!note) throw new Usage(`publish ${action} <pick id> <what you checked on X>`);
         const e = await client().ack(num(a, "pick id"), { note, reply: action === "ack-reply" });
         return { data: e, text: print.ledgerLine(e) };
+      }
+      if (action === "queue" || action === "at") {
+        const when = args.slice(2).join(" ").trim();
+        if (action === "at" && !when)
+          throw new Usage("publish at <pick id> <YYYY-MM-DD HH:MM, Beijing time>");
+        const r = await client().schedulePublish(
+          num(a, "pick id"),
+          action === "at" ? { at: print.fromBeijing(when) } : {},
+        );
+        return {
+          data: r,
+          text: `Pick ${a} goes at ${print.beijing(r.pick.scheduledAt!)} Beijing${r.requested ? ` (asked ${print.beijing(r.requested)}: too close to another post)` : ""}`,
+        };
+      }
+      if (action === "unqueue") {
+        const p = await client().unschedulePublish(num(a, "pick id"));
+        return { data: p, text: `Pick ${a} is out of the line (still ${p.status})` };
       }
       if (action === "reply") {
         const postUrl = args[2]?.trim();

@@ -2,7 +2,8 @@
 // 选题篮: one tab per stage (已选, 写作中, 待发布, 已发布), newest first in each. Each pick shows its genre
 // (changeable), its cards with links, lets a card leave a roundup or the whole pick go back to News, and opens into
 // its draft (PickDetail) under the tabs, with its writer in the agent column. The tab follows the open pick's stage,
-// and any tab goes back to its list. 待发布 says when the next post may go.
+// and any tab goes back to its list. 待发布 says when the next post may go, lists the picks in line first (soonest
+// first, each with when it goes, or why it was held), then the rest.
 import { computed, watch } from "vue";
 import { FileText, ListChecks, Undo2, X } from "@lucide/vue";
 import { PICK_GENRES, type PickGenre } from "@dna/sdk";
@@ -17,7 +18,7 @@ import {
 } from "../client/picks";
 import { feedState, now } from "../client/store";
 import { clean } from "../client/text";
-import { beijingTime } from "../client/time";
+import { beijingDateTime, beijingTime } from "../client/time";
 import { closeWriting, loadSpacing, openPick, openWriting, spacing } from "../client/writing";
 import ChoiceMenu from "./ChoiceMenu.vue";
 import PickDetail from "./PickDetail.vue";
@@ -50,7 +51,21 @@ const GENRE_CHOICES = PICK_GENRES.map((g) => ({
   hint: GENRE_HINTS[g],
 }));
 const count = (s: PickStage) => feedState.value.picks.filter((p) => p.status === s).length;
-const shown = computed(() => feedState.value.picks.filter((p) => p.status === layout.picksTab));
+const queued = computed(() =>
+  feedState.value.picks
+    .filter((p) => p.status === "ready" && p.scheduledAt)
+    .sort(
+      (a, b) =>
+        Number(!!a.scheduleHold) - Number(!!b.scheduleHold) ||
+        Date.parse(a.scheduledAt!) - Date.parse(b.scheduledAt!),
+    ),
+);
+const shown = computed(() => {
+  const here = feedState.value.picks.filter((p) => p.status === layout.picksTab);
+  if (layout.picksTab !== "ready") return here;
+  return [...queued.value, ...here.filter((p) => !p.scheduledAt)];
+});
+const nextUp = computed(() => queued.value.find((p) => !p.scheduleHold));
 
 function showStage(s: PickStage) {
   layout.picksTab = s;
@@ -106,6 +121,10 @@ watch(
           >最早 {{ beijingTime(waitUntil) }} 可以发下一条（北京时间，两条之间隔 30 分钟）</template
         >
         <template v-else>现在就可以发下一条</template>
+        <template v-if="nextUp"
+          >。排着 {{ queued.filter((p) => !p.scheduleHold).length }} 条，下一条
+          {{ beijingDateTime(nextUp.scheduledAt!, now) }} 自动发</template
+        >
       </p>
       <p v-if="!shown.length" class="picks-empty">{{ STAGES[layout.picksTab].empty }}</p>
       <article v-for="p in shown" :key="p.id" class="pick" :class="p.genre" :data-pick-id="p.id">
@@ -119,6 +138,18 @@ watch(
             @change="(g: PickGenre) => setGenre(p, g)"
           />
           <small v-if="p.genre === 'roundup'" class="pick-count">{{ p.items.length }} 条</small>
+          <small
+            v-if="p.status === 'ready' && p.scheduledAt"
+            class="pick-when"
+            :class="{ bad: !!p.scheduleHold }"
+            data-testid="pick-when"
+            :title="
+              p.scheduleHold
+                ? `排在 ${beijingDateTime(p.scheduledAt, now)} 的这条没发出去：${clean(p.scheduleHold)}。点开稿子处理`
+                : `${p.scheduleMode === 'time' ? '定时' : '排队'}，到点自动发（北京时间）`
+            "
+            >{{ p.scheduleHold ? "没发出去" : `${beijingDateTime(p.scheduledAt, now)} 发` }}</small
+          >
           <span class="grow" />
           <button
             class="pick-open"

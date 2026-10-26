@@ -47,6 +47,8 @@ import type {
   PublishBody,
   ReplyBody,
   PublishState,
+  ScheduleBody,
+  ScheduleResult,
   LedgerEntry,
   AckBody,
   UsageDay,
@@ -340,6 +342,13 @@ export class DnaClient {
   }
   publish(id: number, body: PublishBody = {}) {
     return this.call<PublishState>("picks.publish", { params: { id }, body });
+  }
+  /** Put a ready pick in the publish line (the next free slot, or body.at). */
+  schedulePublish(id: number, body: ScheduleBody = {}) {
+    return this.call<ScheduleResult>("picks.schedule", { params: { id }, body });
+  }
+  unschedulePublish(id: number) {
+    return this.call<TopicPick>("picks.unschedule", { params: { id }, body: {} });
   }
   replyAgain(id: number, body: ReplyBody = {}) {
     return this.call<PublishState>("picks.reply", { params: { id }, body });

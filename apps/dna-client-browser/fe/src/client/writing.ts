@@ -4,6 +4,7 @@ import { computed, ref, shallowRef, watch } from "vue";
 import { AgentModel, follow, type Draft, type PublishState, type TopicPick } from "@dna/sdk";
 import { layout, PICK_STAGES, type PickStage } from "./layout";
 import { api, attempt, feed, feedState, notify, onFrame } from "./store";
+import { beijingDateTime } from "./time";
 
 /** The pick open in the basket (detail view) and in the agent column (its writer). */
 export const openPickId = ref<number>();
@@ -208,6 +209,28 @@ export async function publishNow(p: TopicPick, override?: string) {
   const st = await attempt(() => api.publish(p.id, override ? { override } : {}));
   if (st && publishState.value.running?.pickId === p.id)
     notify("开始发布：在 X 上填稿、上传配图，然后点发布");
+}
+
+/** In line to publish: the next free slot (no at), or at the reader's own time. Returns the pick when it worked. */
+export async function schedulePublish(p: TopicPick, at?: string) {
+  const r = await attempt(() => api.schedulePublish(p.id, at ? { at } : {}));
+  if (!r) return undefined;
+  feed.apply({ type: "pick", pick: r.pick });
+  const when = beijingDateTime(r.pick.scheduledAt!);
+  notify(
+    r.requested
+      ? `和别的帖子挨得太近，挪到了 ${when}（北京时间）发`
+      : `已排好：${when}（北京时间）自动发`,
+  );
+  return r.pick;
+}
+
+export async function unschedulePublish(p: TopicPick) {
+  const pick = await attempt(() => api.unschedulePublish(p.id));
+  if (pick) {
+    feed.apply({ type: "pick", pick });
+    notify("已取消排期，这条还在待发布");
+  }
 }
 
 /** Post the first reply (the 原文 links) under a published pick's post again; postUrl when its link was not found. */

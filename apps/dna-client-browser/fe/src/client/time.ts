@@ -27,6 +27,23 @@ function parts(d: Date, zone: string) {
   return { year: +p.year, month: +p.month, day: +p.day, time: `${p.hour}:${p.minute}` };
 }
 
+/** 今天 14:30, 明天 09:05, or 10月28日 14:30 (Beijing time): when a post in line goes. */
+export function beijingDateTime(iso: string, now = Date.now()): string {
+  const d = parts(new Date(iso), BEIJING);
+  const today = parts(new Date(now), BEIJING);
+  const tomorrow = parts(new Date(now + 86_400_000), BEIJING);
+  const same = (a: typeof d, b: typeof d) =>
+    a.year === b.year && a.month === b.month && a.day === b.day;
+  const day = same(d, today) ? "今天" : same(d, tomorrow) ? "明天" : `${d.month}月${d.day}日`;
+  return `${day} ${d.time}`;
+}
+
+/** The Beijing date (YYYY-MM-DD) a number of days from now, for choosing a day. */
+export function beijingDay(offsetDays = 0, now = Date.now()): string {
+  const p = parts(new Date(now + offsetDays * 86_400_000), BEIJING);
+  return `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+}
+
 /** 10月20日 10:24 in Beijing time, with the year when it is not this year; a date-only page gives just the day. */
 export function beijingDate(iso: string, dateOnly = false): string {
   const d = new Date(iso);

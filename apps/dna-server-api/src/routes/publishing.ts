@@ -8,7 +8,13 @@ import { bodyOf, bool, num, str, type Handlers, type RouteDeps } from "./types.t
 export function publishingRoutes({
   app,
 }: RouteDeps): Handlers<
-  "picks.publish" | "picks.reply" | "publish.state" | "ledger.list" | "picks.ack"
+  | "picks.publish"
+  | "picks.schedule"
+  | "picks.unschedule"
+  | "picks.reply"
+  | "publish.state"
+  | "ledger.list"
+  | "picks.ack"
 > {
   return {
     "picks.publish": (req, res) => {
@@ -18,6 +24,13 @@ export function publishingRoutes({
         rehearsal: bool(body, "rehearsal"),
       });
       res.status(202).json(state);
+    },
+    "picks.schedule": (req, res) => {
+      const at = str(bodyOf(req), "at", { max: 40, optional: true });
+      res.json(app.publisher.schedule(int(req.params.id, "id"), at?.trim() || undefined));
+    },
+    "picks.unschedule": (req, res) => {
+      res.json(app.publisher.unschedule(int(req.params.id, "id")));
     },
     "picks.reply": (req, res) => {
       const postUrl = str(bodyOf(req), "postUrl", { max: 300, optional: true });

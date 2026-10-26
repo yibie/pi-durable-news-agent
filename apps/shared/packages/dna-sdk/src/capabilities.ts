@@ -66,8 +66,16 @@ export const CAPABILITIES = {
   },
   publish: {
     summary:
-      "Post a ready pick to X or rehearse it, see the spacing and the ledger, ack after checking X",
-    routes: ["picks.publish", "picks.reply", "publish.state", "ledger.list", "picks.ack"],
+      "Post a ready pick to X now, in line or at a time, or rehearse it; see the spacing and the ledger, ack after checking X",
+    routes: [
+      "picks.publish",
+      "picks.schedule",
+      "picks.unschedule",
+      "picks.reply",
+      "publish.state",
+      "ledger.list",
+      "picks.ack",
+    ],
   },
   keywords: {
     summary: "List, add, weight, toggle and remove keywords",

@@ -132,6 +132,9 @@ export function pickRoutes({
       // A pick with no cards left has nothing to write about: it is dropped.
       const empty = pick && pick.items.length === 0;
       pick = store.picks.update(id, { genre, title, note, status: empty ? "dropped" : status });
+      // Out of 待发布 (back to writing, or dropped): out of the publish line too.
+      if (pick && pick.status !== "ready" && store.picks.clearSchedule(id))
+        pick = store.picks.get(id);
       app.log.info("picks.update", {
         pickId: id,
         genre,

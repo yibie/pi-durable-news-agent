@@ -2318,6 +2318,14 @@ table.usage th {
 .pick-count {
   color: var(--muted);
 }
+.pick-when {
+  color: var(--accent);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+.pick-when.bad {
+  color: var(--bad);
+}
 .pick-drop {
   display: inline-flex;
   align-items: center;
@@ -2569,6 +2577,41 @@ a.pick-title:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+/* A pick in the publish line: when it goes (or why it was held), and what can change it */
+.publish-scheduled {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--fs-ui);
+}
+.publish-scheduled p {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  color: var(--accent);
+}
+.publish-scheduled.bad p {
+  color: var(--bad);
+}
+.publish-timing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--fs-ui);
+}
+.publish-clock {
+  width: 6.5em;
+  font-size: var(--fs-ui);
+  padding: 6px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.publish-hint {
+  color: var(--muted);
+  font-size: var(--fs-meta);
 }
 
 /* The writer's rules: the text on the left, its saved versions on the right */

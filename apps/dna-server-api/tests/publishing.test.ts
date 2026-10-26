@@ -150,3 +150,25 @@ test("a published pick moved back to 待发布 can be posted again; the ledger k
   assert.equal(oks.length, 2);
   await fails(s.client.publish(1, { override: "a third time" }), 400, /only a pick in 待发布/);
 });
+
+test("a ready pick goes in the publish line and out again over HTTP; leaving 待发布 drops its slot", async () => {
+  const pick = await readyPick(cards[2]!);
+  const { pick: queued } = await s.client.schedulePublish(pick.id);
+  assert.equal(queued.scheduleMode, "queue");
+  // Posts just went out above: the slot is at least 30 minutes away.
+  assert.ok(Date.parse(queued.scheduledAt!) >= Date.now() + 29 * 60_000);
+  const state = await s.client.publishState(pick.id);
+  assert.ok(state.today && state.today.posts >= 1 && state.today.cap === 15);
+  const out = await s.client.unschedulePublish(pick.id);
+  assert.equal(out.scheduledAt, undefined);
+  await fails(
+    s.client.schedulePublish(pick.id, { at: new Date(Date.now() - 3_600_000).toISOString() }),
+    400,
+    /has passed/,
+  );
+  const at = new Date(Date.now() + 5 * 3_600_000).toISOString();
+  const timed = await s.client.schedulePublish(pick.id, { at });
+  assert.equal(timed.pick.scheduleMode, "time");
+  const back = await s.client.updatePick(pick.id, { status: "drafting" });
+  assert.equal(back.scheduledAt, undefined, "back to writing: out of the line");
+});

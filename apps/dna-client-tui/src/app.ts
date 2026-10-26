@@ -394,6 +394,22 @@ export class App {
               `Acked pick ${words[1]}${action === "ack-reply" ? "'s first reply" : ""}`,
             );
           }
+          if (action === "queue" || action === "at") {
+            const when = words.slice(2).join(" ").trim();
+            if (action === "at" && !when)
+              throw new Error("/publish at <pick> <YYYY-MM-DD HH:MM, Beijing time>");
+            const r = await cl.schedulePublish(
+              id(1),
+              action === "at" ? { at: print.fromBeijing(when) } : {},
+            );
+            return this.flash(
+              `Pick ${words[1]} goes at ${print.beijing(r.pick.scheduledAt!)} Beijing`,
+            );
+          }
+          if (action === "unqueue") {
+            await cl.unschedulePublish(id(1));
+            return this.flash(`Pick ${words[1]} is out of the line`);
+          }
           if (action === "reply") {
             await cl.replyAgain(id(1), words[2] ? { postUrl: words[2] } : {});
             return this.flash(`Posting pick ${words[1]}'s first reply`);
