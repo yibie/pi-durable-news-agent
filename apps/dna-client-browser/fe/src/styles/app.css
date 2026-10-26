@@ -106,6 +106,33 @@ h4 {
   padding: 12px var(--s3);
   border-bottom: 1px solid var(--line);
   background: var(--bg);
+  white-space: nowrap;
+}
+.topbar > * {
+  flex-shrink: 0;
+}
+.agent-status > span {
+  font-variant-numeric: tabular-nums;
+}
+/* Folding when the window is narrow (TopBar.vue measures which step fits): 1 the tagline, 2 the tool buttons' labels,
+   3 the column toggles' labels and the device name, 4 the brand name, and the status text may be cut short. */
+.topbar:not([data-fit="0"]) .tagline,
+.topbar:is([data-fit="2"], [data-fit="3"], [data-fit="4"]) [data-fold="1"],
+.topbar:is([data-fit="3"], [data-fit="4"]) [data-fold="2"],
+.topbar[data-fit="4"] .brand-text {
+  display: none;
+}
+.topbar:not([data-fit="0"], [data-fit="1"]) .bar-button {
+  padding: 6px 8px;
+}
+.topbar[data-fit="4"] .agent-status {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.topbar[data-fit="4"] .agent-status > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .brand {
   display: flex;

@@ -38,7 +38,7 @@ onBeforeUnmount(() => window.removeEventListener("pointerdown", close));
       title="显示：深色或护眼主题，文字大小"
       @click="open = !open"
     >
-      <Palette :size="16" /><span>显示</span>
+      <Palette :size="16" /><span class="bar-label" data-fold="1">显示</span>
     </button>
     <div v-if="open" class="display-pop" role="dialog" aria-label="Display">
       <p class="display-label">主题</p>

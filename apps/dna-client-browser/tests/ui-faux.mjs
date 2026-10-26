@@ -403,7 +403,7 @@ try {
   check(
     (await scheduleSelect.inputValue()) === "5" &&
       (await scheduleSelect.locator("option").allInnerTexts()).join(",") ===
-        "Every minute,Every 5 min,Every 10 min,Every 15 min,Every 30 min,Every hour,Off",
+        "每分钟,每 5 分钟,每 10 分钟,每 15 分钟,每 30 分钟,每小时,不定时",
     "the top bar schedule shows every 5 minutes with the presets",
   );
   const cardsSelect = page.getByLabel("Cards per sweep");
@@ -416,13 +416,13 @@ try {
   );
   await cardsSelect.selectOption("7");
   await scheduleSelect.selectOption("off");
-  await page.locator(".agent-status", { hasText: "scheduled sweeps off" }).waitFor();
+  await page.locator(".agent-status", { hasText: "定时抓取已关" }).waitFor();
   check(
     (await call("GET", "/v1/schedule")).everyMinutes === null,
     "turning the schedule off reaches the API and the countdown says so",
   );
   await scheduleSelect.selectOption("5");
-  await page.locator(".agent-status", { hasText: "next sweep in" }).waitFor();
+  await page.locator(".agent-status", { hasText: "后抓下一轮" }).waitFor();
   check(
     (await page.locator(".model-button").count()) === 0 &&
       (await page.locator(".context-line").count()) === 0,
