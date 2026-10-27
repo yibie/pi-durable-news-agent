@@ -20,7 +20,7 @@ export interface Config {
   promptsDir: string;
   provider: "openrouter" | "deepseek" | "faux";
   jevBackend: "auto" | "fixture" | "mock" | "ollama" | "openrouter" | "typesafe";
-  /** The decision model a local backend (ollama) answers with, e.g. nimble:9b. */
+  /** The decision model a local backend (ollama) answers with, e.g. tev1:4b. */
   jevModel?: string;
   /** Policy overrides for the active jev backend, by command: <configDir>/jev-policy.json, keyed by backend. */
   jevPolicy?: Record<string, Record<string, unknown>>;

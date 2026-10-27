@@ -15,7 +15,7 @@ import {
 
 export type JevProvider = "mock" | "ollama" | "openrouter" | "typesafe";
 
-/** Ollama (0.35+) serves local decision models such as nimble on the same wire format, with no key. */
+/** Ollama (0.35+) serves local decision models such as tev1 on the same wire format, with no key. */
 const OLLAMA_URL = "http://127.0.0.1:11434/v1/systemone";
 /** Where the ollama backend calls: JEV_OLLAMA_URL, else the Ollama app on its default port. */
 export const ollamaEndpoint = (): string => process.env.JEV_OLLAMA_URL?.trim() || OLLAMA_URL;
@@ -26,7 +26,7 @@ const ENDPOINTS = {
 } as const;
 
 const DEFAULT_MODELS = {
-  ollama: "nimble:9b",
+  ollama: "tev1:4b",
   openrouter: "~typesafe/jev-latest",
   typesafe: "jev-latest",
 } as const;

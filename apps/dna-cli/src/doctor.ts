@@ -39,7 +39,7 @@ export async function doctor(
   if (setting("JEV_BACKEND") === "ollama") {
     const origin = new URL(setting("JEV_OLLAMA_URL") ?? "http://127.0.0.1:11434/v1/systemone")
       .origin;
-    const model = setting("JEV_MODEL") ?? "nimble:9b";
+    const model = setting("JEV_MODEL") ?? "tev1:4b";
     let detail = `no answer from ${origin}`;
     let ok = false;
     try {

@@ -1,0 +1,4 @@
+# tev1:4b ships with num_ctx 2048, and Ollama rejects a longer row (HTTP 400). Same-story states reach about 8,300
+# tokens, so the workbench runs this variant: OLLAMA_HOST=<host> ollama create tev1-16k -f deploy/tev1-16k.Modelfile
+FROM tev1:4b
+PARAMETER num_ctx 16384

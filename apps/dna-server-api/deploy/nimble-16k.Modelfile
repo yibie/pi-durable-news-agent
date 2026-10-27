@@ -1,4 +1,0 @@
-# nimble:9b ships with num_ctx 8194, and Ollama rejects a longer row (HTTP 400). Same-story states reach about 8,300
-# tokens, so the workbench runs this variant: OLLAMA_HOST=<host> ollama create nimble-16k -f deploy/nimble-16k.Modelfile
-FROM nimble:9b
-PARAMETER num_ctx 16384
