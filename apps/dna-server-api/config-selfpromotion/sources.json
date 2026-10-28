@@ -1047,6 +1047,1084 @@
       "url": "https://x.com/jeremyphoward",
       "interval_min": 120,
       "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OpenAI",
+      "url": "https://x.com/OpenAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OpenAIDevs",
+      "url": "https://x.com/OpenAIDevs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ChatGPT",
+      "url": "https://x.com/ChatGPT",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@sama",
+      "url": "https://x.com/sama",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@gdb",
+      "url": "https://x.com/gdb",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@markchen90",
+      "url": "https://x.com/markchen90",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@kevinweil",
+      "url": "https://x.com/kevinweil",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@nickaturley",
+      "url": "https://x.com/nickaturley",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@polynoamial",
+      "url": "https://x.com/polynoamial",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@merettm",
+      "url": "https://x.com/merettm",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@_jasonwei",
+      "url": "https://x.com/_jasonwei",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@wojzaremba",
+      "url": "https://x.com/wojzaremba",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@romainhuet",
+      "url": "https://x.com/romainhuet",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@billpeeb",
+      "url": "https://x.com/billpeeb",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@CompleteSkeptic",
+      "url": "https://x.com/CompleteSkeptic",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@reach_vb",
+      "url": "https://x.com/reach_vb",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@HamelHusain",
+      "url": "https://x.com/HamelHusain",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@model_mechanic",
+      "url": "https://x.com/model_mechanic",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@npew",
+      "url": "https://x.com/npew",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jasonkwon",
+      "url": "https://x.com/jasonkwon",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@btaylor",
+      "url": "https://x.com/btaylor",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@CodexReleases",
+      "url": "https://x.com/CodexReleases",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@AnthropicAI",
+      "url": "https://x.com/AnthropicAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@claudeai",
+      "url": "https://x.com/claudeai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ClaudeDevs",
+      "url": "https://x.com/ClaudeDevs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@DarioAmodei",
+      "url": "https://x.com/DarioAmodei",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jackclarkSF",
+      "url": "https://x.com/jackclarkSF",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@mikeyk",
+      "url": "https://x.com/mikeyk",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@_catwu",
+      "url": "https://x.com/_catwu",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ClaudeCodeLog",
+      "url": "https://x.com/ClaudeCodeLog",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@janleike",
+      "url": "https://x.com/janleike",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ch402",
+      "url": "https://x.com/ch402",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@dpkingma",
+      "url": "https://x.com/dpkingma",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@lydiahallie",
+      "url": "https://x.com/lydiahallie",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@amorriscode",
+      "url": "https://x.com/amorriscode",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@noahzweben",
+      "url": "https://x.com/noahzweben",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@delba_oliveira",
+      "url": "https://x.com/delba_oliveira",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@claude_code",
+      "url": "https://x.com/claude_code",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GoogleDeepMind",
+      "url": "https://x.com/GoogleDeepMind",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GeminiApp",
+      "url": "https://x.com/GeminiApp",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GoogleAI",
+      "url": "https://x.com/GoogleAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@googleaidevs",
+      "url": "https://x.com/googleaidevs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@googlegemma",
+      "url": "https://x.com/googlegemma",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GoogleLabs",
+      "url": "https://x.com/GoogleLabs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@antigravity",
+      "url": "https://x.com/antigravity",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@demishassabis",
+      "url": "https://x.com/demishassabis",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@sundarpichai",
+      "url": "https://x.com/sundarpichai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@JeffDean",
+      "url": "https://x.com/JeffDean",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OfficialLoganK",
+      "url": "https://x.com/OfficialLoganK",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@joshwoodward",
+      "url": "https://x.com/joshwoodward",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@orianewiles",
+      "url": "https://x.com/orianewiles",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Gemini_Notebook",
+      "url": "https://x.com/Gemini_Notebook",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ShaneLegg",
+      "url": "https://x.com/ShaneLegg",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OriolVinyalsML",
+      "url": "https://x.com/OriolVinyalsML",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@fofrAI",
+      "url": "https://x.com/fofrAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@xai",
+      "url": "https://x.com/xai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@grok",
+      "url": "https://x.com/grok",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@elonmusk",
+      "url": "https://x.com/elonmusk",
+      "interval_min": 240,
+      "weight": 0.6
+    },
+    {
+      "kind": "web_page",
+      "name": "@ibab",
+      "url": "https://x.com/ibab",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Yuhu_ai_",
+      "url": "https://x.com/Yuhu_ai_",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jimmybajimmyba",
+      "url": "https://x.com/jimmybajimmyba",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@TheGregYang",
+      "url": "https://x.com/TheGregYang",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Francis_YAO_",
+      "url": "https://x.com/Francis_YAO_",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@asimdotshrestha",
+      "url": "https://x.com/asimdotshrestha",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Kimi_Moonshot",
+      "url": "https://x.com/Kimi_Moonshot",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@MiniMax_AI",
+      "url": "https://x.com/MiniMax_AI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Hailuo_AI",
+      "url": "https://x.com/Hailuo_AI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Zai_org",
+      "url": "https://x.com/Zai_org",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@StepFun_ai",
+      "url": "https://x.com/StepFun_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@TencentHunyuan",
+      "url": "https://x.com/TencentHunyuan",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Meituan_LongCat",
+      "url": "https://x.com/Meituan_LongCat",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@deepseek_ai",
+      "url": "https://x.com/deepseek_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Alibaba_Qwen",
+      "url": "https://x.com/Alibaba_Qwen",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OpenBMB",
+      "url": "https://x.com/OpenBMB",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@BaiduResearch",
+      "url": "https://x.com/BaiduResearch",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Ronny_MiniMax",
+      "url": "https://x.com/Ronny_MiniMax",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@MetaAI",
+      "url": "https://x.com/MetaAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@AIatMeta",
+      "url": "https://x.com/AIatMeta",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@MistralAI",
+      "url": "https://x.com/MistralAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Perplexity_AI",
+      "url": "https://x.com/Perplexity_AI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@huggingface",
+      "url": "https://x.com/huggingface",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@NVIDIAAI",
+      "url": "https://x.com/NVIDIAAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@StabilityAI",
+      "url": "https://x.com/StabilityAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@midjourney",
+      "url": "https://x.com/midjourney",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@cohere",
+      "url": "https://x.com/cohere",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@thinkymachines",
+      "url": "https://x.com/thinkymachines",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@cursor_ai",
+      "url": "https://x.com/cursor_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@cognition",
+      "url": "https://x.com/cognition",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@OpenRouter",
+      "url": "https://x.com/OpenRouter",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@FireworksAI_HQ",
+      "url": "https://x.com/FireworksAI_HQ",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@togethercompute",
+      "url": "https://x.com/togethercompute",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@bfl_ai",
+      "url": "https://x.com/bfl_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@runwayml",
+      "url": "https://x.com/runwayml",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ElevenLabs",
+      "url": "https://x.com/ElevenLabs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ideogram_ai",
+      "url": "https://x.com/ideogram_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ArtificialAnlys",
+      "url": "https://x.com/ArtificialAnlys",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@arena",
+      "url": "https://x.com/arena",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@pika_labs",
+      "url": "https://x.com/pika_labs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@character_ai",
+      "url": "https://x.com/character_ai",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GroqLLC",
+      "url": "https://x.com/GroqLLC",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@opencode",
+      "url": "https://x.com/opencode",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@cline",
+      "url": "https://x.com/cline",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@WindsurfCurrent",
+      "url": "https://x.com/WindsurfCurrent",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@LangChain",
+      "url": "https://x.com/LangChain",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@llama_index",
+      "url": "https://x.com/llama_index",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Gradio",
+      "url": "https://x.com/Gradio",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@replicate",
+      "url": "https://x.com/replicate",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@databricks",
+      "url": "https://x.com/databricks",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ExaAILabs",
+      "url": "https://x.com/ExaAILabs",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@DbrxMosaicAI",
+      "url": "https://x.com/DbrxMosaicAI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@openclaw",
+      "url": "https://x.com/openclaw",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@AndrewYNg",
+      "url": "https://x.com/AndrewYNg",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@clementdelangue",
+      "url": "https://x.com/clementdelangue",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@lintool",
+      "url": "https://x.com/lintool",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@dwarkesh_sp",
+      "url": "https://x.com/dwarkesh_sp",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jimfan",
+      "url": "https://x.com/jimfan",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@hardmaru",
+      "url": "https://x.com/hardmaru",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@miramurati",
+      "url": "https://x.com/miramurati",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@alexandr_wang",
+      "url": "https://x.com/alexandr_wang",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@kaifulee",
+      "url": "https://x.com/kaifulee",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@_akhaliq",
+      "url": "https://x.com/_akhaliq",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@op7418",
+      "url": "https://x.com/op7418",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@dotey",
+      "url": "https://x.com/dotey",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ilyasut",
+      "url": "https://x.com/ilyasut",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@GuillaumeLample",
+      "url": "https://x.com/GuillaumeLample",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@soumithchintala",
+      "url": "https://x.com/soumithchintala",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Thom_Wolf",
+      "url": "https://x.com/Thom_Wolf",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@rasbt",
+      "url": "https://x.com/rasbt",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@shengjia_zhao",
+      "url": "https://x.com/shengjia_zhao",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@hwchung27",
+      "url": "https://x.com/hwchung27",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@aidangomez",
+      "url": "https://x.com/aidangomez",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ggerganov",
+      "url": "https://x.com/ggerganov",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@geoffreyhinton",
+      "url": "https://x.com/geoffreyhinton",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@ID_AA_Carmack",
+      "url": "https://x.com/ID_AA_Carmack",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@EMostaque",
+      "url": "https://x.com/EMostaque",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@adcock_brett",
+      "url": "https://x.com/adcock_brett",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@leerob",
+      "url": "https://x.com/leerob",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Barret_China",
+      "url": "https://x.com/Barret_China",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@WaytoAGI",
+      "url": "https://x.com/WaytoAGI",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@turingbook",
+      "url": "https://x.com/turingbook",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@jietang",
+      "url": "https://x.com/jietang",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@tydsh",
+      "url": "https://x.com/tydsh",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@Valley101_Qian",
+      "url": "https://x.com/Valley101_Qian",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@plantegg",
+      "url": "https://x.com/plantegg",
+      "interval_min": 240,
+      "weight": 1.0
+    },
+    {
+      "kind": "web_page",
+      "name": "@TheRundownAI",
+      "url": "https://x.com/TheRundownAI",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@rowancheung",
+      "url": "https://x.com/rowancheung",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@latentspacepod",
+      "url": "https://x.com/latentspacepod",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@mattshumer_",
+      "url": "https://x.com/mattshumer_",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@venturetwins",
+      "url": "https://x.com/venturetwins",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@deedydas",
+      "url": "https://x.com/deedydas",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@berkeley_ai",
+      "url": "https://x.com/berkeley_ai",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@StanfordAILab",
+      "url": "https://x.com/StanfordAILab",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@MIT_CSAIL",
+      "url": "https://x.com/MIT_CSAIL",
+      "interval_min": 240,
+      "weight": 0.8
+    },
+    {
+      "kind": "web_page",
+      "name": "@DeepLearningAI",
+      "url": "https://x.com/DeepLearningAI",
+      "interval_min": 240,
+      "weight": 0.8
     }
   ]
 }
