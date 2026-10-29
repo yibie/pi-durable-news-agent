@@ -2,7 +2,16 @@
 // The open pick's writer in the agent column: what it did (its messages and tool calls) and a box to ask for
 // changes. The first message is the pick's writing brief, shown as a chip. Back returns the column to the news desk.
 import { computed, nextTick, ref, watch } from "vue";
-import { ArrowLeft, Brain, FilePen, PenLine, ScrollText, Send, Square } from "@lucide/vue";
+import {
+  ArrowLeft,
+  Brain,
+  FilePen,
+  PenLine,
+  ScrollText,
+  Send,
+  Sparkles,
+  Square,
+} from "@lucide/vue";
 import { GENRE_NAMES, pickName } from "../client/picks";
 import { clean, markdown } from "../client/text";
 import {
@@ -53,6 +62,15 @@ async function send() {
   if (!p || !message || sending.value) return;
   sending.value = true;
   if (await sendToWriter(p, message)) text.value = "";
+  sending.value = false;
+}
+/** The 去 AI 味 check (the 去AI味 v2 skill): the writer reports first and rewrites only after the reader answers. */
+const AI_TONE = "【去 AI 味】按「去AI味 v2」检查最新稿：先出改前报告，等我回复再改。";
+async function checkTone() {
+  const p = openPick.value;
+  if (!p || sending.value) return;
+  sending.value = true;
+  await sendToWriter(p, AI_TONE);
   sending.value = false;
 }
 async function start() {
@@ -184,6 +202,17 @@ function onKey(e: KeyboardEvent) {
         @keydown="onKey"
       />
       <div class="composer-row">
+        <button
+          type="button"
+          class="button secondary small"
+          data-cap="writing"
+          aria-label="Check the draft for AI tone"
+          title="去 AI 味：按「去AI味 v2」检查最新稿。写手先给检测报告（命中的句子、改法、保留什么），你回「按建议改」它才改，改完再测一遍"
+          :disabled="sending"
+          @click="checkTone"
+        >
+          <Sparkles :size="13" />去 AI 味
+        </button>
         <span class="grow" />
         <button
           type="button"

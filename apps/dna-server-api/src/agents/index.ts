@@ -38,6 +38,8 @@ import { saveSource } from "./tools/save-source.ts";
 import { scrapeUrl } from "./tools/scrape-url.ts";
 import { searchWeb } from "./tools/search-web.ts";
 import {
+  checkAiToneTool,
+  readAiToneGuide,
   readPick,
   readSource,
   recentLayouts,
@@ -83,6 +85,8 @@ export const WRITER_TOOLS = [
   "search_web",
   "recent_layouts",
   "render_argmap",
+  "read_ai_tone_guide",
+  "check_ai_tone",
   "save_draft",
 ] as const;
 
@@ -186,6 +190,8 @@ export function createAgents(deps: Deps): Agents {
     shared.searchWeb,
     recentLayouts(deps),
     renderArgmapTool(deps),
+    readAiToneGuide(),
+    checkAiToneTool(deps),
     saveDraftTool(deps),
   ];
   const writer = defineExtension({

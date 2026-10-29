@@ -1,11 +1,13 @@
 // The writer's tools. Each writer conversation belongs to one pick, so the tools act on that pick: read it
 // (read_pick), read its sources in full (read_source), see which layouts recent posts used (recent_layouts), draw the
-// argmap (render_argmap) and save a draft revision (save_draft). Publishing is the reader's button, never a tool.
+// argmap (render_argmap), check a draft for AI tone (read_ai_tone_guide, check_ai_tone) and save a draft revision
+// (save_draft). Publishing is the reader's button, never a tool.
 import { Type } from "@earendil-works/pi-ai";
 import type { ToolExecutionApi } from "@earendil-works/pi-durable";
 import { defineAppTool, toolError, toolText } from "@dna/durable-agent";
 import type { TopicPick } from "@dna/sdk";
 import type { Deps } from "../../deps.ts";
+import { aiToneGuide, checkAiTone } from "../../writing/ai-tone.ts";
 import { draftProblems, drawArgmap, saveDraft } from "../../writing/drafts.ts";
 import { ref } from "./shared.ts";
 
@@ -165,6 +167,56 @@ export function renderArgmapTool(deps: Deps) {
       } catch (error) {
         deps.log.error("writing.render_failed", { pickId: pick.id, error: String(error) });
         return toolError(`Rendering failed: ${String(error).slice(0, 300)}`);
+      }
+    },
+  });
+}
+
+export function readAiToneGuide() {
+  return defineAppTool({
+    name: "read_ai_tone_guide",
+    returns:
+      "Text: the 去AI味 v2 skill (its workflow, rewrite rules and never-change list), its semantic-layer criteria and its grading notes.",
+    description:
+      "Read the 去 AI 味 skill before a 去 AI 味 check: how to report, what to rewrite and how, what never to change.",
+    parameters: Type.Object({}),
+    replay: "safe",
+    execute: async () => toolText(aiToneGuide()),
+  });
+}
+
+export function checkAiToneTool(deps: Deps) {
+  return defineAppTool({
+    name: "check_ai_tone",
+    returns:
+      "Text: JSON with the draft revision checked, the script report (densities, locatable hits by rule with line and excerpt, fingerprints, structure; meta.short when under 500 汉字) and the semantic-layer candidates to judge.",
+    description:
+      "Run the 去 AI 味 detector (detect.py) on the pick's newest draft, or on revision if given. Line numbers count the draft body's lines. Run it before reporting and again after rewriting.",
+    parameters: Type.Object({
+      revision: Type.Optional(Type.Integer({ minimum: 1 })),
+    }),
+    replay: "safe",
+    execute: async (args, api) => {
+      const pick = pickOf(deps, api);
+      if (!pick) return noPick();
+      const draft =
+        args.revision === undefined
+          ? deps.store.drafts.latest(pick.id)
+          : deps.store.drafts.list(pick.id).find((d) => d.revision === args.revision);
+      if (!draft)
+        return toolError(
+          args.revision === undefined
+            ? "This pick has no draft yet."
+            : `Pick ${pick.id} has no revision ${args.revision}.`,
+          ["Write and save a draft first, then check it."],
+        );
+      try {
+        const result = await checkAiTone(draft.body);
+        return toolText(JSON.stringify({ revision: draft.revision, ...result }));
+      } catch (error) {
+        return toolError(`The detector failed: ${String(error).slice(0, 300)}`, [
+          "Tell the reader the check could not run; do not guess the hits.",
+        ]);
       }
     },
   });
