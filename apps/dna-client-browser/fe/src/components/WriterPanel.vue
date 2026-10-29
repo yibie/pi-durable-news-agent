@@ -64,8 +64,8 @@ async function send() {
   if (await sendToWriter(p, message)) text.value = "";
   sending.value = false;
 }
-/** The 去 AI 味 check (the 去AI味 v2 skill): the writer reports first and rewrites only after the reader answers. */
-const AI_TONE = "【去 AI 味】按「去AI味 v2」检查最新稿：先出改前报告，等我回复再改。";
+/** The writer runs the 去AI味 v2 pass after every draft on its own; this asks for it again, e.g. after a hand edit. */
+const AI_TONE = "【去 AI 味】按「去AI味 v2」再查一遍最新稿，该改的直接改，改完告诉我改了什么。";
 async function checkTone() {
   const p = openPick.value;
   if (!p || sending.value) return;
@@ -207,7 +207,7 @@ function onKey(e: KeyboardEvent) {
           class="button secondary small"
           data-cap="writing"
           aria-label="Check the draft for AI tone"
-          title="去 AI 味：按「去AI味 v2」检查最新稿。写手先给检测报告（命中的句子、改法、保留什么），你回「按建议改」它才改，改完再测一遍"
+          title="去 AI 味：写手每写完一稿会自动做一遍；手改过稿子后想再查，就点这里。它直接改，改完列出改了哪些句子、按哪条规则"
           :disabled="sending"
           @click="checkTone"
         >
