@@ -84,6 +84,7 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
     ...(config.anthropicAuth
       ? { anthropic: true, credentials: new AuthFileStore(config.anthropicAuth) }
       : {}),
+    ...(config.ark ? { ark: true } : {}),
   });
   const judge = new Judge({
     decide: decideFor(config),

@@ -37,6 +37,8 @@ export interface Config {
   researchModel: string;
   /** A pi-style auth.json signed in to Anthropic: adds Claude (native ids) next to the provider above. */
   anthropicAuth?: string;
+  /** Doubao Seed through Volcengine Ark is in the catalog (ARK_API_KEY is set). */
+  ark: boolean;
   /** The writer's model: Claude Opus 5.5 when Anthropic is signed in, DeepSeek V4 Pro on DeepSeek, else the agent's. */
   writerModel: string;
   imageModel: string;
@@ -105,6 +107,7 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     model: env.DNA_MODEL ?? defaultModel,
     researchModel: env.DNA_RESEARCH_MODEL ?? env.DNA_MODEL ?? defaultModel,
     anthropicAuth: provider === "faux" ? undefined : env.DNA_ANTHROPIC_AUTH?.trim() || undefined,
+    ark: provider !== "faux" && Boolean(env.ARK_API_KEY?.trim()),
     writerModel:
       env.DNA_WRITER_MODEL?.trim() ||
       (provider !== "faux" && env.DNA_ANTHROPIC_AUTH?.trim()

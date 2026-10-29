@@ -2,9 +2,11 @@
 // DNA_PROVIDER=deepseek uses DeepSeek's own API instead (DEEPSEEK_API_KEY), with its two chat models.
 // Either one can add Claude through Anthropic's own API (`anthropic: true`), signed in through a credential store
 // such as pi's auth.json; OpenRouter-style Claude ids then resolve to the native ones.
+// Either one can also add Doubao Seed through Volcengine Ark (`ark: true`, ARK_API_KEY), an OpenAI-compatible API.
 // DNA_PROVIDER=faux swaps in a free deterministic model with the same 1M window.
-import type { CredentialStore } from "@earendil-works/pi-ai";
-import { createModels, type MutableModels } from "@earendil-works/pi-ai/models";
+import { envApiKeyAuth, type CredentialStore } from "@earendil-works/pi-ai";
+import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
+import { createModels, createProvider, type MutableModels } from "@earendil-works/pi-ai/models";
 import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
 import { deepseekProvider } from "@earendil-works/pi-ai/providers/deepseek";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
@@ -98,6 +100,45 @@ export const ANTHROPIC_CATALOG: readonly CatalogEntry[] = [
   { id: "claude-haiku-5-5", name: "Claude Haiku 5.5", tier: "A", icon: "anthropic.png" },
 ];
 
+/** Volcengine Ark: Doubao Seed text models, by the ids Ark itself uses. */
+export const ARK_CATALOG: readonly CatalogEntry[] = [
+  { id: "doubao-seed-2-1-pro-260915", name: "Doubao Seed 2.1 Pro", tier: "A", icon: "lab.png" },
+];
+
+const ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
+
+/** Ark speaks the OpenAI chat API; thinking is switched like DeepSeek's (`thinking: {type}` plus `reasoning_effort`). */
+export function arkProvider() {
+  return createProvider({
+    id: "ark",
+    name: "Volcengine Ark",
+    baseUrl: ARK_BASE_URL,
+    auth: { apiKey: envApiKeyAuth("Volcengine Ark API key", ["ARK_API_KEY"]) },
+    models: ARK_CATALOG.map((c) => ({
+      id: c.id,
+      name: c.name,
+      api: "openai-completions" as const,
+      baseUrl: ARK_BASE_URL,
+      provider: "ark",
+      reasoning: true,
+      input: ["text" as const, "image" as const],
+      // Ark lists prices in yuan only; 0 keeps the cost meter from inventing a dollar figure.
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 1_048_576,
+      maxTokens: 262_144,
+      thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high", max: "high" },
+      compat: {
+        supportsStore: false,
+        supportsDeveloperRole: false,
+        maxTokensField: "max_tokens" as const,
+        thinkingFormat: "deepseek" as const,
+        supportsReasoningEffort: true,
+      },
+    })),
+    api: openAICompletionsApi(),
+  });
+}
+
 /** anthropic/claude-haiku-5.5 (OpenRouter) to claude-haiku-5-5 (Anthropic). */
 export function nativeClaudeId(id: string): string | undefined {
   const m = /^anthropic\/(claude-[a-z]+-[\d.]+)$/.exec(id);
@@ -120,6 +161,8 @@ export function createModelCatalog(options: {
   defaultModel?: string;
   /** Also offer Claude through Anthropic's own API. */
   anthropic?: boolean;
+  /** Also offer Doubao Seed through Volcengine Ark (ARK_API_KEY). */
+  ark?: boolean;
   /** Where signed-in providers keep their credentials (OAuth refreshes write back here). */
   credentials?: CredentialStore;
 }): ModelCatalog {
@@ -178,6 +221,17 @@ export function createModelCatalog(options: {
             provider: anthropicProvider(),
             catalog: ANTHROPIC_CATALOG,
             fallback: "claude-haiku-5-5",
+          },
+        ]
+      : []),
+    ...(options.ark
+      ? [
+          {
+            id: "ark",
+            name: "Volcengine Ark",
+            provider: arkProvider(),
+            catalog: ARK_CATALOG,
+            fallback: ARK_CATALOG[0]!.id,
           },
         ]
       : []),
