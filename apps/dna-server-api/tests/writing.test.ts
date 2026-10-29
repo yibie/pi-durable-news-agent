@@ -206,3 +206,12 @@ test("a link in the post blocks 待发布: the links belong in the first reply",
   await s.client.saveDraft(pick.id, { body: first.body, reply: first.reply });
   assert.equal((await s.client.updatePick(pick.id, { status: "ready" })).status, "ready");
 });
+
+test("DNA_AI_TONE=off takes the 去AI味 pass out of the writer's prompt; it is on by default", () => {
+  const env = { DNA_DATA_DIR: s.dir, DNA_CONFIG_DIR: "", DNA_PROVIDER: "faux" };
+  const on = writerPrompt(loadConfig([], env));
+  const off = writerPrompt(loadConfig([], { ...env, DNA_AI_TONE: "off" }));
+  assert.ok(on.includes("check_ai_tone") && on.includes("finish with the 去AI味 v2 skill"));
+  assert.ok(!off.includes("check_ai_tone") && off.includes("去 AI 味 pass is turned off"));
+  assert.ok(!on.includes("{{") && !off.includes("{{"), "every placeholder is filled");
+});

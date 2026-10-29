@@ -29,10 +29,29 @@ const normalize = (text: string) => `${text.replace(/\r\n?/g, "\n").trimEnd()}\n
 const readRule = (config: Config, name: WriterRuleName) =>
   normalize(readFileSync(ruleFile(config, name).path, "utf8"));
 
+// The 去AI味 v2 pass the writer runs after every draft, unless DNA_AI_TONE=off.
+const AI_TONE_ON =
+  "- Every time you write or revise a draft, finish with the 去AI味 v2 skill; the reader does not want to be asked first. Read read_ai_tone_guide once per conversation. After save_draft: run check_ai_tone, judge its candidates by the semantic criteria, and rewrite the hits the skill marks 拟改 with its minimal-change rules (no new facts, same claim strength, structure untouched, X-level items never changed). If anything changed, save_draft again and run check_ai_tone once more; do not loop further. The skill's step of waiting for the reader before rewriting does not apply here. The writing rules are the studio's style document: where the skill and the writing rules disagree, keep what the writing rules require (for example 我的判断： and 原文链接在评论区). The post is often under 500 汉字 (meta.short): per-thousand densities then mean little, so act on the locatable hits, not the density thresholds.\n- In the reply after a 去 AI 味 pass, add a short 去 AI 味 section: the hit counts before and after, each change as 原文 → 改后 with its rule number, and what you kept and why. A message that starts with 【去 AI 味】 asks for this pass again on the newest draft, including the reader's own edits.";
+const AI_TONE_OFF =
+  "- The 去 AI 味 pass is turned off. A message that starts with 【去 AI 味】 gets a one-line reply saying so; do not check or rewrite for it.";
+
+const WRITER_TOOL_LIST = (aiTone: boolean) =>
+  [
+    "read_pick",
+    "read_source",
+    "search_web",
+    "recent_layouts",
+    "render_argmap",
+    ...(aiTone ? ["read_ai_tone_guide", "check_ai_tone"] : []),
+    "save_draft",
+  ].join(", ");
+
 export function writerPrompt(config: Config): string {
   return loadPrompt(join(config.promptsDir, "agents"), "writer", "SYSTEM_PROMPT.md", {
     writer_rules: readRule(config, "RULES").trim(),
     argmap_rules: readRule(config, "ARGMAP").trim(),
+    ai_tone_instructions: config.aiTone ? AI_TONE_ON : AI_TONE_OFF,
+    tool_list: `${WRITER_TOOL_LIST(config.aiTone)}.`,
   });
 }
 

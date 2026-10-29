@@ -41,6 +41,8 @@ export interface Config {
   ark: boolean;
   /** The writer's model: Claude Opus 5.5 when Anthropic is signed in, DeepSeek V4 Pro on DeepSeek, else the agent's. */
   writerModel: string;
+  /** Whether the writer runs the 去AI味 v2 pass (DNA_AI_TONE=off turns it off). */
+  aiTone: boolean;
   imageModel: string;
   imageQuality: string;
   openaiKey?: string;
@@ -115,6 +117,7 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
         : provider === "deepseek"
           ? "deepseek-v4-pro"
           : (env.DNA_MODEL ?? defaultModel)),
+    aiTone: env.DNA_AI_TONE?.trim().toLowerCase() !== "off",
     imageModel: env.DNA_IMAGE_MODEL ?? "gpt-image-2.5-flare",
     imageQuality: env.DNA_IMAGE_QUALITY ?? "low",
     openaiKey: env.OPENAI_API_KEY?.trim() || undefined,

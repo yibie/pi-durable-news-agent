@@ -190,8 +190,7 @@ export function createAgents(deps: Deps): Agents {
     shared.searchWeb,
     recentLayouts(deps),
     renderArgmapTool(deps),
-    readAiToneGuide(),
-    checkAiToneTool(deps),
+    ...(deps.config.aiTone ? [readAiToneGuide(), checkAiToneTool(deps)] : []),
     saveDraftTool(deps),
   ];
   const writer = defineExtension({
