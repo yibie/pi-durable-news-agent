@@ -6,6 +6,8 @@ import { execFile } from "node:child_process";
 import http from "node:http";
 
 export const BRIDGE_PORT = 4860;
+/** The extension this code needs (apps/x-bridge-extension/manifest.json). */
+export const EXTENSION_VERSION = "0.2.4";
 const POLL_MS = 20_000;
 const COMMAND_MS = 90_000;
 /** The extension wakes at least every 30 seconds, so longer than that means it is not there. */
@@ -121,11 +123,15 @@ export class Bridge {
   async ensure(ms = PING_MS): Promise<void> {
     if (!this.server) throw new Error("工作台发帖桥没有启动");
     if (!(await this.chromeOpen())) throw new Error("Chrome 没有打开：打开 Chrome 后再发布");
-    await this.command("ping", {}, ms).catch(() => {
+    const hello = await this.command<{ version: string }>("ping", {}, ms).catch(() => {
       throw new Error(
         "Chrome 开着，但工作台发帖桥没连上：确认扩展已启用（更新后要在 chrome://extensions 点重新加载）",
       );
     });
+    if (hello.version !== EXTENSION_VERSION)
+      throw new Error(
+        `工作台发帖桥是旧版本 ${hello.version}，需要 ${EXTENSION_VERSION}：在 chrome://extensions 点重新加载`,
+      );
   }
 }
 

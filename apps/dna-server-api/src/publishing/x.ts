@@ -111,7 +111,8 @@ async function openQuote(tabId: number) {
   throw new Error("the retweet menu has no Quote item");
 }
 
-/** Wait for the button while X finishes the image, and list what is wrong with the composer. */
+/** Wait for the button while X finishes the image, and list what is wrong with the composer. The text is compared with
+ * X's own copy, line breaks included: what the page shows can differ from what X posts. */
 async function checkComposer(
   tabId: number,
   text: string,
@@ -120,9 +121,12 @@ async function checkComposer(
 ): Promise<{ state: ComposerState; problems: string[] }> {
   await until(async () => (await read(tabId, quoteId)).button === "enabled", 30_000);
   const state = await read(tabId, quoteId);
+  const draft = await page<string | null>("draftText", tabId);
+  state.text = draft ?? "";
   const problems = [
-    norm(state.text) !== norm(text)
-      ? `the text is not what was written (${state.text.length} of ${text.length} characters)`
+    draft === null ? "could not read X's copy of the text" : "",
+    draft !== null && draft !== text
+      ? `X's copy of the text differs (${draft.length} of ${text.length} characters, ${draft.split("\n").length} of ${text.split("\n").length} lines)`
       : "",
     images && state.media < images ? `${state.media} of ${images} images attached` : "",
     quoteId && !state.card ? "the quoted card is missing" : "",

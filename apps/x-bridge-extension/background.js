@@ -8,12 +8,8 @@ const own = new Map(); // tab id -> the tab to go back to
 
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
-async function inPage(tabId, func, ...args) {
-  const [r] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func,
-    args,
-  });
+async function inPage(tabId, func, args = [], world = "ISOLATED") {
+  const [r] = await chrome.scripting.executeScript({ target: { tabId }, func, args, world });
   return r?.result;
 }
 
@@ -43,13 +39,6 @@ const pageOps = {
     document.execCommand("delete");
     return true;
   },
-  insert: (text) => {
-    const T = "[data-testid=tweetTextarea_0]";
-    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
-    if (!tb) return false;
-    tb.focus();
-    return document.execCommand("insertText", false, text);
-  },
   read: (quoteId) => {
     const T = "[data-testid=tweetTextarea_0]";
     const B = "[data-testid=tweetButton]";
@@ -67,7 +56,9 @@ const pageOps = {
     };
   },
   attach: (files) => {
-    const input = document.querySelector("input[data-testid=fileInput]");
+    const input =
+      document.querySelector("[role=dialog] input[data-testid=fileInput]") ??
+      document.querySelector("input[data-testid=fileInput]");
     if (!input) return false;
     const data = new DataTransfer();
     for (const f of files) {
@@ -146,6 +137,34 @@ const pageOps = {
   },
 };
 
+// These two run in the page's own world. X's editor keeps its own copy of the text: execCommand changes what the page
+// shows but drops the line breaks from what X posts, while a paste it handles itself keeps every paragraph. And only
+// the page's world can read that copy, which is what the check before the click has to compare.
+const mainOps = {
+  insert: (text) => {
+    const T = "[data-testid=tweetTextarea_0]";
+    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
+    if (!tb) return false;
+    tb.focus();
+    const data = new DataTransfer();
+    data.setData("text/plain", text);
+    tb.dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }),
+    );
+    return true;
+  },
+  draftText: () => {
+    const T = "[data-testid=tweetTextarea_0]";
+    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
+    const key = tb && Object.keys(tb).find((k) => k.startsWith("__reactFiber"));
+    for (let f = key ? tb[key] : null; f; f = f.return) {
+      const state = f.memoizedProps?.editorState;
+      if (state?.getCurrentContent) return state.getCurrentContent().getPlainText("\n");
+    }
+    return null;
+  },
+};
+
 const ops = {
   ping: async () => ({ version: chrome.runtime.getManifest().version }),
   open: async ({ url }) => {
@@ -179,7 +198,9 @@ const ops = {
   },
 };
 for (const [name, func] of Object.entries(pageOps))
-  ops[name] = ({ tabId, args = [] }) => inPage(tabId, func, ...args);
+  ops[name] = ({ tabId, args = [] }) => inPage(tabId, func, args);
+for (const [name, func] of Object.entries(mainOps))
+  ops[name] = ({ tabId, args = [] }) => inPage(tabId, func, args, "MAIN");
 
 async function run(cmd) {
   if (cmd.args?.tabId !== undefined && !own.has(cmd.args.tabId))

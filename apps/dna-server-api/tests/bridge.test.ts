@@ -72,3 +72,22 @@ test("an open Chrome without the extension says to check the extension", async (
     open.close();
   }
 });
+
+test("an old extension is told to reload", async () => {
+  const open = new Bridge(async () => true);
+  const port = await open.listen(0);
+  try {
+    const ensuring = assert.rejects(open.ensure(5_000), /旧版本 0\.1\.0.*重新加载/);
+    const c = (await (
+      await fetch(`http://127.0.0.1:${port}/bridge/next`, { headers: HEADERS })
+    ).json()) as any;
+    await fetch(`http://127.0.0.1:${port}/bridge/result`, {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ id: c.id, ok: true, result: { version: "0.1.0" } }),
+    });
+    await ensuring;
+  } finally {
+    open.close();
+  }
+});
