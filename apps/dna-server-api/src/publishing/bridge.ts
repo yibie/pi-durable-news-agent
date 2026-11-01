@@ -2,6 +2,7 @@
 // for one command at a time. Web pages cannot use it: the extension sends a header a page can't send cross-site without
 // a preflight this server refuses, and a page reaching it through a rebound name fails the Host check. A command that
 // times out is taken off the queue, so it can never run later, after it was reported as failed.
+import { execFile } from "node:child_process";
 import http from "node:http";
 
 export const BRIDGE_PORT = 4860;
@@ -16,12 +17,17 @@ interface Command {
   args: unknown;
 }
 
+const chromeIsOpen = () =>
+  new Promise<boolean>((ok) => execFile("pgrep", ["-x", "Google Chrome"], (error) => ok(!error)));
+
 export class Bridge {
   private server?: http.Server;
   private waiter?: (c: Command) => void;
   private queue: Command[] = [];
   private next = 0;
   private readonly pending = new Map<number, (m: any) => void>();
+
+  constructor(private readonly chromeOpen: () => Promise<boolean> = chromeIsOpen) {}
 
   /** Resolves with the port; `port` 0 picks a free one. */
   listen(port = BRIDGE_PORT): Promise<number> {
@@ -41,11 +47,7 @@ export class Bridge {
     this.server?.close();
   }
 
-  private handle(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    port: number,
-  ) {
+  private handle(req: http.IncomingMessage, res: http.ServerResponse, port: number) {
     const hostOk = port === 0 || req.headers.host === `127.0.0.1:${port}`;
     if (req.headers["x-dna-bridge"] !== "1" || !hostOk) {
       res.writeHead(403);
@@ -95,11 +97,7 @@ export class Bridge {
   }
 
   /** Run one operation in the extension. Rejects with its error, or on timeout. */
-  command<T = any>(
-    op: string,
-    args: unknown = {},
-    ms = COMMAND_MS,
-  ): Promise<T> {
+  command<T = any>(op: string, args: unknown = {}, ms = COMMAND_MS): Promise<T> {
     return new Promise((ok, fail) => {
       const c: Command = { id: ++this.next, op, args };
       const timer = setTimeout(() => {
@@ -119,12 +117,13 @@ export class Bridge {
     });
   }
 
-  /** Throws, saying what to do, unless the extension answers. */
+  /** Throws, saying what to do, unless the extension answers. A closed Chrome is told right away, without waiting. */
   async ensure(ms = PING_MS): Promise<void> {
     if (!this.server) throw new Error("工作台发帖桥没有启动");
+    if (!(await this.chromeOpen())) throw new Error("Chrome 没有打开：打开 Chrome 后再发布");
     await this.command("ping", {}, ms).catch(() => {
       throw new Error(
-        "Chrome 里的工作台发帖桥没连上：确认 Chrome 开着、扩展已启用（更新后要在 chrome://extensions 点重新加载）",
+        "Chrome 开着，但工作台发帖桥没连上：确认扩展已启用（更新后要在 chrome://extensions 点重新加载）",
       );
     });
   }

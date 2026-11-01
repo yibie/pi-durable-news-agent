@@ -12,25 +12,13 @@
 import { createHash } from "node:crypto";
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type {
-  LedgerEntry,
-  PublishState,
-  ScheduleMode,
-  ScheduleResult,
-  TopicPick,
-} from "@dna/sdk";
+import type { LedgerEntry, PublishState, ScheduleMode, ScheduleResult, TopicPick } from "@dna/sdk";
 import type { Deps } from "../deps.ts";
 import { BLOCKING, pickKey, replyKey } from "../db/repos/ledger.ts";
 import { invalid, notFound } from "../errors.ts";
 import { readyProblems } from "../writing/drafts.ts";
 import { bridge } from "./bridge.ts";
-import {
-  postToX,
-  replyOnX,
-  type PostInput,
-  type PostOutcome,
-  type ReplyInput,
-} from "./x.ts";
+import { postToX, replyOnX, type PostInput, type PostOutcome, type ReplyInput } from "./x.ts";
 
 export const SPACING_MINUTES = 30;
 const MINUTE = 60_000;
@@ -53,19 +41,10 @@ export const liveX: XClient = { post: postToX, reply: replyOnX };
 /** Offline (faux, fixture): no Chrome, the click always "posts", and the post gets a made-up link. */
 export const fakeX: XClient = {
   async post(input) {
-    for (const p of [
-      "compose",
-      "type",
-      ...(input.images.length ? ["attach"] : []),
-      "check",
-    ])
+    for (const p of ["compose", "type", ...(input.images.length ? ["attach"] : []), "check"])
       input.phase(p);
     if (input.rehearsal)
-      return {
-        status: "rehearsed",
-        clean: true,
-        detail: "ready to post (offline)",
-      };
+      return { status: "rehearsed", clean: true, detail: "ready to post (offline)" };
     input.phase("click");
     input.beforeClick();
     const url = `https://x.com/offline/status/${Date.now()}`;
@@ -74,11 +53,7 @@ export const fakeX: XClient = {
   async reply(input) {
     for (const p of ["open", "type", "check"]) input.phase(p);
     if (input.rehearsal)
-      return {
-        status: "rehearsed",
-        clean: true,
-        detail: "ready to reply (offline)",
-      };
+      return { status: "rehearsed", clean: true, detail: "ready to reply (offline)" };
     input.phase("click");
     input.beforeClick();
     return { status: "ok", detail: "replied (offline)" };
@@ -90,10 +65,8 @@ const POST_URL = /^https:\/\/(x|twitter)\.com\/\S+\/status\/\d+/;
 
 const beijingDay = (d = new Date()) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai" }).format(d);
-const dayStart = (t: number) =>
-  Date.parse(`${beijingDay(new Date(t))}T00:00:00+08:00`);
-const titleOf = (pick: TopicPick) =>
-  pick.title ?? pick.items[0]?.title ?? `选题 ${pick.id}`;
+const dayStart = (t: number) => Date.parse(`${beijingDay(new Date(t))}T00:00:00+08:00`);
+const titleOf = (pick: TopicPick) => pick.title ?? pick.items[0]?.title ?? `选题 ${pick.id}`;
 
 export interface PublisherOptions {
   /** A desktop notification (the queue posts while nobody watches). */
@@ -107,10 +80,7 @@ export class Publisher {
   private current?: Promise<void>;
   private ticking = false;
   private timer?: NodeJS.Timeout;
-  private readonly rehearsals = new Map<
-    number,
-    NonNullable<PublishState["rehearsal"]>
-  >();
+  private readonly rehearsals = new Map<number, NonNullable<PublishState["rehearsal"]>>();
   private readonly notify: (title: string, text: string) => void;
   private readonly random: () => number;
 
@@ -128,11 +98,7 @@ export class Publisher {
     const { store, log, config } = this.deps;
     if (config.ledgerImport) {
       const added = store.ledger.importJsonl(config.ledgerImport);
-      if (added)
-        log.info("publish.ledger_imported", {
-          added,
-          from: config.ledgerImport,
-        });
+      if (added) log.info("publish.ledger_imported", { added, from: config.ledgerImport });
     }
     for (const e of store.ledger.pendingNow().filter((e) => !e.imported))
       store.ledger.append({
@@ -144,9 +110,7 @@ export class Publisher {
         note: "the server restarted during this publish: check X, then ack if it did not post",
       });
     this.timer = setInterval(() => {
-      this.tick().catch((error) =>
-        log.warn("publish.tick_failed", { error: String(error) }),
-      );
+      this.tick().catch((error) => log.warn("publish.tick_failed", { error: String(error) }));
     }, TICK_MS);
     this.timer.unref();
   }
@@ -162,8 +126,7 @@ export class Publisher {
     const post = pickId ? ledger.state(pickKey(pickId)) : undefined;
     const reply = pickId ? ledger.state(replyKey(pickId)) : undefined;
     // The reply that belongs to the post now on X: one written after it.
-    const mine =
-      post?.status === "ok" && reply && reply.at >= post.at ? reply : undefined;
+    const mine = post?.status === "ok" && reply && reply.at >= post.at ? reply : undefined;
     const replyDue =
       post?.status === "ok" &&
       !!drafts.latest(post.pickId ?? pickId!)?.reply &&
@@ -178,25 +141,14 @@ export class Publisher {
         ? { postUrl: `https://x.com/i/status/${post.tweetId}` }
         : {}),
       ...(this.running ? { running: { ...this.running } } : {}),
-      ...(pickId && this.rehearsals.has(pickId)
-        ? { rehearsal: this.rehearsals.get(pickId) }
-        : {}),
-      today: {
-        posts: ledger.postsOn(beijingDay(new Date(now))),
-        cap: DAILY_CAP,
-      },
+      ...(pickId && this.rehearsals.has(pickId) ? { rehearsal: this.rehearsals.get(pickId) } : {}),
+      today: { posts: ledger.postsOn(beijingDay(new Date(now))), cap: DAILY_CAP },
     };
   }
 
   private emit(pickId: number, phase: string, entry?: LedgerEntry) {
     if (this.running) this.running.phase = phase;
-    this.deps.bus.publish({
-      type: "publish",
-      pickId,
-      phase,
-      state: this.state(pickId),
-      entry,
-    });
+    this.deps.bus.publish({ type: "publish", pickId, phase, state: this.state(pickId), entry });
   }
 
   /** Check every gate, then post in the background. Throws (a 400) with what blocks it. */
@@ -209,21 +161,17 @@ export class Publisher {
     if (!pick) throw notFound(`No pick ${pickId}`);
     const rehearsal = !!opts.rehearsal;
     // The old channel may still be posting until the cutover: read its newest lines before checking spacing.
-    if (this.deps.config.ledgerImport)
-      store.ledger.importJsonl(this.deps.config.ledgerImport);
+    if (this.deps.config.ledgerImport) store.ledger.importJsonl(this.deps.config.ledgerImport);
     if (this.running)
       throw invalid(
         `Pick ${this.running.pickId} is being ${this.running.rehearsal ? "rehearsed" : "published"} now`,
       );
     if (!rehearsal && pick.status !== "ready")
-      throw invalid(
-        `Pick ${pickId} is ${pick.status}: only a pick in 待发布 (ready) is published`,
-      );
+      throw invalid(`Pick ${pickId} is ${pick.status}: only a pick in 待发布 (ready) is published`);
     if (pick.status === "published" || pick.status === "dropped")
       throw invalid(`Pick ${pickId} is ${pick.status}`);
     const problems = readyProblems(store, pick);
-    if (problems.length)
-      throw invalid(`Pick ${pickId} is not ready: ${problems.join("; ")}`);
+    if (problems.length) throw invalid(`Pick ${pickId} is not ready: ${problems.join("; ")}`);
     const draft = store.drafts.latest(pickId)!;
     if (!rehearsal) {
       const blocked = this.ledgerBlock(pick);
@@ -243,14 +191,9 @@ export class Publisher {
   }
 
   /** What the ledger says against posting the pick: it is already out, or a last publish may have posted. */
-  private ledgerBlock(
-    pick: TopicPick,
-  ): { message: string; reason: string } | undefined {
+  private ledgerBlock(pick: TopicPick): { message: string; reason: string } | undefined {
     const mine = this.deps.store.ledger.state(pickKey(pick.id));
-    if (
-      mine?.status === "ok" &&
-      !(pick.reopenedAt && pick.reopenedAt > mine.at)
-    )
+    if (mine?.status === "ok" && !(pick.reopenedAt && pick.reopenedAt > mine.at))
       return {
         message: `Pick ${pick.id} was already published at ${mine.at}; move it back to 待发布 to post it again`,
         reason: "这条已经发过了",
@@ -258,8 +201,7 @@ export class Publisher {
     if (mine && BLOCKING.includes(mine.status))
       return {
         message: `Pick ${pick.id}'s last publish is ${mine.status} (${mine.at}): it may have posted. Check X, then ack it if it did not`,
-        reason:
-          "上次发布结果不明，可能已经发出去了：先去 X 上看一眼，再在发布区确认",
+        reason: "上次发布结果不明，可能已经发出去了：先去 X 上看一眼，再在发布区确认",
       };
     return undefined;
   }
@@ -273,18 +215,13 @@ export class Publisher {
     const pick = store.picks.get(pickId);
     if (!pick) throw notFound(`No pick ${pickId}`);
     if (pick.status !== "ready")
-      throw invalid(
-        `Pick ${pickId} is ${pick.status}: only a pick in 待发布 (ready) is scheduled`,
-      );
+      throw invalid(`Pick ${pickId} is ${pick.status}: only a pick in 待发布 (ready) is scheduled`);
     const problems = readyProblems(store, pick);
-    if (problems.length)
-      throw invalid(`Pick ${pickId} is not ready: ${problems.join("; ")}`);
+    if (problems.length) throw invalid(`Pick ${pickId} is not ready: ${problems.join("; ")}`);
     const blocked = this.ledgerBlock(pick);
     if (blocked) throw invalid(blocked.message);
-    if (this.running?.pickId === pickId)
-      throw invalid(`Pick ${pickId} is publishing now`);
-    if (this.deps.config.ledgerImport)
-      store.ledger.importJsonl(this.deps.config.ledgerImport);
+    if (this.running?.pickId === pickId) throw invalid(`Pick ${pickId} is publishing now`);
+    if (this.deps.config.ledgerImport) store.ledger.importJsonl(this.deps.config.ledgerImport);
     const mode: ScheduleMode = at ? "time" : "queue";
     let from = now;
     if (at) {
@@ -298,23 +235,13 @@ export class Publisher {
       throw invalid(
         `Pick ${pickId} may go now: nothing to wait for in line. Publish it, or choose a time`,
       );
-    const scheduled = store.picks.setSchedule(
-      pickId,
-      new Date(slot).toISOString(),
-      mode,
-    )!;
-    this.deps.log.info("publish.scheduled", {
-      pickId,
-      mode,
-      at: scheduled.scheduledAt,
-    });
+    const scheduled = store.picks.setSchedule(pickId, new Date(slot).toISOString(), mode)!;
+    this.deps.log.info("publish.scheduled", { pickId, mode, at: scheduled.scheduledAt });
     this.deps.bus.publish({ type: "pick", pick: scheduled });
     this.emit(pickId, "scheduled");
     return {
       pick: scheduled,
-      ...(at && slot - from >= MINUTE
-        ? { requested: new Date(from).toISOString() }
-        : {}),
+      ...(at && slot - from >= MINUTE ? { requested: new Date(from).toISOString() } : {}),
     };
   }
 
@@ -351,12 +278,10 @@ export class Publisher {
     let at = last ? Math.max(from, Date.parse(last.at) + this.gap(mode)) : from;
     for (let days = 0; days < 60; days++) {
       for (const other of others)
-        if (at > other - SPACING_MS && at < other + SPACING_MS)
-          at = other + this.gap(mode);
+        if (at > other - SPACING_MS && at < other + SPACING_MS) at = other + this.gap(mode);
       const day = beijingDay(new Date(at));
       const taken =
-        store.ledger.postsOn(day) +
-        others.filter((o) => beijingDay(new Date(o)) === day).length;
+        store.ledger.postsOn(day) + others.filter((o) => beijingDay(new Date(o)) === day).length;
       if (taken < DAILY_CAP) return at;
       if (mode === "time")
         throw invalid(
@@ -403,33 +328,18 @@ export class Publisher {
       }
       const mode = due.scheduleMode ?? "queue";
       // The queue's day is full (posts by hand count too): the next day.
-      if (
-        mode === "queue" &&
-        store.ledger.postsOn(beijingDay(new Date(now))) >= DAILY_CAP
-      ) {
+      if (mode === "queue" && store.ledger.postsOn(beijingDay(new Date(now))) >= DAILY_CAP) {
         const at = dayStart(now) + DAY_MS + this.gap("queue") - SPACING_MS;
-        changed(
-          store.picks.setSchedule(due.id, new Date(at).toISOString(), mode),
-        );
-        log.info("publish.schedule_moved", {
-          pickId: due.id,
-          at,
-          why: "daily cap",
-        });
+        changed(store.picks.setSchedule(due.id, new Date(at).toISOString(), mode));
+        log.info("publish.schedule_moved", { pickId: due.id, at, why: "daily cap" });
         return due.id;
       }
       // A post went out since the slot was planned: keep the spacing, go later.
       const earliest = this.state(undefined, now).earliestAt;
       if (earliest) {
         const at = Date.parse(earliest) + this.gap(mode) - SPACING_MS;
-        changed(
-          store.picks.setSchedule(due.id, new Date(at).toISOString(), mode),
-        );
-        log.info("publish.schedule_moved", {
-          pickId: due.id,
-          at,
-          why: "spacing",
-        });
+        changed(store.picks.setSchedule(due.id, new Date(at).toISOString(), mode));
+        log.info("publish.schedule_moved", { pickId: due.id, at, why: "spacing" });
         return due.id;
       }
       const slot = due.scheduledAt!;
@@ -464,32 +374,14 @@ export class Publisher {
     }
   }
 
-  private async run(
-    pick: TopicPick,
-    draftId: number,
-    rehearsal: boolean,
-    override?: string,
-  ) {
+  private async run(pick: TopicPick, draftId: number, rehearsal: boolean, override?: string) {
     const { store, log, config } = this.deps;
     const draft = store.drafts.get(draftId)!;
     const key = pickKey(pick.id);
-    const backend = draft.quoteUrl
-      ? "bridge-quote"
-      : draft.imageId
-        ? "bridge-image"
-        : "bridge";
-    const hash = createHash("sha256")
-      .update(draft.body)
-      .digest("hex")
-      .slice(0, 16);
-    const image = draft.imageId
-      ? store.news.image(draft.imageId)?.filePath
-      : undefined;
-    const record = (
-      status: LedgerEntry["status"],
-      note: string,
-      tweetId?: string,
-    ) => {
+    const backend = draft.quoteUrl ? "bridge-quote" : draft.imageId ? "bridge-image" : "bridge";
+    const hash = createHash("sha256").update(draft.body).digest("hex").slice(0, 16);
+    const image = draft.imageId ? store.news.image(draft.imageId)?.filePath : undefined;
+    const record = (status: LedgerEntry["status"], note: string, tweetId?: string) => {
       const entry = store.ledger.append({
         draftKey: key,
         pickId: pick.id,
@@ -498,10 +390,7 @@ export class Publisher {
         hash,
         backend,
         tweetId,
-        note:
-          override && status === "pending"
-            ? `${note}; spacing override: ${override}`
-            : note,
+        note: override && status === "pending" ? `${note}; spacing override: ${override}` : note,
       });
       this.emit(pick.id, status, entry);
       return entry;
@@ -533,9 +422,7 @@ export class Publisher {
     if (rehearsal) {
       this.rehearsals.set(pick.id, {
         at: new Date().toISOString(),
-        wouldPost:
-          outcome.status === "rehearsed" &&
-          outcome.detail.startsWith("ready to post"),
+        wouldPost: outcome.status === "rehearsed" && outcome.detail.startsWith("ready to post"),
         clean: outcome.status === "rehearsed" && outcome.clean,
         detail: outcome.detail,
       });
@@ -544,11 +431,7 @@ export class Publisher {
       return;
     }
     record(
-      outcome.status === "ok"
-        ? "ok"
-        : outcome.status === "unknown"
-          ? "unknown"
-          : "failed",
+      outcome.status === "ok" ? "ok" : outcome.status === "unknown" ? "unknown" : "failed",
       outcome.detail,
       outcome.status === "ok" ? statusId(outcome.url) : undefined,
     );
@@ -560,18 +443,9 @@ export class Publisher {
     this.deps.bus.publish({ type: "pick", pick: published });
     if (config.publishedDir) {
       try {
-        this.archive(
-          published,
-          draft.body,
-          draft.reply,
-          image,
-          config.publishedDir,
-        );
+        this.archive(published, draft.body, draft.reply, image, config.publishedDir);
       } catch (error) {
-        log.warn("publish.archive_failed", {
-          pickId: pick.id,
-          error: String(error),
-        });
+        log.warn("publish.archive_failed", { pickId: pick.id, error: String(error) });
       }
     }
     try {
@@ -589,12 +463,7 @@ export class Publisher {
   }
 
   /** The first reply under the post: its own ledger key, pending right before the click, then how it went. */
-  private async postReply(
-    pickId: number,
-    draftId: number,
-    text: string,
-    postUrl?: string,
-  ) {
+  private async postReply(pickId: number, draftId: number, text: string, postUrl?: string) {
     const { store, log, config } = this.deps;
     const record = (status: LedgerEntry["status"], note: string) => {
       const entry = store.ledger.append({
@@ -630,17 +499,9 @@ export class Publisher {
         detail: String((error as Error).message ?? error).slice(0, 300),
       };
     }
-    log.info("publish.reply", {
-      pickId,
-      status: outcome.status,
-      detail: outcome.detail,
-    });
+    log.info("publish.reply", { pickId, status: outcome.status, detail: outcome.detail });
     record(
-      outcome.status === "ok"
-        ? "ok"
-        : outcome.status === "unknown"
-          ? "unknown"
-          : "failed",
+      outcome.status === "ok" ? "ok" : outcome.status === "unknown" ? "unknown" : "failed",
       `${outcome.detail} (under ${postUrl})`,
     );
   }
@@ -659,22 +520,17 @@ export class Publisher {
         `Pick ${pickId}'s post has not gone out (its ledger is ${post?.status ?? "empty"})`,
       );
     const draft = store.drafts.latest(pickId);
-    if (!draft?.reply)
-      throw invalid(`Pick ${pickId}'s draft has no first reply`);
+    if (!draft?.reply) throw invalid(`Pick ${pickId}'s draft has no first reply`);
     const mine = store.ledger.state(replyKey(pickId));
     if (mine && mine.at >= post.at) {
       if (mine.status === "ok")
-        throw invalid(
-          `Pick ${pickId}'s first reply already went out at ${mine.at}`,
-        );
+        throw invalid(`Pick ${pickId}'s first reply already went out at ${mine.at}`);
       if (BLOCKING.includes(mine.status))
         throw invalid(
           `Pick ${pickId}'s first reply is ${mine.status} (${mine.at}): it may have gone out. Check X, then ack it if it did not`,
         );
     }
-    const url =
-      postUrl?.trim() ||
-      (post.tweetId ? `https://x.com/i/status/${post.tweetId}` : "");
+    const url = postUrl?.trim() || (post.tweetId ? `https://x.com/i/status/${post.tweetId}` : "");
     if (!POST_URL.test(url))
       throw invalid(
         "The post's link was not found: give it as postUrl (https://x.com/<account>/status/<id>)",
@@ -686,6 +542,18 @@ export class Publisher {
         await this.postReply(pickId, draft.id, draft.reply!, url);
       } catch (error) {
         log.warn("publish.reply_failed", { pickId, error: String(error) });
+        this.emit(
+          pickId,
+          "failed",
+          store.ledger.append({
+            draftKey: replyKey(pickId),
+            pickId,
+            draftId: draft.id,
+            status: "failed",
+            backend: "bridge-reply",
+            note: String((error as Error).message ?? error).slice(0, 300),
+          }),
+        );
       } finally {
         this.running = undefined;
         this.emit(pickId, "done");
@@ -724,11 +592,8 @@ export class Publisher {
     const { store } = this.deps;
     const mine = store.ledger.state(reply ? replyKey(pickId) : pickKey(pickId));
     if (!mine || !BLOCKING.includes(mine.status))
-      throw invalid(
-        `Pick ${pickId} has nothing to ack: its ledger is ${mine?.status ?? "empty"}`,
-      );
-    if (this.running?.pickId === pickId)
-      throw invalid(`Pick ${pickId} is publishing now`);
+      throw invalid(`Pick ${pickId} has nothing to ack: its ledger is ${mine?.status ?? "empty"}`);
+    if (this.running?.pickId === pickId) throw invalid(`Pick ${pickId} is publishing now`);
     const entry = store.ledger.append({
       draftKey: mine.draftKey,
       pickId,

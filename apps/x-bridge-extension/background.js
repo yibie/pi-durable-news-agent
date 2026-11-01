@@ -32,14 +32,11 @@ async function loaded(tabId, ms = 30_000) {
 const pageOps = {
   ready: () => {
     const T = "[data-testid=tweetTextarea_0]";
-    return !!(
-      document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T)
-    );
+    return !!(document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T));
   },
   clear: () => {
     const T = "[data-testid=tweetTextarea_0]";
-    const tb =
-      document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
+    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
     if (!tb) return false;
     tb.focus();
     document.execCommand("selectAll");
@@ -48,8 +45,7 @@ const pageOps = {
   },
   insert: (text) => {
     const T = "[data-testid=tweetTextarea_0]";
-    const tb =
-      document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
+    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
     if (!tb) return false;
     tb.focus();
     return document.execCommand("insertText", false, text);
@@ -57,10 +53,8 @@ const pageOps = {
   read: (quoteId) => {
     const T = "[data-testid=tweetTextarea_0]";
     const B = "[data-testid=tweetButton]";
-    const tb =
-      document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
-    const bt =
-      document.querySelector(`[role=dialog] ${B}`) ?? document.querySelector(B);
+    const tb = document.querySelector(`[role=dialog] ${T}`) ?? document.querySelector(T);
+    const bt = document.querySelector(`[role=dialog] ${B}`) ?? document.querySelector(B);
     return {
       text: tb ? tb.innerText : "",
       button: bt ? (bt.disabled ? "disabled" : "enabled") : "missing",
@@ -92,9 +86,7 @@ const pageOps = {
   },
   removeMedia: () => {
     let n = 0;
-    for (const b of document.querySelectorAll(
-      "[data-testid=attachments] button",
-    ))
+    for (const b of document.querySelectorAll("[data-testid=attachments] button"))
       if (/移除|删除|Remove/.test(b.getAttribute("aria-label") || "")) {
         b.click();
         n++;
@@ -103,15 +95,12 @@ const pageOps = {
   },
   clickPost: () => {
     const B = "[data-testid=tweetButton]";
-    const b =
-      document.querySelector(`[role=dialog] ${B}`) ?? document.querySelector(B);
+    const b = document.querySelector(`[role=dialog] ${B}`) ?? document.querySelector(B);
     if (!b || b.disabled) return false;
     b.click();
     return true;
   },
-  sent: () =>
-    document.querySelector('[data-testid=toast] a[href*="/status/"]')?.href ??
-    "",
+  sent: () => document.querySelector('[data-testid=toast] a[href*="/status/"]')?.href ?? "",
   retweetMenu: () => {
     const b = document.querySelector("[data-testid=retweet]");
     b?.click();
@@ -131,9 +120,7 @@ const pageOps = {
     );
     const b = art?.querySelector("[data-testid=reply]");
     if (!b) return null;
-    const start = (
-      art.querySelector("[data-testid=tweetText]")?.innerText || ""
-    )
+    const start = (art.querySelector("[data-testid=tweetText]")?.innerText || "")
       .replace(/\s+/g, "")
       .slice(0, 20);
     b.click();
@@ -148,17 +135,9 @@ const pageOps = {
   findOwn: (start) => {
     const norm = (s) => (s || "").replace(/\s+/g, "");
     for (const art of document.querySelectorAll("article")) {
-      if (
-        /Pinned|已置顶/.test(
-          art.querySelector("[data-testid=socialContext]")?.innerText || "",
-        )
-      )
+      if (/Pinned|已置顶/.test(art.querySelector("[data-testid=socialContext]")?.innerText || ""))
         continue;
-      if (
-        !norm(
-          art.querySelector("[data-testid=tweetText]")?.innerText,
-        ).startsWith(start)
-      )
+      if (!norm(art.querySelector("[data-testid=tweetText]")?.innerText).startsWith(start))
         continue;
       const a = art.querySelector("time")?.closest("a");
       if (a) return a.href;
@@ -195,8 +174,7 @@ const ops = {
     const back = own.get(tabId);
     own.delete(tabId);
     await chrome.tabs.remove(tabId);
-    if (back !== undefined)
-      await chrome.tabs.update(back, { active: true }).catch(() => {});
+    if (back !== undefined) await chrome.tabs.update(back, { active: true }).catch(() => {});
     return true;
   },
 };

@@ -54,14 +54,10 @@ const read = (tabId: number, quoteId?: string) =>
   page<ComposerState>("read", tabId, quoteId ?? null);
 const openTab = async (url: string) =>
   (await bridge.command<{ tabId: number }>("open", { url })).tabId;
-const closeTab = (tabId: number) =>
-  bridge.command("close", { tabId }).catch(() => undefined);
+const closeTab = (tabId: number) => bridge.command("close", { tabId }).catch(() => undefined);
 
 /** Poll until `fn` gives something truthy, or undefined when the time is up. */
-async function until<T>(
-  fn: () => Promise<T>,
-  ms: number,
-): Promise<T | undefined> {
+async function until<T>(fn: () => Promise<T>, ms: number): Promise<T | undefined> {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     const v = await fn().catch(() => undefined);
@@ -85,8 +81,7 @@ async function attach(tabId: number, images: string[]) {
     type: MIME[extname(path).toLowerCase()] ?? "image/png",
     b64: readFileSync(path).toString("base64"),
   }));
-  if (!(await page("attach", tabId, files)))
-    throw new Error("no file input in the composer");
+  if (!(await page("attach", tabId, files))) throw new Error("no file input in the composer");
   await until(async () => (await read(tabId)).media >= images.length, 30_000);
   await page("applyMedia", tabId);
 }
@@ -123,22 +118,15 @@ async function checkComposer(
   images: number,
   quoteId?: string,
 ): Promise<{ state: ComposerState; problems: string[] }> {
-  await until(
-    async () => (await read(tabId, quoteId)).button === "enabled",
-    30_000,
-  );
+  await until(async () => (await read(tabId, quoteId)).button === "enabled", 30_000);
   const state = await read(tabId, quoteId);
   const problems = [
     norm(state.text) !== norm(text)
       ? `the text is not what was written (${state.text.length} of ${text.length} characters)`
       : "",
-    images && state.media < images
-      ? `${state.media} of ${images} images attached`
-      : "",
+    images && state.media < images ? `${state.media} of ${images} images attached` : "",
     quoteId && !state.card ? "the quoted card is missing" : "",
-    quoteId && state.text.includes(quoteId)
-      ? "the quoted post's id is in the text"
-      : "",
+    quoteId && state.text.includes(quoteId) ? "the quoted post's id is in the text" : "",
     state.button !== "enabled" ? `the Post button is ${state.button}` : "",
   ].filter(Boolean);
   return { state, problems };
@@ -151,8 +139,7 @@ export async function postToX(input: PostInput): Promise<PostOutcome> {
   try {
     input.phase("compose");
     const quoteId = input.quoteUrl?.match(/status\/(\d+)/)?.[1];
-    if (input.quoteUrl && !quoteId)
-      throw new Error(`not a post url: ${input.quoteUrl}`);
+    if (input.quoteUrl && !quoteId) throw new Error(`not a post url: ${input.quoteUrl}`);
     tabId = await openTab(input.quoteUrl ?? COMPOSE);
     const tab = tabId;
     if (input.quoteUrl) await openQuote(tab);
@@ -160,20 +147,14 @@ export async function postToX(input: PostInput): Promise<PostOutcome> {
       return { status: "failed", detail: "the composer has no text box" };
     await page("clear", tab);
     input.phase("type");
-    if (!(await page("insert", tab, input.text)))
-      throw new Error("the text did not go in");
+    if (!(await page("insert", tab, input.text))) throw new Error("the text did not go in");
     await sleep(1_000);
     if (input.images.length) {
       input.phase("attach");
       await attach(tab, input.images);
     }
     input.phase("check");
-    const { state, problems } = await checkComposer(
-      tab,
-      input.text,
-      input.images.length,
-      quoteId,
-    );
+    const { state, problems } = await checkComposer(tab, input.text, input.images.length, quoteId);
     const summary = `len ${state.text.length}, media ${state.media}, button ${state.button}${quoteId ? `, card ${state.card}` : ""}`;
     if (input.rehearsal) {
       input.phase("discard");
@@ -187,13 +168,11 @@ export async function postToX(input: PostInput): Promise<PostOutcome> {
           : `ready to post (${summary})`,
       };
     }
-    if (problems.length)
-      return { status: "failed", detail: `not posted: ${problems.join("; ")}` };
+    if (problems.length) return { status: "failed", detail: `not posted: ${problems.join("; ")}` };
     input.phase("click");
     input.beforeClick();
     clicked = true;
-    if (!(await page("clickPost", tab)))
-      throw new Error("the Post button was gone at the click");
+    if (!(await page("clickPost", tab))) throw new Error("the Post button was gone at the click");
     // X says "post sent" with a link to the new post for a few seconds: catch it while the post settles.
     input.phase("settle");
     let url = "";
@@ -235,17 +214,14 @@ export async function ownPost(tabId: number, text: string): Promise<string> {
   if (!handle) return "";
   await bridge.command("navigate", { tabId, url: `https://x.com/${handle}` });
   const start = norm(text).slice(0, 24);
-  return (
-    (await until(() => page<string>("findOwn", tabId, start), 20_000)) ?? ""
-  );
+  return (await until(() => page<string>("findOwn", tabId, start), 20_000)) ?? "";
 }
 
 /** Reply under a post from its page: open the reply box, insert the text, check it is a reply with the whole text,
  * click. A rehearsal stops before the click and empties the box, like a post's. */
 export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
   const id = input.postUrl.match(/status\/(\d+)/)?.[1];
-  if (!id)
-    return { status: "failed", detail: `not a post url: ${input.postUrl}` };
+  if (!id) return { status: "failed", detail: `not a post url: ${input.postUrl}` };
   let tabId: number | undefined;
   let clicked = false;
   let keep = false;
@@ -253,10 +229,7 @@ export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
     input.phase("open");
     tabId = await openTab(`https://x.com/i/status/${id}`);
     const tab = tabId;
-    const opened = await until(
-      () => page<{ start: string } | null>("openReply", tab, id),
-      25_000,
-    );
+    const opened = await until(() => page<{ start: string } | null>("openReply", tab, id), 25_000);
     if (!opened)
       return {
         status: "failed",
@@ -267,15 +240,13 @@ export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
       return { status: "failed", detail: "the reply box did not open" };
     await page("clear", tab);
     input.phase("type");
-    if (!(await page("insert", tab, input.text)))
-      throw new Error("the text did not go in");
+    if (!(await page("insert", tab, input.text))) throw new Error("the text did not go in");
     await sleep(1_000);
     input.phase("check");
     const { state, problems } = await checkComposer(tab, input.text, 0);
     // X shows the replied-to post above the box (a reply to your own post has no "Replying to" line).
     const isReply = norm(state.dialogText).includes(opened.start);
-    if (!isReply)
-      problems.push("the reply box does not show the post it replies to");
+    if (!isReply) problems.push("the reply box does not show the post it replies to");
     const summary = `len ${state.text.length}, reply ${isReply ? "yes" : "no"}, button ${state.button}`;
     if (input.rehearsal) {
       input.phase("discard");
@@ -297,8 +268,7 @@ export async function replyOnX(input: ReplyInput): Promise<PostOutcome> {
     input.phase("click");
     input.beforeClick();
     clicked = true;
-    if (!(await page("clickPost", tab)))
-      throw new Error("the Reply button was gone at the click");
+    if (!(await page("clickPost", tab))) throw new Error("the Reply button was gone at the click");
     await sleep(8_000);
     input.phase("settle");
     if ((await read(tab)).dialog) {

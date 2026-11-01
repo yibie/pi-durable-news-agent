@@ -1,18 +1,13 @@
 // dna-server-api: load the root .env, open the stores, the durable harness and the projector, then serve HTTP.
 //   tsx src/main.ts [--port 4850] [--host 127.0.0.1] [--data-dir data] [--device local]
-import {
-  createLogger,
-  installProcessHandlers,
-  loadRootEnv,
-} from "@dna/sdk/node";
+import { createLogger, installProcessHandlers, loadRootEnv } from "@dna/sdk/node";
 import { createHttpApp } from "./app.ts";
 import { assertTokens, loadConfig } from "./config.ts";
 import { bridge } from "./publishing/bridge.ts";
 import { openApp } from "./runtime.ts";
 import { packageVersion } from "./version.ts";
 
-if (process.env.DNA_ENV_FILE !== "none")
-  loadRootEnv(process.env.DNA_ENV_FILE || undefined);
+if (process.env.DNA_ENV_FILE !== "none") loadRootEnv(process.env.DNA_ENV_FILE || undefined);
 const config = loadConfig();
 const log = createLogger("api").child({ device: config.device });
 installProcessHandlers(log);
@@ -27,9 +22,7 @@ await new Promise<void>((resolve, reject) => {
 });
 server.keepAliveTimeout = 65_000;
 // Publishing goes through the extension in the everyday Chrome; without this port a publish says the bridge is off.
-await bridge
-  .listen()
-  .catch((error) => log.warn("bridge.listen_failed", { error: String(error) }));
+await bridge.listen().catch((error) => log.warn("bridge.listen_failed", { error: String(error) }));
 const model = await app.mainModel();
 const piDurable = packageVersion("@earendil-works/pi-durable");
 log.info("api.listening", {
